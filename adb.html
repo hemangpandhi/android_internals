@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADB (Android Debug Bridge) - Android Internals</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="android_logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="hero">
+    <a href="index.html" class="back-link">&#8592; Home</a>
+    <img src="android_logo.svg" alt="Android Logo" class="android-logo animate-pop" />
+    <h1 class="animate-fadein">ADB (Android Debug Bridge)</h1>
+    <p class="subtitle animate-slidein">Powerful tool for Android development and debugging</p>
+  </header>
+  <main>
+    <section class="info animate-fadein">
+      <h2>What is ADB?</h2>
+      <p>ADB is a versatile command-line tool that lets you communicate with and control Android devices. It is essential for development, debugging, and automation.</p>
+      <h2>Common Uses</h2>
+      <ul>
+        <li>Install and uninstall apps</li>
+        <li>Access device shell</li>
+        <li>Transfer files between device and computer</li>
+        <li>Logcat for viewing system logs</li>
+        <li>Automate device actions</li>
+      </ul>
+      <h2>Common Commands</h2>
+      <ul>
+        <li><code>adb devices</code> - List connected devices</li>
+        <li><code>adb install &lt;apk&gt;</code> - Install an APK</li>
+        <li><code>adb shell</code> - Open a shell on the device</li>
+        <li><code>adb logcat</code> - View system logs</li>
+        <li><code>adb push &lt;src&gt; &lt;dest&gt;</code> - Copy file to device</li>
+        <li><code>adb pull &lt;src&gt; &lt;dest&gt;</code> - Copy file from device</li>
+      </ul>
+      <div class="cta animate-slidein">
+        <p>Explore more: <a href="https://developer.android.com/studio/command-line/adb" target="_blank">ADB Documentation</a></p>
+      </div>
+    </section>
+  </main>
+  <footer class="footer animate-fadein">
+    <p>&copy; 2024 Android Internals. Not affiliated with Google or Android.</p>
+  </footer>
+  <script src="scripts.js"></script>
+</body>
+</html> 

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OS Internals - Android Internals</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="android_logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="hero">
+    <a href="index.html" class="back-link">&#8592; Home</a>
+    <img src="android_logo.svg" alt="Android Logo" class="android-logo animate-pop" />
+    <h1 class="animate-fadein">OS Internals</h1>
+    <p class="subtitle animate-slidein">Deep dive into Android's core</p>
+  </header>
+  <main>
+    <section class="info animate-fadein">
+      <h2>Android OS Architecture</h2>
+      <ul>
+        <li>Linux Kernel: Handles low-level hardware interactions, security, and process management.</li>
+        <li>HAL: Bridges hardware and software.</li>
+        <li>Native Libraries: C/C++ libraries for core features (WebKit, OpenGL, etc.).</li>
+        <li>Android Runtime (ART): Executes app bytecode.</li>
+        <li>Framework: Java APIs for app development.</li>
+        <li>Apps: User and system applications.</li>
+      </ul>
+      <h2>Processes & Memory Management</h2>
+      <ul>
+        <li>Each app runs in its own process and sandbox for security.</li>
+        <li>Android manages memory using Linux features (OOM killer, cgroups).</li>
+        <li>Garbage collection in ART/Dalvik for app memory.</li>
+      </ul>
+      <h2>Security</h2>
+      <ul>
+        <li>App sandboxing and permissions</li>
+        <li>SELinux enforcement</li>
+        <li>Verified Boot and system integrity</li>
+      </ul>
+      <div class="cta animate-slidein">
+        <p>Explore more: <a href="https://source.android.com/docs/core/architecture" target="_blank">Android OS Architecture</a></p>
+      </div>
+    </section>
+  </main>
+  <footer class="footer animate-fadein">
+    <p>&copy; 2024 Android Internals. Not affiliated with Google or Android.</p>
+  </footer>
+  <script src="scripts.js"></script>
+</body>
+</html> 

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HAL (Hardware Abstraction Layer) - Android Internals</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="android_logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="hero">
+    <a href="index.html" class="back-link">&#8592; Home</a>
+    <img src="android_logo.svg" alt="Android Logo" class="android-logo animate-pop" />
+    <h1 class="animate-fadein">HAL (Hardware Abstraction Layer)</h1>
+    <p class="subtitle animate-slidein">Bridging Android software and device hardware</p>
+  </header>
+  <main>
+    <section class="info animate-fadein">
+      <h2>What is HAL?</h2>
+      <p>The Hardware Abstraction Layer (HAL) in Android provides a standard interface for hardware vendors to implement, allowing Android OS to communicate with device hardware without knowing the hardware specifics. HAL modules act as a bridge between the Android system and hardware drivers.</p>
+      <h2>Role in Android</h2>
+      <ul>
+        <li>Enables Android to support a wide range of hardware with minimal changes to the OS.</li>
+        <li>Vendors implement HAL modules for their hardware, which the Android system calls via defined interfaces.</li>
+        <li>Ensures modularity and easier updates for both hardware and software.</li>
+      </ul>
+      <h2>Architecture</h2>
+      <p>HAL sits between the Android Framework and the Linux kernel drivers. The typical stack is:</p>
+      <ol>
+        <li>Android App</li>
+        <li>Android Framework</li>
+        <li>JNI (Java Native Interface)</li>
+        <li>HAL</li>
+        <li>Linux Kernel Driver</li>
+        <li>Hardware</li>
+      </ol>
+      <h2>Examples of HAL Modules</h2>
+      <ul>
+        <li>Camera HAL</li>
+        <li>Audio HAL</li>
+        <li>Bluetooth HAL</li>
+        <li>Wi-Fi HAL</li>
+        <li>Sensor HAL</li>
+      </ul>
+      <div class="cta animate-slidein">
+        <p>Explore more: <a href="https://source.android.com/docs/core/architecture/hal" target="_blank">Official Android HAL Documentation</a></p>
+      </div>
+    </section>
+  </main>
+  <footer class="footer animate-fadein">
+    <p>&copy; 2024 Android Internals. Not affiliated with Google or Android.</p>
+  </footer>
+  <script src="scripts.js"></script>
+</body>
+</html> 

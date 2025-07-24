@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Android Commands - Android Internals</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="android_logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="hero">
+    <a href="index.html" class="back-link">&#8592; Home</a>
+    <img src="android_logo.svg" alt="Android Logo" class="android-logo animate-pop" />
+    <h1 class="animate-fadein">Android Commands</h1>
+    <p class="subtitle animate-slidein">Essential shell and system commands for Android</p>
+  </header>
+  <main>
+    <section class="info animate-fadein">
+      <h2>Common Android Shell Commands</h2>
+      <ul>
+        <li><code>pm list packages</code> - List all installed packages</li>
+        <li><code>am start -n &lt;package/activity&gt;</code> - Start an activity</li>
+        <li><code>settings get &lt;namespace&gt; &lt;key&gt;</code> - Get system setting</li>
+        <li><code>logcat</code> - View system logs</li>
+        <li><code>top</code> - Show running processes</li>
+        <li><code>df</code> - Show disk usage</li>
+        <li><code>getprop</code> - Get system properties</li>
+        <li><code>svc wifi enable/disable</code> - Control Wi-Fi</li>
+      </ul>
+      <h2>Usage Examples</h2>
+      <ul>
+        <li><code>adb shell pm list packages | grep google</code> - List Google packages</li>
+        <li><code>adb shell am start -a android.intent.action.VIEW -d https://www.android.com</code> - Open URL in browser</li>
+      </ul>
+      <div class="cta animate-slidein">
+        <p>See more: <a href="https://developer.android.com/studio/command-line" target="_blank">Android Command-Line Tools</a></p>
+      </div>
+    </section>
+  </main>
+  <footer class="footer animate-fadein">
+    <p>&copy; 2024 Android Internals. Not affiliated with Google or Android.</p>
+  </footer>
+  <script src="scripts.js"></script>
+</body>
+</html> 

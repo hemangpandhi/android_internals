@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System App - Android Internals</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="android_logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="hero">
+    <a href="index.html" class="back-link">&#8592; Home</a>
+    <img src="android_logo.svg" alt="Android Logo" class="android-logo animate-pop" />
+    <h1 class="animate-fadein">System App</h1>
+    <p class="subtitle animate-slidein">Core apps with elevated privileges</p>
+  </header>
+  <main>
+    <section class="info animate-fadein">
+      <h2>What are System Apps?</h2>
+      <p>System apps are pre-installed applications that reside in the system partition of an Android device. They have elevated privileges and are essential for core device functionality.</p>
+      <h2>Privileges of System Apps</h2>
+      <ul>
+        <li>Access to protected system APIs</li>
+        <li>Cannot be uninstalled by regular users</li>
+        <li>Can request special permissions not available to user apps</li>
+      </ul>
+      <h2>Differences from User Apps</h2>
+      <ul>
+        <li>User apps are installed in the data partition and can be removed by users.</li>
+        <li>System apps are updated via OTA or firmware updates.</li>
+        <li>System apps can act as device administrators.</li>
+      </ul>
+      <h2>Examples</h2>
+      <ul>
+        <li>Settings</li>
+        <li>Phone</li>
+        <li>System UI</li>
+        <li>Package Installer</li>
+      </ul>
+      <div class="cta animate-slidein">
+        <p>Learn more: <a href="https://source.android.com/docs/core/architecture/overview#system-apps" target="_blank">Android System Apps</a></p>
+      </div>
+    </section>
+  </main>
+  <footer class="footer animate-fadein">
+    <p>&copy; 2024 Android Internals. Not affiliated with Google or Android.</p>
+  </footer>
+  <script src="scripts.js"></script>
+</body>
+</html> 

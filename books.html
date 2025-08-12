@@ -5,57 +5,108 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Android Internals Books - Recommendations</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="android_logo.svg" type="image/svg+xml">
+  <link rel="icon" href="android_svc_logo.svg" type="image/svg+xml">
 </head>
 <body>
   <header class="hero">
-    <a href="index.html" class="back-link">&#8592; Home</a>
-    <img src="android_internals_logo.svg" alt="Android Internals Logo" class="android-internals-logo animate-pop" />
-    <h1 class="animate-fadein">Android Internals Books</h1>
-    <p class="subtitle animate-slidein">Recommended reading for AOSP platform development</p>
+    <nav class="main-nav">
+      <div class="nav-container">
+        <a href="index.html">
+          <img src="android_svc_logo.svg" alt="Android SVC Logo" class="nav-logo" />
+        </a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="index.html#topics" class="nav-link">Topics</a>
+          <a href="books.html" class="nav-link">Books</a>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="hero-content">
+      <h1 class="hero-title animate-fadein">Android Internals Books</h1>
+      <p class="hero-subtitle animate-slidein">Recommended reading for AOSP platform development</p>
+    </div>
   </header>
+
   <main>
-    <section class="info animate-fadein">
-      <p>One of my hobbies: Collecting things. Today: Books about <strong>#AOSP platform development</strong>.<br>
-      Here is a complete list of all books about <strong>#AOSP</strong> (to my knowledge). Sorted according to the latest update. Newest first:</p>
-      <ol class="books-list">
-        <li>
-          <strong>Android Internals - A Confectioner's CookBook</strong> (or better books) by Jonathan Levi (2015 to 2025)<br>
-          <a href="https://lnkd.in/dtsg_Aqh" target="_blank">View Book</a>
-        </li>
-        <li>
-          <strong>Inside the Android OS: Building, Customizing, Managing and Operating Android System Services (Android Deep Dive)</strong> by G. Blake Meike and Larry Schiefer (2021)<br>
-          <a href="https://lnkd.in/d3Hktsq8" target="_blank">View Book</a>
-        </li>
-        <li>
-          <strong>Android System Programming: Porting, customizing, and debugging Android HAL (English Edition)</strong> by Roger Ye (2017)<br>
-          <a href="https://lnkd.in/dmARDhbZ" target="_blank">View Book</a>
-        </li>
-        <li>
-          <strong>Learning Embedded Android N Programming</strong> by Ivan Morgillo and Stefano Viola (2016)<br>
-          <a href="https://lnkd.in/dYPVwiXJ" target="_blank">View Book</a>
-        </li>
-        <li>
-          <strong>Embedded Programming with Android: Bringing Up an Android System from Scratch (Android Deep Dive)</strong> by Roger Ye (2015-08-23)<br>
-          <a href="https://lnkd.in/dscP_2tQ" target="_blank">View Book</a>
-        </li>
-        <li>
-          <strong>Embedded Android: Porting, Extending, and Customizing</strong> by Karim Yaghmour (2013)<br>
-          <a href="https://lnkd.in/dPvZADYp" target="_blank">View Book</a>
-        </li>
-        <li>
-          <strong>NSA - Note Su Android</strong> (non-english) by Gianluca Moro (2011)<br>
-          <a href="https://lnkd.in/dqiEQyss" target="_blank">View Book</a>
-        </li>
-      </ol>
-      <div class="cta animate-slidein">
-        <!-- (Removed contact line as requested) -->
+    <section class="content-section">
+      <div class="container">
+        <div class="content-card">
+          <h2>Complete AOSP Book Collection</h2>
+          <p>One of my hobbies: Collecting things. Today: Books about <strong>#AOSP platform development</strong>.<br>
+          Here is a complete list of all books about <strong>#AOSP</strong> (to my knowledge). Sorted according to the latest update. Newest first:</p>
+          
+          <ol class="books-list">
+            <li>
+              <strong>Android Internals - A Confectioner's CookBook</strong> (or better books) by Jonathan Levi (2015 to 2025)<br>
+              <a href="https://lnkd.in/dtsg_Aqh" target="_blank">View Book</a>
+            </li>
+            <li>
+              <strong>Inside the Android OS: Building, Customizing, Managing and Operating Android System Services (Android Deep Dive)</strong> by G. Blake Meike and Larry Schiefer (2021)<br>
+              <a href="https://lnkd.in/d3Hktsq8" target="_blank">View Book</a>
+            </li>
+            <li>
+              <strong>Android System Programming: Porting, customizing, and debugging Android HAL (English Edition)</strong> by Roger Ye (2017)<br>
+              <a href="https://lnkd.in/dmARDhbZ" target="_blank">View Book</a>
+            </li>
+            <li>
+              <strong>Learning Embedded Android N Programming</strong> by Ivan Morgillo and Stefano Viola (2016)<br>
+              <a href="https://lnkd.in/dYPVwiXJ" target="_blank">View Book</a>
+            </li>
+            <li>
+              <strong>Embedded Programming with Android: Bringing Up an Android System from Scratch (Android Deep Dive)</strong> by Roger Ye (2015-08-23)<br>
+              <a href="https://lnkd.in/dscP_2tQ" target="_blank">View Book</a>
+            </li>
+            <li>
+              <strong>Embedded Android: Porting, Extending, and Customizing</strong> by Karim Yaghmour (2013)<br>
+              <a href="https://lnkd.in/dPvZADYp" target="_blank">View Book</a>
+            </li>
+            <li>
+              <strong>NSA - Note Su Android</strong> (non-english) by Gianluca Moro (2011)<br>
+              <a href="https://lnkd.in/dqiEQyss" target="_blank">View Book</a>
+            </li>
+          </ol>
+          
+          <div class="cta-content">
+            <h3>Build Your Collection</h3>
+            <p>These books represent the complete knowledge base for Android system development. Start with the newest publications for the most current information.</p>
+          </div>
+        </div>
       </div>
     </section>
   </main>
-  <footer class="footer animate-fadein">
-    <p>&copy; 2024 Android Internals. Not affiliated with Google or Android.</p>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <img src="android_svc_logo.svg" alt="Android SVC Logo" class="footer-logo" />
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="hal.html">HAL</a></li>
+            <li><a href="framework.html">Framework</a></li>
+            <li><a href="adb.html">ADB</a></li>
+            <li><a href="books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
   </footer>
+
   <script src="scripts.js"></script>
 </body>
 </html> 

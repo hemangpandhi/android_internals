@@ -5,41 +5,172 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Android Commands - Android Internals</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="android_logo.svg" type="image/svg+xml">
+  <link rel="icon" href="android_svc_logo.svg" type="image/svg+xml">
 </head>
 <body>
   <header class="hero">
-    <a href="index.html" class="back-link">&#8592; Home</a>
-    <img src="android_logo.svg" alt="Android Logo" class="android-logo animate-pop" />
-    <h1 class="animate-fadein">Android Commands</h1>
-    <p class="subtitle animate-slidein">Essential shell and system commands for Android</p>
+    <nav class="main-nav">
+      <div class="nav-container">
+        <a href="index.html">
+          <img src="android_svc_logo.svg" alt="Android SVC Logo" class="nav-logo" />
+        </a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="index.html#topics" class="nav-link">Topics</a>
+          <a href="books.html" class="nav-link">Books</a>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="hero-content">
+      <h1 class="hero-title animate-fadein">Android Commands</h1>
+      <p class="hero-subtitle animate-slidein">Essential shell and system commands for Android</p>
+    </div>
   </header>
+
   <main>
-    <section class="info animate-fadein">
-      <h2>Common Android Shell Commands</h2>
-      <ul>
-        <li><code>pm list packages</code> - List all installed packages</li>
-        <li><code>am start -n &lt;package/activity&gt;</code> - Start an activity</li>
-        <li><code>settings get &lt;namespace&gt; &lt;key&gt;</code> - Get system setting</li>
-        <li><code>logcat</code> - View system logs</li>
-        <li><code>top</code> - Show running processes</li>
-        <li><code>df</code> - Show disk usage</li>
-        <li><code>getprop</code> - Get system properties</li>
-        <li><code>svc wifi enable/disable</code> - Control Wi-Fi</li>
-      </ul>
-      <h2>Usage Examples</h2>
-      <ul>
-        <li><code>adb shell pm list packages | grep google</code> - List Google packages</li>
-        <li><code>adb shell am start -a android.intent.action.VIEW -d https://www.android.com</code> - Open URL in browser</li>
-      </ul>
-      <div class="cta animate-slidein">
-        <p>See more: <a href="https://developer.android.com/studio/command-line" target="_blank">Android Command-Line Tools</a></p>
+    <section class="content-section">
+      <div class="container">
+        <div class="content-card">
+          <h2>Common Android Shell Commands</h2>
+          <p>These commands provide powerful control over Android devices and are essential for development, debugging, and system administration.</p>
+          
+          <div class="command-list">
+            <div class="command-item">
+              <code>pm list packages</code>
+              <span>List all installed packages on the device</span>
+            </div>
+            <div class="command-item">
+              <code>am start -n &lt;package/activity&gt;</code>
+              <span>Start a specific activity or application</span>
+            </div>
+            <div class="command-item">
+              <code>settings get &lt;namespace&gt; &lt;key&gt;</code>
+              <span>Get system setting values</span>
+            </div>
+            <div class="command-item">
+              <code>logcat</code>
+              <span>View system logs and debugging information</span>
+            </div>
+            <div class="command-item">
+              <code>top</code>
+              <span>Show running processes and resource usage</span>
+            </div>
+            <div class="command-item">
+              <code>df</code>
+              <span>Display disk usage and storage information</span>
+            </div>
+            <div class="command-item">
+              <code>getprop</code>
+              <span>Get system properties and configuration</span>
+            </div>
+            <div class="command-item">
+              <code>svc wifi enable/disable</code>
+              <span>Control Wi-Fi connectivity</span>
+            </div>
+          </div>
+          
+          <h2>Package Management Commands</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>Package Installation</h3>
+              <p><code>pm install &lt;apk-path&gt;</code> - Install APK file</p>
+            </div>
+            <div class="module-card">
+              <h3>Package Removal</h3>
+              <p><code>pm uninstall &lt;package-name&gt;</code> - Remove app</p>
+            </div>
+            <div class="module-card">
+              <h3>Package Information</h3>
+              <p><code>pm list packages -f</code> - List with file paths</p>
+            </div>
+            <div class="module-card">
+              <h3>Package Permissions</h3>
+              <p><code>pm list permissions</code> - Show all permissions</p>
+            </div>
+          </div>
+          
+          <h2>Activity Management Commands</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>Start Activity</h3>
+              <p><code>am start -a &lt;action&gt;</code> - Start by intent action</p>
+            </div>
+            <div class="module-card">
+              <h3>Force Stop</h3>
+              <p><code>am force-stop &lt;package&gt;</code> - Force stop app</p>
+            </div>
+            <div class="module-card">
+              <h3>Broadcast Intent</h3>
+              <p><code>am broadcast -a &lt;action&gt;</code> - Send broadcast</p>
+            </div>
+            <div class="module-card">
+              <h3>Clear App Data</h3>
+              <p><code>pm clear &lt;package&gt;</code> - Clear app data</p>
+            </div>
+          </div>
+          
+          <h2>Usage Examples</h2>
+          <div class="code-examples">
+            <div class="code-block">
+              <h4>List Google packages:</h4>
+              <code>adb shell pm list packages | grep google</code>
+            </div>
+            <div class="code-block">
+              <h4>Open URL in browser:</h4>
+              <code>adb shell am start -a android.intent.action.VIEW -d https://www.android.com</code>
+            </div>
+            <div class="code-block">
+              <h4>Check Wi-Fi status:</h4>
+              <code>adb shell settings get global wifi_on</code>
+            </div>
+            <div class="code-block">
+              <h4>Get device model:</h4>
+              <code>adb shell getprop ro.product.model</code>
+            </div>
+          </div>
+          
+          <div class="cta-content">
+            <h3>Learn More</h3>
+            <p>Explore the official Android command-line tools documentation for advanced usage.</p>
+            <a href="https://developer.android.com/studio/command-line" target="_blank" class="cta-button">Android Command-Line Tools</a>
+          </div>
+        </div>
       </div>
     </section>
   </main>
-  <footer class="footer animate-fadein">
-    <p>&copy; 2024 Android Internals. Not affiliated with Google or Android.</p>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <img src="android_svc_logo.svg" alt="Android SVC Logo" class="footer-logo" />
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="hal.html">HAL</a></li>
+            <li><a href="framework.html">Framework</a></li>
+            <li><a href="adb.html">ADB</a></li>
+            <li><a href="books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
   </footer>
+
   <script src="scripts.js"></script>
 </body>
 </html> 

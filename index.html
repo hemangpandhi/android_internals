@@ -3,77 +3,206 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Android Internals</title>
+  <meta name="description" content="Comprehensive guide to Android Internals - HAL, Framework, System Apps, OS Internals, ADB, Performance, and more. Expert resources for Android developers and enthusiasts.">
+  <meta name="keywords" content="Android Internals, AOSP, HAL, Android Framework, System Apps, ADB, Android Development, Android OS">
+  <meta name="author" content="Android Internals">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://yourdomain.com/">
+  <meta property="og:title" content="Android Internals - Complete Guide">
+  <meta property="og:description" content="Comprehensive guide to Android Internals - HAL, Framework, System Apps, OS Internals, ADB, Performance, and more.">
+  <meta property="og:image" content="https://yourdomain.com/android_svc_logo.svg">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://yourdomain.com/">
+  <meta property="twitter:title" content="Android Internals - Complete Guide">
+  <meta property="twitter:description" content="Comprehensive guide to Android Internals - HAL, Framework, System Apps, OS Internals, ADB, Performance, and more.">
+  <meta property="twitter:image" content="https://yourdomain.com/android_svc_logo.svg">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="android_svc_logo.svg">
+  <link rel="apple-touch-icon" href="android_svc_logo.svg">
+  
+  <!-- Preload critical resources -->
+  <link rel="preload" href="styles.css" as="style">
+  <link rel="preload" href="android_svc_logo.svg" as="image">
+  
+  <!-- Styles -->
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="android_logo.svg" type="image/svg+xml">
+  
+  <title>Android Internals - Complete Guide to Android OS Architecture</title>
 </head>
 <body>
   <header class="hero">
-    <img src="android_internals_logo.svg" alt="Android Internals Logo" class="android-internals-logo animate-pop" />
-    <h1 class="animate-fadein" style="display:none;">Welcome to <span class="highlight">Android Internals</span></h1>
-    <p class="subtitle animate-slidein">Explore the depths of Android OS, architecture, and more!</p>
-  </header>
-  <main>
-    <section class="info animate-fadein">
-      <h2>Explore Android Internals</h2>
-      <div class="topics-grid">
-        <a class="topic-card" href="hal.html">
-          <h3>HAL (Hardware Abstraction Layer)</h3>
-          <p>Understand how Android interfaces with device hardware through HAL modules, enabling hardware-software integration.</p>
-        </a>
-        <a class="topic-card" href="framework.html">
-          <h3>Framework</h3>
-          <p>Dive into the Android Framework layer, which provides APIs and system services for app development and system management.</p>
-        </a>
-        <a class="topic-card" href="android-app.html">
-          <h3>Android App</h3>
-          <p>Learn about Android application structure, lifecycle, components, and how apps interact with the OS.</p>
-        </a>
-        <a class="topic-card" href="system-app.html">
-          <h3>System App</h3>
-          <p>Explore the role of system apps, their privileges, and how they differ from user-installed apps.</p>
-        </a>
-        <a class="topic-card" href="os-internals.html">
-          <h3>OS Internals</h3>
-          <p>Uncover the core of Android OS: processes, memory management, security, and system architecture.</p>
-        </a>
-        <a class="topic-card" href="emulator.html">
-          <h3>Emulator</h3>
-          <p>Discover how the Android Emulator works, its use cases, and tips for effective testing and debugging.</p>
-        </a>
-        <a class="topic-card" href="system-performance.html">
-          <h3>System Performance</h3>
-          <p>Get insights into optimizing Android system performance, resource management, and profiling tools.</p>
-        </a>
-        <a class="topic-card" href="best-practices.html">
-          <h3>Best Practices</h3>
-          <p>Follow industry best practices for Android development, security, and maintainability.</p>
-        </a>
-        <a class="topic-card" href="adb.html">
-          <h3>ADB (Android Debug Bridge)</h3>
-          <p>Master ADB for device communication, debugging, and automation with essential commands and workflows.</p>
-        </a>
-        <a class="topic-card" href="android-commands.html">
-          <h3>Android Commands</h3>
-          <p>Reference a curated list of powerful Android shell and system commands for advanced users and developers.</p>
-        </a>
-        <a class="topic-card" href="other-internals.html">
-          <h3>Other Internals Concepts</h3>
-          <p>Explore additional topics like boot process, SELinux, system updates, and more.</p>
-        </a>
-        <a class="topic-card" href="books.html">
-          <h3>Android Internals Books</h3>
-          <p>Recommended books for AOSP platform development and Android OS internals.</p>
-        </a>
+    <nav class="main-nav">
+      <div class="nav-container">
+        <img src="android_svc_logo.svg" alt="Android SVC Logo" class="nav-logo" />
+        <div class="nav-links">
+          <a href="#about" class="nav-link">About</a>
+          <a href="#topics" class="nav-link">Topics</a>
+          <a href="books.html" class="nav-link">Books</a>
+        </div>
       </div>
-      <div class="cta animate-slidein">
-        <p>Stay tuned for in-depth blogs and guides on each topic!</p>
+    </nav>
+    
+    <div class="hero-content">
+      <img src="android_svc_logo.svg" alt="Android SVC Logo" class="hero-logo animate-pop" />
+      <h1 class="hero-title animate-fadein">Android Internals</h1>
+      <p class="hero-subtitle animate-slidein">Complete Guide to Android OS Architecture, HAL, Framework, and System Development</p>
+      <div class="hero-stats animate-fadein">
+        <div class="stat">
+          <span class="stat-number">11</span>
+          <span class="stat-label">Core Topics</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">7</span>
+          <span class="stat-label">Expert Books</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">100%</span>
+          <span class="stat-label">Open Source</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="about" class="about-section">
+      <div class="container">
+        <h2 class="section-title">About Android Internals</h2>
+        <p class="section-description">
+          Android Internals is your comprehensive resource for understanding the Android operating system architecture, 
+          from hardware abstraction layers to application frameworks. Whether you're a developer, system administrator, 
+          or Android enthusiast, our guides provide deep insights into Android's core components and development practices.
+        </p>
+      </div>
+    </section>
+
+    <section id="topics" class="topics-section">
+      <div class="container">
+        <h2 class="section-title">Explore Android Internals</h2>
+        <div class="topics-grid">
+          <a class="topic-card" href="hal.html">
+            <div class="card-icon">🔧</div>
+            <h3>HAL (Hardware Abstraction Layer)</h3>
+            <p>Understand how Android interfaces with device hardware through HAL modules, enabling hardware-software integration.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="framework.html">
+            <div class="card-icon">🏗️</div>
+            <h3>Framework</h3>
+            <p>Dive into the Android Framework layer, which provides APIs and system services for app development and system management.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="android-app.html">
+            <div class="card-icon">📱</div>
+            <h3>Android App</h3>
+            <p>Learn about Android application structure, lifecycle, components, and how apps interact with the OS.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="system-app.html">
+            <div class="card-icon">⚙️</div>
+            <h3>System App</h3>
+            <p>Explore the role of system apps, their privileges, and how they differ from user-installed apps.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="os-internals.html">
+            <div class="card-icon">🔬</div>
+            <h3>OS Internals</h3>
+            <p>Uncover the core of Android OS: processes, memory management, security, and system architecture.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="emulator.html">
+            <div class="card-icon">🖥️</div>
+            <h3>Emulator</h3>
+            <p>Discover how the Android Emulator works, its use cases, and tips for effective testing and debugging.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="system-performance.html">
+            <div class="card-icon">⚡</div>
+            <h3>System Performance</h3>
+            <p>Get insights into optimizing Android system performance, resource management, and profiling tools.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="best-practices.html">
+            <div class="card-icon">📋</div>
+            <h3>Best Practices</h3>
+            <p>Follow industry best practices for Android development, security, and maintainability.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="adb.html">
+            <div class="card-icon">🔌</div>
+            <h3>ADB (Android Debug Bridge)</h3>
+            <p>Master ADB for device communication, debugging, and automation with essential commands and workflows.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="android-commands.html">
+            <div class="card-icon">⌨️</div>
+            <h3>Android Commands</h3>
+            <p>Reference a curated list of powerful Android shell and system commands for advanced users and developers.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="other-internals.html">
+            <div class="card-icon">🔍</div>
+            <h3>Other Internals Concepts</h3>
+            <p>Explore additional topics like boot process, SELinux, system updates, and more.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="books.html">
+            <div class="card-icon">📚</div>
+            <h3>Android Internals Books</h3>
+            <p>Recommended books for AOSP platform development and Android OS internals.</p>
+            <span class="card-arrow">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <div class="container">
+        <div class="cta-content">
+          <h2>Ready to Master Android Internals?</h2>
+          <p>Start exploring our comprehensive guides and become an Android system expert.</p>
+          <a href="books.html" class="cta-button">Get Started</a>
+        </div>
       </div>
     </section>
   </main>
-  <footer class="footer animate-fadein">
-    <p>&copy; 2024 Android Internals. Not affiliated with Google or Android.</p>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <img src="android_svc_logo.svg" alt="Android SVC Logo" class="footer-logo" />
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="hal.html">HAL</a></li>
+            <li><a href="framework.html">Framework</a></li>
+            <li><a href="adb.html">ADB</a></li>
+            <li><a href="books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
   </footer>
+
   <script src="scripts.js"></script>
 </body>
 </html> 

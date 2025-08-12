@@ -5,46 +5,122 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Framework - Android Internals</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="android_logo.svg" type="image/svg+xml">
+  <link rel="icon" href="android_svc_logo.svg" type="image/svg+xml">
 </head>
 <body>
   <header class="hero">
-    <a href="index.html" class="back-link">&#8592; Home</a>
-    <img src="android_logo.svg" alt="Android Logo" class="android-logo animate-pop" />
-    <h1 class="animate-fadein">Android Framework</h1>
-    <p class="subtitle animate-slidein">The backbone of Android app development</p>
+    <nav class="main-nav">
+      <div class="nav-container">
+        <a href="index.html">
+          <img src="android_svc_logo.svg" alt="Android SVC Logo" class="nav-logo" />
+        </a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="index.html#topics" class="nav-link">Topics</a>
+          <a href="books.html" class="nav-link">Books</a>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="hero-content">
+      <h1 class="hero-title animate-fadein">Android Framework</h1>
+      <p class="hero-subtitle animate-slidein">The backbone of Android app development</p>
+    </div>
   </header>
+
   <main>
-    <section class="info animate-fadein">
-      <h2>What is the Android Framework?</h2>
-      <p>The Android Framework is a set of Java APIs and system services that provide the building blocks for app development. It abstracts the underlying hardware and OS, allowing developers to create powerful apps without dealing with low-level details.</p>
-      <h2>Key Components</h2>
-      <ul>
-        <li><strong>Activity Manager</strong>: Manages the lifecycle and stack of activities.</li>
-        <li><strong>Window Manager</strong>: Handles windows and their layout on the screen.</li>
-        <li><strong>Content Providers</strong>: Manage access to structured data.</li>
-        <li><strong>View System</strong>: UI components and layouts.</li>
-        <li><strong>Resource Manager</strong>: Accesses non-code resources like strings, layouts, and images.</li>
-        <li><strong>Notification Manager</strong>: Manages notifications.</li>
-        <li><strong>Package Manager</strong>: Manages app installation and updates.</li>
-        <li><strong>Telephony Manager</strong>: Manages telephony services.</li>
-      </ul>
-      <h2>Role in App Development</h2>
-      <p>The Framework provides a consistent environment for apps, handling communication with the system and hardware. Developers use the Framework to:</p>
-      <ul>
-        <li>Build user interfaces</li>
-        <li>Access device features (camera, sensors, etc.)</li>
-        <li>Manage app lifecycle and resources</li>
-        <li>Interact with other apps and system services</li>
-      </ul>
-      <div class="cta animate-slidein">
-        <p>Learn more: <a href="https://developer.android.com/guide/components/fundamentals" target="_blank">Android Framework Guide</a></p>
+    <section class="content-section">
+      <div class="container">
+        <div class="content-card">
+          <h2>What is the Android Framework?</h2>
+          <p>The Android Framework is a set of Java APIs and system services that provide the building blocks for app development. It abstracts the underlying hardware and OS, allowing developers to create powerful apps without dealing with low-level details.</p>
+          
+          <h2>Key Components</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>Activity Manager</h3>
+              <p>Manages the lifecycle and stack of activities.</p>
+            </div>
+            <div class="module-card">
+              <h3>Window Manager</h3>
+              <p>Handles windows and their layout on the screen.</p>
+            </div>
+            <div class="module-card">
+              <h3>Content Providers</h3>
+              <p>Manage access to structured data.</p>
+            </div>
+            <div class="module-card">
+              <h3>View System</h3>
+              <p>UI components and layouts.</p>
+            </div>
+            <div class="module-card">
+              <h3>Resource Manager</h3>
+              <p>Accesses non-code resources like strings, layouts, and images.</p>
+            </div>
+            <div class="module-card">
+              <h3>Notification Manager</h3>
+              <p>Manages notifications.</p>
+            </div>
+            <div class="module-card">
+              <h3>Package Manager</h3>
+              <p>Manages app installation and updates.</p>
+            </div>
+            <div class="module-card">
+              <h3>Telephony Manager</h3>
+              <p>Manages telephony services.</p>
+            </div>
+          </div>
+          
+          <h2>Role in App Development</h2>
+          <p>The Framework provides a consistent environment for apps, handling communication with the system and hardware. Developers use the Framework to:</p>
+          <ul>
+            <li>Build user interfaces</li>
+            <li>Access device features (camera, sensors, etc.)</li>
+            <li>Manage app lifecycle and resources</li>
+            <li>Interact with other apps and system services</li>
+          </ul>
+          
+          <div class="cta-content">
+            <h3>Learn More</h3>
+            <p>Explore the official Android Framework documentation for comprehensive guides.</p>
+            <a href="https://developer.android.com/guide/components/fundamentals" target="_blank" class="cta-button">Android Framework Guide</a>
+          </div>
+        </div>
       </div>
     </section>
   </main>
-  <footer class="footer animate-fadein">
-    <p>&copy; 2024 Android Internals. Not affiliated with Google or Android.</p>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <img src="android_svc_logo.svg" alt="Android SVC Logo" class="footer-logo" />
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="hal.html">HAL</a></li>
+            <li><a href="framework.html">Framework</a></li>
+            <li><a href="adb.html">ADB</a></li>
+            <li><a href="books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
   </footer>
+
   <script src="scripts.js"></script>
 </body>
 </html> 

@@ -5,46 +5,147 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Emulator - Android Internals</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="android_logo.svg" type="image/svg+xml">
+  <link rel="icon" href="android_svc_logo.svg" type="image/svg+xml">
 </head>
 <body>
   <header class="hero">
-    <a href="index.html" class="back-link">&#8592; Home</a>
-    <img src="android_logo.svg" alt="Android Logo" class="android-logo animate-pop" />
-    <h1 class="animate-fadein">Android Emulator</h1>
-    <p class="subtitle animate-slidein">Test and debug Android apps virtually</p>
+    <nav class="main-nav">
+      <div class="nav-container">
+        <a href="index.html">
+          <img src="android_svc_logo.svg" alt="Android SVC Logo" class="nav-logo" />
+        </a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="index.html#topics" class="nav-link">Topics</a>
+          <a href="books.html" class="nav-link">Books</a>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="hero-content">
+      <h1 class="hero-title animate-fadein">Android Emulator</h1>
+      <p class="hero-subtitle animate-slidein">Test and debug Android apps virtually</p>
+    </div>
   </header>
+
   <main>
-    <section class="info animate-fadein">
-      <h2>What is the Android Emulator?</h2>
-      <p>The Android Emulator is a virtual device that mimics the functionality of a real Android device. It allows developers to test and debug apps in a controlled environment without needing physical hardware.</p>
-      <h2>Key Features</h2>
-      <ul>
-        <li>Simulates various device types, screen sizes, and Android versions</li>
-        <li>Supports hardware features like sensors, GPS, and cameras</li>
-        <li>Snapshot and quick boot for fast startup</li>
-        <li>Network and battery simulation</li>
-      </ul>
-      <h2>Use Cases</h2>
-      <ul>
-        <li>App development and debugging</li>
-        <li>Testing on multiple Android versions and configurations</li>
-        <li>Automated UI testing</li>
-      </ul>
-      <h2>Tips for Effective Testing</h2>
-      <ul>
-        <li>Use snapshots for faster boot times</li>
-        <li>Test on different device profiles</li>
-        <li>Simulate real-world conditions (network, battery, sensors)</li>
-      </ul>
-      <div class="cta animate-slidein">
-        <p>Learn more: <a href="https://developer.android.com/studio/run/emulator" target="_blank">Android Emulator Guide</a></p>
+    <section class="content-section">
+      <div class="container">
+        <div class="content-card">
+          <h2>What is the Android Emulator?</h2>
+          <p>The Android Emulator is a virtual device that mimics the functionality of a real Android device. It allows developers to test and debug apps in a controlled environment without needing physical hardware.</p>
+          
+          <h2>Key Features</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>Device Simulation</h3>
+              <p>Simulates various device types, screen sizes, and Android versions for comprehensive testing.</p>
+            </div>
+            <div class="module-card">
+              <h3>Hardware Features</h3>
+              <p>Supports hardware features like sensors, GPS, cameras, and network connectivity simulation.</p>
+            </div>
+            <div class="module-card">
+              <h3>Fast Startup</h3>
+              <p>Snapshot and quick boot features for faster startup times during development.</p>
+            </div>
+            <div class="module-card">
+              <h3>Environment Control</h3>
+              <p>Network and battery simulation for testing app behavior in different conditions.</p>
+            </div>
+          </div>
+          
+          <h2>Use Cases</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>App Development</h3>
+              <p>Primary tool for developing and debugging Android applications during development cycle.</p>
+            </div>
+            <div class="module-card">
+              <h3>Multi-Device Testing</h3>
+              <p>Test on multiple Android versions and device configurations without physical hardware.</p>
+            </div>
+            <div class="module-card">
+              <h3>Automated Testing</h3>
+              <p>Run automated UI tests and integration tests in controlled virtual environments.</p>
+            </div>
+            <div class="module-card">
+              <h3>Performance Testing</h3>
+              <p>Profile app performance and identify bottlenecks in virtual device environment.</p>
+            </div>
+          </div>
+          
+          <h2>Tips for Effective Testing</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>Use Snapshots</h3>
+              <p>Create and use snapshots for faster boot times and consistent testing environments.</p>
+            </div>
+            <div class="module-card">
+              <h3>Test Different Profiles</h3>
+              <p>Test on different device profiles to ensure compatibility across various screen sizes and hardware.</p>
+            </div>
+            <div class="module-card">
+              <h3>Simulate Real Conditions</h3>
+              <p>Simulate real-world conditions like network changes, battery levels, and sensor inputs.</p>
+            </div>
+            <div class="module-card">
+              <h3>Performance Monitoring</h3>
+              <p>Monitor CPU, memory, and network usage to identify performance issues early.</p>
+            </div>
+          </div>
+          
+          <h2>Emulator Configuration</h2>
+          <div class="architecture-stack">
+            <div class="stack-item">AVD Manager</div>
+            <div class="stack-item">Device Definition</div>
+            <div class="stack-item">System Image</div>
+            <div class="stack-item highlight">Emulator Instance</div>
+            <div class="stack-item">Hardware Acceleration</div>
+            <div class="stack-item">Performance Optimization</div>
+          </div>
+          
+          <div class="cta-content">
+            <h3>Learn More</h3>
+            <p>Explore the official Android Emulator documentation for setup guides and advanced configuration options.</p>
+            <a href="https://developer.android.com/studio/run/emulator" target="_blank" class="cta-button">Android Emulator Guide</a>
+          </div>
+        </div>
       </div>
     </section>
   </main>
-  <footer class="footer animate-fadein">
-    <p>&copy; 2024 Android Internals. Not affiliated with Google or Android.</p>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <img src="android_svc_logo.svg" alt="Android SVC Logo" class="footer-logo" />
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="hal.html">HAL</a></li>
+            <li><a href="framework.html">Framework</a></li>
+            <li><a href="adb.html">ADB</a></li>
+            <li><a href="books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
   </footer>
+
   <script src="scripts.js"></script>
 </body>
 </html> 

@@ -1,0 +1,43 @@
+{
+  "name": "android-internals",
+  "version": "1.0.0",
+  "description": "Comprehensive guide to Android OS architecture and internals",
+  "main": "index.html",
+  "scripts": {
+    "build": "node tools/build.js",
+    "new-article": "node tools/new-article.js",
+    "dev": "python3 -m http.server 8000",
+    "serve": "cd build && python3 -m http.server 8080",
+    "preview": "npm run build && cd build && python3 -m http.server 8000",
+    "deploy": "npm run build && echo 'Build completed. Deploy the build/ directory to your hosting service.'",
+    "clean": "rm -rf build/",
+    "rebuild": "npm run clean && npm run build",
+    "newsletter": "node tools/newsletter-manager.js",
+    "api": "node tools/api-server.js",
+    "newsletter:add": "node tools/newsletter-manager.js add",
+    "newsletter:list": "node tools/newsletter-manager.js list",
+    "newsletter:count": "node tools/newsletter-manager.js count",
+    "newsletter:export": "node tools/newsletter-manager.js export"
+  },
+  "keywords": [
+    "android",
+    "internals",
+    "development",
+    "system-architecture",
+    "hal",
+    "framework",
+    "adb"
+  ],
+  "author": "Android Internals Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/android-internals.git"
+  },
+  "devDependencies": {
+    "marked": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+} 

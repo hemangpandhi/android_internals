@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}} - Android Internals</title>
+  <meta name="description" content="{{description}}">
+  <meta name="keywords" content="Android, Internals, {{category}}, development, programming">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="icon" href="../android_logo.PNG" type="image/png">
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#3ddc84">
+  
+  <!-- Security Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+      <!-- X-Frame-Options should be set via HTTP headers, not meta tags -->
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="{{title}}">
+  <meta property="og:description" content="{{description}}">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.hemangpandhi.com/articles/{{slug}}.html">
+  <meta property="og:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{title}}">
+  <meta name="twitter:description" content="{{description}}">
+  <meta name="twitter:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="main-nav">
+    <div class="nav-container">
+      <a href="../index.html" class="nav-logo-link">
+        <img src="../android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+      </a>
+      <div class="nav-links">
+        <a href="../index.html" class="nav-link">Home</a>
+        <a href="../index.html#topics" class="nav-link">Topics</a>
+        <a href="../index.html#blogs" class="nav-link">Blogs</a>
+        <a href="../index.html#about" class="nav-link">About</a>
+        <a href="../books.html" class="nav-link">Books</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Article Header -->
+  <header class="article-header">
+    <div class="container">
+      <div class="article-hero">
+        <div class="article-meta">
+          <span class="article-category">{{category}}</span>
+          <span class="article-date">{{date}}</span>
+          <span class="article-read-time">5 min read</span>
+        </div>
+        <h1 class="article-title">{{title}}</h1>
+        <p class="article-subtitle">{{description}}</p>
+        <div class="article-author">
+          <img src="../android_logo.PNG" alt="Author" class="author-avatar">
+          <div class="author-info">
+            <span class="author-name">{{author}}</span>
+            <span class="author-title">Android Internals Expert</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="article-content">
+    <!-- Reading Mode Toggle -->
+    <div class="reading-mode-controls">
+      <button id="toggleReadingMode" class="reading-mode-btn">
+        <span class="reading-mode-icon">📖</span>
+        <span class="reading-mode-text">Full Screen</span>
+      </button>
+      <button id="toggleSidebar" class="sidebar-toggle-btn">
+        <span class="sidebar-icon">📋</span>
+        <span class="sidebar-text">Sidebar</span>
+      </button>
+    </div>
+
+    <div class="container">
+      <div class="article-layout" id="articleLayout">
+        <!-- Article Body -->
+        <article class="article-body" id="articleBody">
+          <div class="article-intro">
+            <p class="lead-text">{{description}}</p>
+          </div>
+          
+          <div class="article-content-wrapper">
+            {{content}}
+          </div>
+          
+          <!-- Article Footer -->
+          <div class="article-footer">
+            <div class="article-tags">
+              <span class="tag-label">Tags:</span>
+              <span class="tag">Android</span>
+              <span class="tag">Internals</span>
+              <span class="tag">{{category}}</span>
+            </div>
+            <div class="article-share">
+              <span class="share-label">Share:</span>
+              <a href="https://twitter.com/intent/tweet?text={{title}}&url=https://www.hemangpandhi.com/articles/{{slug}}.html" target="_blank" class="share-link">🐦 Twitter</a>
+              <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://www.hemangpandhi.com/articles/{{slug}}.html" target="_blank" class="share-link">💼 LinkedIn</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Article Sidebar -->
+        <aside class="article-sidebar" id="articleSidebar">
+          <!-- Table of Contents -->
+          <div class="sidebar-widget toc-widget">
+            <h4>📋 Table of Contents</h4>
+            <nav class="article-toc" id="tableOfContents">
+              <ul>
+                <li><a href="#introduction">Loading...</a></li>
+              </ul>
+            </nav>
+          </div>
+
+          <!-- Author Info -->
+          <div class="sidebar-widget author-widget">
+            <h4>👤 About the Author</h4>
+            <div class="author-card">
+              <img src="../android_logo.PNG" alt="{{author}}" class="author-avatar-small">
+              <div class="author-details">
+                <h5>{{author}}</h5>
+                <p>Android Internals expert with deep knowledge of system architecture and development tools. Specializing in HAL, Framework, and system optimization.</p>
+                <div class="author-stats">
+                  <span class="stat">📚 50+ Articles</span>
+                  <span class="stat">🔧 10+ Years Experience</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Related Articles -->
+          <div class="sidebar-widget related-widget">
+            <h4>🔗 Related Articles</h4>
+            <div class="related-articles">
+              <a href="../adb.html" class="related-article">
+                <h5>ADB (Android Debug Bridge)</h5>
+                <p>Powerful tool for Android development and debugging</p>
+              </a>
+              <a href="../hal.html" class="related-article">
+                <h5>HAL (Hardware Abstraction Layer)</h5>
+                <p>Bridging Android software and device hardware</p>
+              </a>
+              <a href="../framework.html" class="related-article">
+                <h5>Android Framework</h5>
+                <p>The backbone of Android app development</p>
+              </a>
+            </div>
+          </div>
+
+          <!-- Newsletter Signup -->
+          <div class="sidebar-widget newsletter-widget">
+            <h4>📧 Stay Updated</h4>
+            <p>Get the latest Android Internals articles delivered to your inbox.</p>
+            <form class="newsletter-form">
+              <input type="email" placeholder="Enter your email" required>
+              <button type="submit" class="btn btn-primary">Subscribe</button>
+            </form>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <a href="../index.html" class="footer-logo-link">
+            <img src="../android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
+          </a>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="../hal.html">HAL</a></li>
+            <li><a href="../framework.html">Framework</a></li>
+            <li><a href="../adb.html">ADB</a></li>
+            <li><a href="../books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/scripts.js"></script>
+  <script>
+    // Article functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      // Reading mode toggle
+      const toggleReadingMode = document.getElementById('toggleReadingMode');
+      const toggleSidebar = document.getElementById('toggleSidebar');
+      const articleLayout = document.getElementById('articleLayout');
+      const articleSidebar = document.getElementById('articleSidebar');
+      
+      toggleReadingMode.addEventListener('click', function() {
+        articleLayout.classList.toggle('full-screen');
+        const isFullScreen = articleLayout.classList.contains('full-screen');
+        
+        if (isFullScreen) {
+          toggleReadingMode.querySelector('.reading-mode-text').textContent = 'Exit Full Screen';
+          articleSidebar.style.display = 'none';
+        } else {
+          toggleReadingMode.querySelector('.reading-mode-text').textContent = 'Full Screen';
+          articleSidebar.style.display = 'block';
+        }
+      });
+      
+      toggleSidebar.addEventListener('click', function() {
+        const isHidden = articleSidebar.style.display === 'none';
+        articleSidebar.style.display = isHidden ? 'block' : 'none';
+        toggleSidebar.querySelector('.sidebar-text').textContent = isHidden ? 'Hide Sidebar' : 'Show Sidebar';
+      });
+      
+      // Generate Table of Contents
+      function generateTOC() {
+        const headings = document.querySelectorAll('.article-content-wrapper h1, .article-content-wrapper h2, .article-content-wrapper h3');
+        const tocContainer = document.getElementById('tableOfContents');
+        
+        if (headings.length === 0) return;
+        
+        let tocHTML = '<ul>';
+        headings.forEach((heading, index) => {
+          const id = `heading-${index}`;
+          heading.id = id;
+          
+          const level = parseInt(heading.tagName.charAt(1));
+          const indent = level > 2 ? 'style="margin-left: ' + ((level - 2) * 20) + 'px;"' : '';
+          
+          tocHTML += `<li ${indent}><a href="#${id}">${heading.textContent}</a></li>`;
+        });
+        tocHTML += '</ul>';
+        
+        tocContainer.innerHTML = tocHTML;
+      }
+      
+      // Smooth scrolling for TOC links
+      function addSmoothScrolling() {
+        document.querySelectorAll('.article-toc a').forEach(link => {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+              target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }
+          });
+        });
+      }
+      
+      // Copy code functionality
+      function addCopyCodeButtons() {
+        document.querySelectorAll('.code-copy').forEach(button => {
+          button.addEventListener('click', function() {
+            const codeBlock = this.closest('.code-example').querySelector('code');
+            const text = codeBlock.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+              this.textContent = 'Copied!';
+              setTimeout(() => {
+                this.textContent = 'Copy';
+              }, 2000);
+            });
+          });
+        });
+      }
+      
+      // Initialize functionality
+      generateTOC();
+      setTimeout(() => {
+        addSmoothScrolling();
+        addCopyCodeButtons();
+      }, 100);
+    });
+  </script>
+</body>
+</html> 

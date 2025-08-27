@@ -1,0 +1,27 @@
+{
+  "name": "Android Internals",
+  "short_name": "Android Internals",
+  "description": "Comprehensive guide to Android OS architecture and internals",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#3ddc84",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "android_logo.PNG",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "android_logo.PNG",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "developer", "technology"],
+  "lang": "en",
+  "dir": "ltr"
+} 

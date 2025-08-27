@@ -1,0 +1,45 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Create config file
+      run: |
+        cp config.example.js config.js
+        # Replace placeholder values with environment variables
+        sed -i 's/YOUR_EMAILJS_PUBLIC_KEY_HERE/${{ secrets.EMAILJS_PUBLIC_KEY }}/g' config.js
+        sed -i 's/YOUR_EMAILJS_SERVICE_ID_HERE/${{ secrets.EMAILJS_SERVICE_ID }}/g' config.js
+        sed -i 's/YOUR_NEWSLETTER_TEMPLATE_ID_HERE/${{ secrets.EMAILJS_NEWSLETTER_TEMPLATE }}/g' config.js
+        sed -i 's/YOUR_CONTACT_TEMPLATE_ID_HERE/${{ secrets.EMAILJS_CONTACT_TEMPLATE }}/g' config.js
+        sed -i 's|https://your-domain.com|${{ secrets.SITE_DOMAIN }}|g' config.js
+        sed -i 's/noreply@your-domain.com/${{ secrets.NEWSLETTER_FROM_EMAIL }}/g' config.js
+        
+    - name: Build website
+      run: node tools/build.js
+      
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      if: github.ref == 'refs/heads/main'
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./build

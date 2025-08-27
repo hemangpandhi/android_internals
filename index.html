@@ -8,30 +8,45 @@
   <meta name="author" content="Android Internals">
   <meta name="robots" content="index, follow">
   
+      <!-- EmailJS Integration -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript" src="config.js"></script>
+  
+  <!-- Security Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+      <!-- X-Frame-Options should be set via HTTP headers, not meta tags -->
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://yourdomain.com/">
+  <meta property="og:url" content="https://hemangpandhi.com/">
   <meta property="og:title" content="Android Internals - Complete Guide">
   <meta property="og:description" content="Comprehensive guide to Android Internals - HAL, Framework, System Apps, OS Internals, ADB, Performance, and more.">
-  <meta property="og:image" content="https://yourdomain.com/android_svc_logo.svg">
+  <meta property="og:image" content="https://hemangpandhi.com/android_logo.PNG">
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="https://yourdomain.com/">
+  <meta property="twitter:url" content="https://hemangpandhi.com/">
   <meta property="twitter:title" content="Android Internals - Complete Guide">
   <meta property="twitter:description" content="Comprehensive guide to Android Internals - HAL, Framework, System Apps, OS Internals, ADB, Performance, and more.">
-  <meta property="twitter:image" content="https://yourdomain.com/android_svc_logo.svg">
+  <meta property="twitter:image" content="https://hemangpandhi.com/android_logo.PNG">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="android_svc_logo.svg">
-  <link rel="apple-touch-icon" href="android_svc_logo.svg">
+  <link rel="icon" type="image/png" href="android_logo.PNG">
+  <link rel="apple-touch-icon" href="android_logo.PNG">
   
   <!-- Preload critical resources -->
-  <link rel="preload" href="styles.css" as="style">
-  <link rel="preload" href="android_svc_logo.svg" as="image">
+  <link rel="preload" href="assets/css/styles.css" as="style">
+  <link rel="preload" href="android_logo.PNG" as="image">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="assets/manifest.json">
+  <meta name="theme-color" content="#3ddc84">
   
   <!-- Styles -->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="assets/css/styles.css">
   
   <title>Android Internals - Complete Guide to Android OS Architecture</title>
 </head>
@@ -40,7 +55,7 @@
     <nav class="main-nav">
       <div class="nav-container">
         <a href="index.html" class="nav-logo-link">
-          <img src="android_logo.png" alt="Android Internals Logo" class="nav-logo" />
+          <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
         </a>
         <div class="nav-links">
           <a href="#about" class="nav-link">About</a>
@@ -53,13 +68,13 @@
     </nav>
     
     <div class="hero-content">
-        <img src="android_logo.png" alt="Android Internals Logo" class="hero-logo animate-pop" />
+        <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="hero-logo animate-pop" />
       <h1 class="hero-title animate-fadein">Android Internals</h1>
       <p class="hero-subtitle animate-slidein">Uncovering the Hidden Depths of Android</p>
                     <div class="hero-stats animate-fadein">
                 <a href="#blogs" class="stat-link">
                   <div class="stat">
-                    <span class="stat-number">5</span>
+                    <span class="stat-number">7</span>
                     <span class="stat-label">Latest Articles</span>
                   </div>
                 </a>
@@ -91,7 +106,7 @@
       </div>
     </section>
 
-    <!-- Blogs Section - Moved to top for immediate visibility -->
+    <!-- Blogs Section - Main Articles -->
     <section id="blogs" class="blogs-section">
       <div class="container">
         <div class="blogs-layout">
@@ -104,14 +119,14 @@
             <div class="blogs-grid">
               <article class="blog-card">
                 <div class="blog-image">
-                  <div class="blog-placeholder">📱</div>
+                  <div class="blog-placeholder">🔌</div>
                 </div>
                 <div class="blog-content">
-                  <h3>Understanding Android Boot Process</h3>
-                  <p>Deep dive into how Android boots from bootloader to system UI, exploring each step in detail.</p>
+                  <h3><a href="articles/2025-08-24-new-test-article.html">New Test Article - Android System Architecture Deep Dive</a></h3>
+                  <p>A comprehensive exploration of Android system architecture, covering the latest developments in HAL, Framework, and system optimization techniques.</p>
                   <div class="blog-meta">
-                    <span class="blog-date">Coming Soon</span>
-                    <span class="blog-category">System</span>
+                    <span class="blog-date">2025-08-24</span>
+                    <span class="blog-category">System Architecture</span>
                   </div>
                 </div>
               </article>
@@ -120,11 +135,11 @@
                   <div class="blog-placeholder">🔧</div>
                 </div>
                 <div class="blog-content">
-                  <h3>HAL Implementation Guide</h3>
-                  <p>Step-by-step guide to implementing Hardware Abstraction Layer modules for custom hardware.</p>
+                  <h3><a href="articles/2025-08-24-test-newsletter-article.html">Test Newsletter Article - Android System Performance Optimization</a></h3>
+                  <p>A comprehensive guide to optimizing Android system performance through kernel tuning, memory management, and battery optimization techniques.</p>
                   <div class="blog-meta">
-                    <span class="blog-date">Coming Soon</span>
-                    <span class="blog-category">Hardware</span>
+                    <span class="blog-date">2025-08-24</span>
+                    <span class="blog-category">Performance</span>
                   </div>
                 </div>
               </article>
@@ -133,11 +148,50 @@
                   <div class="blog-placeholder">⚡</div>
                 </div>
                 <div class="blog-content">
-                  <h3>Android Performance Optimization</h3>
-                  <p>Advanced techniques for optimizing Android system performance and battery life.</p>
+                  <h3><a href="articles/adb-enclopidia.html">Ultimate Encyclopedia of ADB & Dumpsys Debugging </a></h3>
+                  <p>Master Android Debug Bridge (ADB) with comprehensive commands, installation guides, debugging techniques, and advanced usage patterns for Android development.</p>
                   <div class="blog-meta">
-                    <span class="blog-date">Coming Soon</span>
-                    <span class="blog-category">Performance</span>
+                    <span class="blog-date">2025-08-24</span>
+                    <span class="blog-category">Development Tools</span>
+                  </div>
+                </div>
+              </article>
+              <article class="blog-card">
+                <div class="blog-image">
+                  <div class="blog-placeholder">🔒</div>
+                </div>
+                <div class="blog-content">
+                  <h3><a href="articles/hal-version-comparison.html">Android HAL Version Comparison: Evolution of Hardware Abstraction Layer</a></h3>
+                  <p>Comprehensive comparison of Android HAL versions from 1.0 to 4.0, highlighting key features, compatibility, and architectural improvements.</p>
+                  <div class="blog-meta">
+                    <span class="blog-date">2025-08-23</span>
+                    <span class="blog-category">System Architecture</span>
+                  </div>
+                </div>
+              </article>
+              <article class="blog-card">
+                <div class="blog-image">
+                  <div class="blog-placeholder">🏗️</div>
+                </div>
+                <div class="blog-content">
+                  <h3><a href="articles/markdown-features-demo.html">Complete Markdown Features Demo: All Supported Syntax</a></h3>
+                  <p>Comprehensive demonstration of all markdown features supported by the enhanced parser, including tables, lists, code blocks, and more.</p>
+                  <div class="blog-meta">
+                    <span class="blog-date">2025-08-23</span>
+                    <span class="blog-category">Documentation</span>
+                  </div>
+                </div>
+              </article>
+              <article class="blog-card">
+                <div class="blog-image">
+                  <div class="blog-placeholder">📱</div>
+                </div>
+                <div class="blog-content">
+                  <h3><a href="articles/production-test-article.html">Production Test: Complete Markdown Features Verification</a></h3>
+                  <p>Comprehensive test article to verify all markdown features work correctly for production deployment</p>
+                  <div class="blog-meta">
+                    <span class="blog-date">2025-08-23</span>
+                    <span class="blog-category">Testing</span>
                   </div>
                 </div>
               </article>
@@ -148,56 +202,7 @@
             </div>
           </div>
           
-          <div class="blogs-sidebar">
-            <div class="blogs-summary-box">
-              <h3>Latest Updates</h3>
-              <div class="summary-item">
-                <div class="summary-icon">📱</div>
-                <div class="summary-content">
-                  <h4>Android Boot Process</h4>
-                  <p>Complete guide to Android boot sequence</p>
-                  <span class="summary-status">Coming Soon</span>
-                </div>
-              </div>
-              <div class="summary-item">
-                <div class="summary-icon">🔧</div>
-                <div class="summary-content">
-                  <h4>HAL Implementation</h4>
-                  <p>Step-by-step HAL development guide</p>
-                  <span class="summary-status">Coming Soon</span>
-                </div>
-              </div>
-              <div class="summary-item">
-                <div class="summary-icon">⚡</div>
-                <div class="summary-content">
-                  <h4>Performance Optimization</h4>
-                  <p>System performance tuning techniques</p>
-                  <span class="summary-status">Coming Soon</span>
-                </div>
-              </div>
-              <div class="summary-item">
-                <div class="summary-icon">🔒</div>
-                <div class="summary-content">
-                  <h4>Android Security</h4>
-                  <p>Deep dive into Android security model</p>
-                  <span class="summary-status">Coming Soon</span>
-                </div>
-              </div>
-              <div class="summary-item">
-                <div class="summary-icon">🏗️</div>
-                <div class="summary-content">
-                  <h4>Custom ROM Development</h4>
-                  <p>Building your own Android ROM</p>
-                  <span class="summary-status">Coming Soon</span>
-                </div>
-              </div>
-              <div class="blogs-newsletter">
-                <h4>Stay Updated</h4>
-                <p>Get notified when new articles are published</p>
-                <a href="#newsletter" class="newsletter-btn">Subscribe</a>
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
     </section>
@@ -323,12 +328,49 @@
       </div>
     </section>
 
+    <!-- Newsletter Section -->
+    <section id="newsletter" class="newsletter-section">
+      <div class="container">
+        <div class="newsletter-content">
+          <h2>Stay Updated</h2>
+          <p>Get notified when new articles are published and receive exclusive Android internals insights.</p>
+          <form id="newsletterForm" class="newsletter-form">
+            <input type="email" id="newsletterEmail" placeholder="Enter your email address" required>
+            <button type="submit" id="newsletterSubmitBtn" class="newsletter-submit">Subscribe</button>
+          </form>
+          <p class="newsletter-note">No spam, unsubscribe at any time.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+      <div class="container">
+        <div class="contact-content">
+          <h2>Get in Touch</h2>
+          <p>Have questions about Android internals? Want to collaborate? Let's connect!</p>
+          <form id="contactForm" class="contact-form">
+            <div class="form-group">
+              <input type="text" id="contactName" placeholder="Your Name" required>
+            </div>
+            <div class="form-group">
+              <input type="email" id="contactEmail" placeholder="Your Email" required>
+            </div>
+            <div class="form-group">
+              <textarea id="contactMessage" placeholder="Your Message" rows="5" required></textarea>
+            </div>
+            <button type="submit" id="contactSubmitBtn" class="contact-submit">Send Message</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
     <section class="cta-section">
       <div class="container">
         <div class="cta-content">
           <h2>Ready to Master Android Internals?</h2>
           <p>Start exploring our comprehensive guides and become an Android system expert.</p>
-          <a href="#topics" class="cta-button">Get Started</a>
+          <a href="#topics" class="cta-button" id="getStartedBtn">Get Started</a>
         </div>
       </div>
     </section>
@@ -339,7 +381,7 @@
       <div class="footer-content">
         <div class="footer-section">
                       <a href="index.html" class="footer-logo-link">
-              <img src="android_logo.png" alt="Android Internals Logo" class="footer-logo" />
+                                          <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
             </a>
           <p>Comprehensive guide to Android OS architecture and internals.</p>
         </div>
@@ -367,6 +409,6 @@
     </div>
   </footer>
 
-  <script src="scripts.js"></script>
+  <script src="assets/js/scripts.js"></script>
 </body>
 </html> 

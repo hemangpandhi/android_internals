@@ -1,0 +1,65 @@
+{
+  "articles": [
+    {
+      "title": "Node.js Test Article",
+      "description": "Add a compelling description for this article here.",
+      "author": "Android Internals Team",
+      "date": "2025-08-23",
+      "category": "System Architecture",
+      "tags": "[\"android\", \"internals\", \"development\"]",
+      "image": "",
+      "featured": "false",
+      "slug": "2025-08-23-nodejs-test-article",
+      "filename": "2025-08-23-nodejs-test-article.md"
+    },
+    {
+      "title": "NPM Script Test Article",
+      "description": "Add a compelling description for this article here.",
+      "author": "Android Internals Team",
+      "date": "2025-08-23",
+      "category": "System Architecture",
+      "tags": "[\"android\", \"internals\", \"development\"]",
+      "image": "",
+      "featured": "false",
+      "slug": "2025-08-23-npm-script-test-article",
+      "filename": "2025-08-23-npm-script-test-article.md"
+    },
+    {
+      "title": "Test Article",
+      "description": "Add a compelling description for this article here.",
+      "author": "Android Internals Team",
+      "date": "2025-08-23",
+      "category": "System Architecture",
+      "tags": "[\"android\", \"internals\", \"development\"]",
+      "image": "",
+      "featured": "false",
+      "slug": "2025-08-23-test-article",
+      "filename": "2025-08-23-test-article.md"
+    },
+    {
+      "title": "Your First Article",
+      "description": "Add a compelling description for this article here.",
+      "author": "Android Internals Team",
+      "date": "2025-08-23",
+      "category": "System Architecture",
+      "tags": "[\"android\", \"internals\", \"development\"]",
+      "image": "",
+      "featured": "false",
+      "slug": "2025-08-23-your-first-article",
+      "filename": "2025-08-23-your-first-article.md"
+    },
+    {
+      "title": "Android Boot Process: From Power-On to Home Screen",
+      "description": "Comprehensive guide to Android boot sequence, including kernel loading, system initialization, and app startup processes.",
+      "author": "Android Internals Team",
+      "date": "2024-12-17",
+      "category": "System Architecture",
+      "tags": "[\"boot\", \"kernel\", \"system\", \"initialization\"]",
+      "image": "android-boot-process.jpg",
+      "featured": "true",
+      "slug": "2024-12-17-android-boot-process",
+      "filename": "2024-12-17-android-boot-process.md"
+    }
+  ],
+  "lastUpdated": "2025-08-23T12:54:00.304Z"
+}

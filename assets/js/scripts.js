@@ -334,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
       submitBtn.textContent = 'Subscribing...';
       submitBtn.disabled = true;
       
-      // Send email using EmailJS - simplified template parameters
+      // Send email using EmailJS - template parameters matching EmailJS template
       const templateParams = {
         to_email: 'info@hemangpandhi.com',
         to_name: 'Hemang Pandhi',
@@ -342,13 +342,20 @@ document.addEventListener('DOMContentLoaded', function() {
         from_email: email,
         message: `New newsletter subscription from: ${email}\n\nThis user wants to receive updates when new articles are published.`,
         subject: 'New Newsletter Subscription - Android Internals',
-        reply_to: email
+        reply_to: email,
+        // Additional parameters that EmailJS might expect
+        email: email,
+        name: 'Newsletter Subscriber',
+        recipient_email: 'info@hemangpandhi.com',
+        recipient_name: 'Hemang Pandhi'
       };
       
       // Send notification email to you
       console.log('Sending newsletter EmailJS with template params:', templateParams);
       console.log('Service ID:', window.EMAILJS_CONFIG.serviceId);
       console.log('Template ID:', window.EMAILJS_CONFIG.newsletterTemplate);
+      console.log('To Email:', templateParams.to_email);
+      console.log('From Email:', templateParams.from_email);
       
       if (!window.EMAILJS_CONFIG.serviceId || !window.EMAILJS_CONFIG.newsletterTemplate) {
         console.error('EmailJS configuration missing');
@@ -398,6 +405,9 @@ document.addEventListener('DOMContentLoaded', function() {
             toast.error('Network Error', 'Please check your internet connection and try again.');
           } else if (error.status === 403) {
             toast.error('Access Denied', 'Email service temporarily unavailable. Please try again later.');
+          } else if (error.status === 422) {
+            console.error('EmailJS template parameter error:', error.text);
+            toast.error('Template Error', 'Email template configuration issue. Please contact support.');
           } else {
             toast.error('Subscription Failed', 'Please try again later or contact us for assistance.');
           }

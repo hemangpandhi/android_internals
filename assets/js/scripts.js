@@ -5,6 +5,37 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('=== ANDROID INTERNALS WEBSITE LOADED ===');
   console.log('JavaScript is running successfully!');
   
+  // ===== MOBILE MENU FUNCTIONALITY =====
+  const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+  const navLinks = document.getElementById('navLinks');
+  
+  if (mobileMenuToggle && navLinks) {
+    mobileMenuToggle.addEventListener('click', function() {
+      mobileMenuToggle.classList.toggle('active');
+      navLinks.classList.toggle('active');
+      document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : '';
+    });
+    
+    // Close menu when clicking on a link
+    const mobileNavLinks = navLinks.querySelectorAll('.nav-link');
+    mobileNavLinks.forEach(link => {
+      link.addEventListener('click', function() {
+        mobileMenuToggle.classList.remove('active');
+        navLinks.classList.remove('active');
+        document.body.style.overflow = '';
+      });
+    });
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!mobileMenuToggle.contains(e.target) && !navLinks.contains(e.target)) {
+        mobileMenuToggle.classList.remove('active');
+        navLinks.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+  }
+
   // ===== NAVIGATION ENHANCEMENTS =====
   const nav = document.querySelector('.main-nav');
   const navLinks = document.querySelectorAll('.nav-link');

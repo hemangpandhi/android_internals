@@ -34,16 +34,16 @@ jobs:
     - name: Install dependencies
       run: npm install
       
-    # - name: Create config file
-    #   run: |
-    #     cp config.example.js config.js
-    #     # Replace placeholder values with environment variables, using defaults if secrets are missing
-    #     sed -i 's/YOUR_EMAILJS_PUBLIC_KEY_HERE/${{ secrets.EMAILJS_PUBLIC_KEY || "default_key" }}/g' config.js
-    #     sed -i 's/YOUR_EMAILJS_SERVICE_ID_HERE/${{ secrets.EMAILJS_SERVICE_ID || "default_service" }}/g' config.js
-    #     sed -i 's/YOUR_NEWSLETTER_TEMPLATE_ID_HERE/${{ secrets.EMAILJS_NEWSLETTER_TEMPLATE || "default_newsletter" }}/g' config.js
-    #     sed -i 's/YOUR_CONTACT_TEMPLATE_ID_HERE/${{ secrets.EMAILJS_CONTACT_TEMPLATE || "default_contact" }}/g' config.js
-    #     sed -i 's|https://your-domain.com|${{ secrets.SITE_DOMAIN || "https://www.hemangpandhi.com" }}|g' config.js
-    #     sed -i 's/noreply@your-domain.com/${{ secrets.NEWSLETTER_FROM_EMAIL || "noreply@hemangpandhi.com" }}/g' config.js
+    - name: Create config file
+      run: |
+        cp config.example.js config.js
+        # Replace placeholder values with GitHub Secrets
+        sed -i "s/YOUR_EMAILJS_PUBLIC_KEY_HERE/${{ secrets.EMAILJS_PUBLIC_KEY }}/g" config.js
+        sed -i "s/YOUR_EMAILJS_SERVICE_ID_HERE/${{ secrets.EMAILJS_SERVICE_ID }}/g" config.js
+        sed -i "s/YOUR_NEWSLETTER_TEMPLATE_ID_HERE/${{ secrets.EMAILJS_NEWSLETTER_TEMPLATE }}/g" config.js
+        sed -i "s/YOUR_CONTACT_TEMPLATE_ID_HERE/${{ secrets.EMAILJS_CONTACT_TEMPLATE }}/g" config.js
+        sed -i "s|https://your-domain.com|${{ secrets.SITE_DOMAIN }}/g" config.js
+        sed -i "s/noreply@your-domain.com/${{ secrets.NEWSLETTER_FROM_EMAIL }}/g" config.js
         
     - name: Build website
       run: node tools/build.js

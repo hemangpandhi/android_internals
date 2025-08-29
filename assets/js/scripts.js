@@ -7,30 +7,30 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // ===== MOBILE MENU FUNCTIONALITY =====
   const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-  const navLinks = document.getElementById('navLinks');
+  const mobileNavLinks = document.getElementById('navLinks');
   
-  if (mobileMenuToggle && navLinks) {
+  if (mobileMenuToggle && mobileNavLinks) {
     mobileMenuToggle.addEventListener('click', function() {
       mobileMenuToggle.classList.toggle('active');
-      navLinks.classList.toggle('active');
-      document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : '';
+      mobileNavLinks.classList.toggle('active');
+      document.body.style.overflow = mobileNavLinks.classList.contains('active') ? 'hidden' : '';
     });
     
     // Close menu when clicking on a link
-    const mobileNavLinks = navLinks.querySelectorAll('.nav-link');
-    mobileNavLinks.forEach(link => {
+    const mobileNavLinkElements = mobileNavLinks.querySelectorAll('.nav-link');
+    mobileNavLinkElements.forEach(link => {
       link.addEventListener('click', function() {
         mobileMenuToggle.classList.remove('active');
-        navLinks.classList.remove('active');
+        mobileNavLinks.classList.remove('active');
         document.body.style.overflow = '';
       });
     });
     
     // Close menu when clicking outside
     document.addEventListener('click', function(e) {
-      if (!mobileMenuToggle.contains(e.target) && !navLinks.contains(e.target)) {
+      if (!mobileMenuToggle.contains(e.target) && !mobileNavLinks.contains(e.target)) {
         mobileMenuToggle.classList.remove('active');
-        navLinks.classList.remove('active');
+        mobileNavLinks.classList.remove('active');
         document.body.style.overflow = '';
       }
     });
@@ -286,8 +286,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const newsletterForm = document.getElementById('newsletterForm');
   console.log('Newsletter form found:', newsletterForm);
   if (newsletterForm) {
+    console.log('Adding submit event listener to newsletter form');
     newsletterForm.addEventListener('submit', function(e) {
+      console.log('=== NEWSLETTER FORM SUBMIT EVENT TRIGGERED ===');
       e.preventDefault();
+      console.log('Newsletter form submitted!');
       const email = document.getElementById('newsletterEmail').value;
       
       // Validate email
@@ -322,33 +325,33 @@ document.addEventListener('DOMContentLoaded', function() {
         recipient: 'info@hemangpandhi.com'
       };
       
-      // First, send notification email to you
+      // Send notification email to you
       console.log('Sending newsletter EmailJS with template params:', templateParams);
       emailjs.send(window.EMAILJS_CONFIG.serviceId, window.EMAILJS_CONFIG.newsletterTemplate, templateParams)
         .then(function(response) {
           console.log('Newsletter subscription email sent:', response);
           
-          // Then add subscriber to the newsletter list
-          fetch('http://localhost:3001/api/subscribe', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email: email })
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              toast.success('Subscription Successful!', 'You\'ll receive updates when new articles are published.');
-              newsletterForm.reset();
-            } else {
-              toast.error('Subscription Failed', 'Please try again or contact us for assistance.');
-            }
-          })
-          .catch(error => {
-            console.error('Error adding subscriber:', error);
-            toast.error('Subscription Failed', 'Please try again or contact us for assistance.');
-          });
+          // Success - EmailJS worked, so subscription is successful
+          toast.success('Subscription Successful!', 'You\'ll receive updates when new articles are published.');
+          newsletterForm.reset();
+          
+          // Try to add to local API if available (for development)
+          if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            fetch('http://localhost:3001/api/subscribe', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ email: email })
+            })
+            .then(response => response.json())
+            .then(data => {
+              console.log('Local API response:', data);
+            })
+            .catch(error => {
+              console.log('Local API not available (expected on production)');
+            });
+          }
         })
         .catch(function(error) {
           console.error('Newsletter subscription email failed:', error);

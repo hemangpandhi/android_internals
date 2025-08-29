@@ -295,6 +295,21 @@ document.addEventListener('DOMContentLoaded', function() {
             toast.success('Forms Ready', 'Contact and newsletter forms are now functional!');
   }, 2000);
   
+  // Add test function to global scope for debugging
+  window.testEmailJS = function() {
+    console.log('Testing EmailJS configuration...');
+    console.log('EmailJS available:', typeof emailjs !== 'undefined');
+    console.log('EmailJS config:', window.EMAILJS_CONFIG);
+    
+    if (typeof emailjs !== 'undefined' && window.EMAILJS_CONFIG) {
+      console.log('EmailJS is properly configured');
+      return true;
+    } else {
+      console.error('EmailJS is not properly configured');
+      return false;
+    }
+  };
+  
   // Newsletter Form
   const newsletterForm = document.getElementById('newsletterForm');
   console.log('Newsletter form found:', newsletterForm);
@@ -375,8 +390,14 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(function(error) {
           console.error('Newsletter subscription email failed:', error);
+          console.error('Error details:', error);
+          
           if (error.message === 'EmailJS timeout') {
             toast.error('Subscription Timeout', 'The request took too long. Please try again later.');
+          } else if (error.status === 0) {
+            toast.error('Network Error', 'Please check your internet connection and try again.');
+          } else if (error.status === 403) {
+            toast.error('Access Denied', 'Email service temporarily unavailable. Please try again later.');
           } else {
             toast.error('Subscription Failed', 'Please try again later or contact us for assistance.');
           }

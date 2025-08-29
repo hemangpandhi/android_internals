@@ -272,8 +272,21 @@ document.addEventListener('DOMContentLoaded', function() {
   
   console.log('Setting up form functionality...');
   console.log('EmailJS available:', typeof emailjs !== 'undefined');
+  console.log('EmailJS config available:', typeof window.EMAILJS_CONFIG !== 'undefined');
+  
   if (typeof emailjs !== 'undefined') {
     console.log('EmailJS object:', emailjs);
+    console.log('EmailJS config:', window.EMAILJS_CONFIG);
+    
+    // Ensure EmailJS is initialized
+    if (window.EMAILJS_CONFIG && window.EMAILJS_CONFIG.publicKey) {
+      emailjs.init(window.EMAILJS_CONFIG.publicKey);
+      console.log('EmailJS initialized with key:', window.EMAILJS_CONFIG.publicKey);
+    } else {
+      console.error('EmailJS config missing or invalid');
+    }
+  } else {
+    console.error('EmailJS library not loaded');
   }
   
   // Test notification system
@@ -306,28 +319,35 @@ document.addEventListener('DOMContentLoaded', function() {
       submitBtn.textContent = 'Subscribing...';
       submitBtn.disabled = true;
       
-      // Send email using EmailJS - matching your template exactly
+      // Send email using EmailJS - simplified template parameters
       const templateParams = {
+        to_email: 'info@hemangpandhi.com',
+        to_name: 'Hemang Pandhi',
         from_name: 'Newsletter Subscriber',
         from_email: email,
         message: `New newsletter subscription from: ${email}\n\nThis user wants to receive updates when new articles are published.`,
-        // Add recipient email for EmailJS to send to
-        to_email: 'info@hemangpandhi.com',
-        to_name: 'Hemang Pandhi',
         subject: 'New Newsletter Subscription - Android Internals',
-        reply_to: email,
-        // Alternative parameter names that EmailJS might expect for Outlook
-        email: 'info@hemangpandhi.com',
-        name: 'Hemang Pandhi',
-        recipient_email: 'info@hemangpandhi.com',
-        recipient_name: 'Hemang Pandhi',
-        to: 'info@hemangpandhi.com',
-        recipient: 'info@hemangpandhi.com'
+        reply_to: email
       };
       
       // Send notification email to you
       console.log('Sending newsletter EmailJS with template params:', templateParams);
-      emailjs.send(window.EMAILJS_CONFIG.serviceId, window.EMAILJS_CONFIG.newsletterTemplate, templateParams)
+      console.log('Service ID:', window.EMAILJS_CONFIG.serviceId);
+      console.log('Template ID:', window.EMAILJS_CONFIG.newsletterTemplate);
+      
+      if (!window.EMAILJS_CONFIG.serviceId || !window.EMAILJS_CONFIG.newsletterTemplate) {
+        console.error('EmailJS configuration missing');
+        toast.error('Configuration Error', 'Email service not properly configured. Please try again later.');
+        return;
+      }
+      
+      // Create a promise with timeout
+      const emailPromise = emailjs.send(window.EMAILJS_CONFIG.serviceId, window.EMAILJS_CONFIG.newsletterTemplate, templateParams);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('EmailJS timeout')), 10000)
+      );
+      
+      Promise.race([emailPromise, timeoutPromise])
         .then(function(response) {
           console.log('Newsletter subscription email sent:', response);
           
@@ -355,7 +375,11 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(function(error) {
           console.error('Newsletter subscription email failed:', error);
-          toast.error('Subscription Failed', 'Please try again later or contact us for assistance.');
+          if (error.message === 'EmailJS timeout') {
+            toast.error('Subscription Timeout', 'The request took too long. Please try again later.');
+          } else {
+            toast.error('Subscription Failed', 'Please try again later or contact us for assistance.');
+          }
         })
         .finally(function() {
           // Reset button state

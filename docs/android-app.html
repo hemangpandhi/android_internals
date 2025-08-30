@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Android App - Android Internals</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="icon" href="assets/images/android_logo.PNG" type="image/png">
+  <link rel="manifest" href="assets/manifest.json">
+  <meta name="theme-color" content="#3ddc84">
+</head>
+<body>
+  <header class="hero">
+    <nav class="main-nav">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo-link">
+          <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+        </a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="index.html#topics" class="nav-link">Topics</a>
+          <a href="index.html#blogs" class="nav-link">Blogs</a>
+          <a href="index.html#about" class="nav-link">About</a>
+          <a href="books.html" class="nav-link">Books</a>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="hero-content">
+      <h1 class="hero-title animate-fadein">Android App</h1>
+      <p class="hero-subtitle animate-slidein">Building blocks of the Android ecosystem</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="content-section">
+      <div class="container">
+        <div class="content-card">
+          <h2>App Structure</h2>
+          <p>An Android app is a package (APK) containing code, resources, and a manifest. It consists of components that interact with the system and users.</p>
+          
+          <h2>Core Components</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>Activities</h3>
+              <p>UI screens for user interaction and navigation between different parts of the app.</p>
+            </div>
+            <div class="module-card">
+              <h3>Services</h3>
+              <p>Background tasks without UI that can run independently of activities.</p>
+            </div>
+            <div class="module-card">
+              <h3>Broadcast Receivers</h3>
+              <p>Respond to system-wide events and notifications from other apps.</p>
+            </div>
+            <div class="module-card">
+              <h3>Content Providers</h3>
+              <p>Manage shared app data and provide data access to other applications.</p>
+            </div>
+          </div>
+          
+          <h2>App Lifecycle</h2>
+          <p>Android manages app components' lifecycles, ensuring efficient resource use and smooth user experience. Developers must handle state transitions and resource cleanup.</p>
+          
+          <div class="architecture-stack">
+            <div class="stack-item">Created</div>
+            <div class="stack-item">Started</div>
+            <div class="stack-item">Resumed</div>
+            <div class="stack-item highlight">Running</div>
+            <div class="stack-item">Paused</div>
+            <div class="stack-item">Stopped</div>
+            <div class="stack-item">Destroyed</div>
+          </div>
+          
+          <h2>Interaction with OS</h2>
+          <ul>
+            <li>Apps communicate with the OS via the Framework and system services.</li>
+            <li>Permissions control access to sensitive features and device resources.</li>
+            <li>Apps can interact with each other using Intents and Content Providers.</li>
+            <li>Background processing is managed through Services and WorkManager.</li>
+          </ul>
+          
+          <div class="cta-content">
+            <h3>Learn More</h3>
+            <p>Explore the official Android app development documentation for comprehensive guides.</p>
+            <a href="https://developer.android.com/guide/components/fundamentals" target="_blank" class="cta-button">Android App Fundamentals</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <a href="index.html" class="footer-logo-link">
+            <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
+          </a>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="hal.html">HAL</a></li>
+            <li><a href="framework.html">Framework</a></li>
+            <li><a href="adb.html">ADB</a></li>
+            <li><a href="books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/scripts.js"></script>
+</body>
+</html> 

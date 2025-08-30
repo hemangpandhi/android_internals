@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System App - Android Internals</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="icon" href="assets/images/android_logo.PNG" type="image/png">
+  <link rel="manifest" href="assets/manifest.json">
+  <meta name="theme-color" content="#3ddc84">
+</head>
+<body>
+  <header class="hero">
+    <nav class="main-nav">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo-link">
+          <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+        </a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="index.html#topics" class="nav-link">Topics</a>
+          <a href="index.html#blogs" class="nav-link">Blogs</a>
+          <a href="index.html#about" class="nav-link">About</a>
+          <a href="books.html" class="nav-link">Books</a>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="hero-content">
+      <h1 class="hero-title animate-fadein">System App</h1>
+      <p class="hero-subtitle animate-slidein">Core apps with elevated privileges</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="content-section">
+      <div class="container">
+        <div class="content-card">
+          <h2>What are System Apps?</h2>
+          <p>System apps are pre-installed applications that reside in the system partition of an Android device. They have elevated privileges and are essential for core device functionality.</p>
+          
+          <h2>Privileges of System Apps</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>Protected APIs</h3>
+              <p>Access to system-level APIs not available to regular user apps.</p>
+            </div>
+            <div class="module-card">
+              <h3>Persistence</h3>
+              <p>Cannot be uninstalled by regular users, ensuring core functionality.</p>
+            </div>
+            <div class="module-card">
+              <h3>Special Permissions</h3>
+              <p>Can request permissions not available to user-installed applications.</p>
+            </div>
+            <div class="module-card">
+              <h3>System Integration</h3>
+              <p>Deep integration with Android system services and components.</p>
+            </div>
+          </div>
+          
+          <h2>Differences from User Apps</h2>
+          <div class="architecture-stack">
+            <div class="stack-item">User Apps</div>
+            <div class="stack-item">- Installed in data partition</div>
+            <div class="stack-item">- Can be removed by users</div>
+            <div class="stack-item">- Limited system access</div>
+            <div class="stack-item highlight">System Apps</div>
+            <div class="stack-item">- Installed in system partition</div>
+            <div class="stack-item">- Cannot be uninstalled</div>
+            <div class="stack-item">- Elevated privileges</div>
+          </div>
+          
+          <h2>Common System Apps</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>Settings</h3>
+              <p>System configuration and device management interface.</p>
+            </div>
+            <div class="module-card">
+              <h3>Phone</h3>
+              <p>Telephony and call management functionality.</p>
+            </div>
+            <div class="module-card">
+              <h3>System UI</h3>
+              <p>Status bar, navigation bar, and system interface elements.</p>
+            </div>
+            <div class="module-card">
+              <h3>Package Installer</h3>
+              <p>Manages app installation and updates from various sources.</p>
+            </div>
+            <div class="module-card">
+              <h3>Launcher</h3>
+              <p>Home screen and app drawer management.</p>
+            </div>
+            <div class="module-card">
+              <h3>System Services</h3>
+              <p>Core system services like PackageManager, ActivityManager.</p>
+            </div>
+          </div>
+          
+          <div class="cta-content">
+            <h3>Learn More</h3>
+            <p>Explore the official Android documentation for system app development and management.</p>
+            <a href="https://source.android.com/docs/core/architecture/overview#system-apps" target="_blank" class="cta-button">Android System Apps</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <a href="index.html" class="footer-logo-link">
+            <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
+          </a>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="hal.html">HAL</a></li>
+            <li><a href="framework.html">Framework</a></li>
+            <li><a href="adb.html">ADB</a></li>
+            <li><a href="books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/scripts.js"></script>
+</body>
+</html> 

@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Ultimate Encyclopedia of ADB, Dumpsys & Android Internals - Android Internals</title>
+  <meta name="description" content="Master Android Debug Bridge (ADB) with a complete guide covering everything from basic commands to expert-level, time-saving techniques for AOSP and native debugging.">
+  <meta name="keywords" content="Android, Internals, Development Tools, development, programming">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="icon" href="../assets/images/android_logo.PNG" type="image/png">
+  <link rel="manifest" href="../assets/manifest.json">
+  <meta name="theme-color" content="#3ddc84">
+  
+  <!-- Security Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+      <!-- X-Frame-Options should be set via HTTP headers, not meta tags -->
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="The Ultimate Encyclopedia of ADB, Dumpsys & Android Internals">
+  <meta property="og:description" content="Master Android Debug Bridge (ADB) with a complete guide covering everything from basic commands to expert-level, time-saving techniques for AOSP and native debugging.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.hemangpandhi.com/articles/adb-enclopidia.html">
+  <meta property="og:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The Ultimate Encyclopedia of ADB, Dumpsys & Android Internals">
+  <meta name="twitter:description" content="Master Android Debug Bridge (ADB) with a complete guide covering everything from basic commands to expert-level, time-saving techniques for AOSP and native debugging.">
+  <meta name="twitter:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="main-nav">
+    <div class="nav-container">
+      <a href="../index.html" class="nav-logo-link">
+        <img src="../assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="../index.html" class="nav-link">Home</a>
+        <a href="../index.html#topics" class="nav-link">Topics</a>
+        <a href="../index.html#blogs" class="nav-link">Blogs</a>
+        <a href="../index.html#about" class="nav-link">About</a>
+        <a href="../books.html" class="nav-link">Books</a>
+      </div>
+      <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle mobile menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Article Header -->
+  <header class="article-header">
+    <div class="container">
+      <div class="article-hero">
+        <div class="article-meta">
+          <span class="article-category">Development Tools</span>
+          <span class="article-date">2025-08-28</span>
+          <span class="article-read-time">5 min read</span>
+        </div>
+        <h1 class="article-title">The Ultimate Encyclopedia of ADB, Dumpsys & Android Internals</h1>
+        <p class="article-subtitle">Master Android Debug Bridge (ADB) with a complete guide covering everything from basic commands to expert-level, time-saving techniques for AOSP and native debugging.</p>
+        <div class="article-author">
+          <img src="../assets/images/android_logo.PNG" alt="Author" class="author-avatar">
+          <div class="author-info">
+            <span class="author-name">Android Internals Team</span>
+            <span class="author-title">Android Internals Expert</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="article-content">
+    <!-- Reading Mode Toggle -->
+    <div class="reading-mode-controls">
+      <button id="toggleReadingMode" class="reading-mode-btn">
+        <span class="reading-mode-icon">📖</span>
+        <span class="reading-mode-text">Full Screen</span>
+      </button>
+      <button id="toggleSidebar" class="sidebar-toggle-btn">
+        <span class="sidebar-icon">📋</span>
+        <span class="sidebar-text">Sidebar</span>
+      </button>
+    </div>
+
+    <div class="container">
+      <div class="article-layout" id="articleLayout">
+        <!-- Article Body -->
+        <article class="article-body" id="articleBody">
+          <div class="article-intro">
+            <p class="lead-text">Master Android Debug Bridge (ADB) with a complete guide covering everything from basic commands to expert-level, time-saving techniques for AOSP and native debugging.</p>
+          </div>
+          
+          <div class="article-content-wrapper">
+            <h1>The Ultimate Encyclopedia of ADB, Dumpsys & Android Internals</h1>
+
+<section class="article-section"><h2>📘 Introduction</h2>
+
+<p class="article-paragraph">The <strong>Android Debug Bridge (ADB)</strong> is the single most critical tool for anyone working seriously with the Android platform. It's the command-line interface that provides a direct line into the heart of the Android system, allowing for unparalleled control and introspection.</p>
+
+<p class="article-paragraph">This encyclopedia is the definitive guide, merging <strong>all important ADB commands</strong> with <strong>system-level <code class="inline-code">dumpsys</code> and service commands</strong>. It's designed to be a one-stop reference, packed with:</p>
+<p class="article-paragraph">✔ Real AOSP package names for practical, ready-to-use examples</p>
+<p class="article-paragraph">✔ Sample commands and outputs</p>
+<p class="article-paragraph">✔ Clear interpretation of what the data means</p>
+<p class="article-paragraph">✔ Expert-level "magical" commands that save hours of debugging time</p>
+<p class="article-paragraph">✔ Specific sections for Android Automotive, native debugging, and performance analysis</p>
+
+<p class="article-paragraph">Whether you're debugging your first app or diagnosing a deep kernel-level performance issue, this guide has you covered.</p>
+
+<hr class="article-divider">
+
+</section><section class="article-section"><h2>📋 Index</h2>
+
+
+<ol class="article-list"><li class="list-item"><a href="#-fundamentals--server-management" class="article-link" target="_blank" rel="noopener noreferrer">Fundamentals &amp; Server Management</a></li><li class="list-item"><a href="#-device-management--info" class="article-link" target="_blank" rel="noopener noreferrer">Device Management &amp; Info</a></li><li class="list-item"><a href="#-app--file-management" class="article-link" target="_blank" rel="noopener noreferrer">App &amp; File Management</a></li><li class="list-item"><a href="#-logging--bug-reporting" class="article-link" target="_blank" rel="noopener noreferrer">Logging &amp; Bug Reporting</a></li><li class="list-item"><a href="#-key-debugging-techniques" class="article-link" target="_blank" rel="noopener noreferrer">Key Debugging Techniques</a></li><li class="list-item"><a href="#-expert-level-magical-commands" class="article-link" target="_blank" rel="noopener noreferrer">Expert-Level &quot;Magical&quot; Commands</a></li><li class="list-item"><a href="#-advanced-internals--native-debugging" class="article-link" target="_blank" rel="noopener noreferrer">Advanced Internals &amp; Native Debugging</a></li><li class="list-item"><a href="#-runtime-properties--selinux" class="article-link" target="_blank" rel="noopener noreferrer">Runtime Properties &amp; SELinux</a></li><li class="list-item"><a href="#-android-automotive-commands" class="article-link" target="_blank" rel="noopener noreferrer">Android Automotive Commands</a></li><li class="list-item"><a href="#-dumpsys-encyclopedia" class="article-link" target="_blank" rel="noopener noreferrer">Dumpsys Encyclopedia</a></li><li class="list-item"><a href="#-automation--ui" class="article-link" target="_blank" rel="noopener noreferrer">Automation &amp; UI</a></li><li class="list-item"><a href="#-advanced-commands-backup-sideload--fastboot" class="article-link" target="_blank" rel="noopener noreferrer">Advanced Commands: Backup, Sideload &amp; Fastboot</a></li><li class="list-item"><a href="#-debugging-scenarios" class="article-link" target="_blank" rel="noopener noreferrer">Debugging Scenarios</a></li><li class="list-item"><a href="#-references" class="article-link" target="_blank" rel="noopener noreferrer">References</a></li><li class="list-item"><a href="#-conclusion" class="article-link" target="_blank" rel="noopener noreferrer">Conclusion</a></li></ol>
+<hr class="article-divider">
+
+</section><section class="article-section"><h2>⚙️ Fundamentals & Server Management</h2>
+
+<p class="article-paragraph">Manage the ADB daemon itself and establish device connections.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Stop the ADB server process</span>
+adb kill-server
+
+<span class="comment"># Ensure the ADB server process is running</span>
+adb start-server
+
+<span class="comment"># List all connected devices and their state (device, offline, unauthorized)</span>
+adb devices
+
+<span class="comment"># Start a remote shell on the target device</span>
+adb shell
+
+<span class="comment"># Reconnect to a device whose connection may be stale, without a full server restart</span>
+adb reconnect device</code></pre>
+        </div>
+
+<p class="article-paragraph"><strong>Modern Wireless Debugging (Android 11+):</strong></p>
+<p class="article-paragraph">Instead of <code class="inline-code">adb tcpip</code>, modern Android offers a simpler flow in Developer Options > Wireless debugging. You can pair using a QR code or a pairing code with the <code class="inline-code">adb pair &lt;ip&lt;em&gt;address&amp;gt;:&amp;lt;port&amp;gt;</code> command shown on the device screen. Once paired, you connect using <code class="inline-code">adb connect &amp;lt;ip&lt;/em&gt;address&gt;:&lt;port&gt;</code>.</p>
+
+<hr class="article-divider">
+
+</section><section class="article-section"><h2>📱 Device Management & Info</h2>
+
+<p class="article-paragraph">Commands for controlling the device's state, power, and retrieving key information.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Reboot the device</span>
+adb reboot
+
+<span class="comment"># Reboot into recovery mode</span>
+adb reboot recovery
+
+<span class="comment"># Reboot into the bootloader (fastboot mode)</span>
+adb reboot bootloader
+
+<span class="comment"># Restart adb with root permissions on the device (for debug builds)</span>
+adb root
+
+<span class="comment"># Get a specific system property&#x27;s value (e.g., Android version)</span>
+adb shell getprop ro.build.version.release</code></pre>
+        </div>
+
+<hr class="article-divider">
+
+</section><section class="article-section"><h2>📦 App & File Management</h2>
+
+<p class="article-paragraph">Manage applications (install, uninstall, permissions) and transfer files.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Install an APK. The &#x27;-r&#x27; flag allows re-installing an existing app, keeping its data.</span>
+adb install -r YourApp.apk
+
+<span class="comment"># Grant all runtime permissions on install (useful for testing)</span>
+adb install -g YourApp.apk
+
+<span class="comment"># Uninstall an app. This will fail for core system apps on production builds.</span>
+adb uninstall com.android.calculator2
+
+<span class="comment"># Clear all data associated with the Settings app</span>
+adb shell pm clear com.android.settings
+
+<span class="comment"># Grant the CAMERA permission to the Android Camera app</span>
+adb shell pm grant com.android.camera2 android.permission.CAMERA
+
+<span class="comment"># Get the path to the installed APK file for the Settings app</span>
+adb shell pm path com.android.settings
+
+<span class="comment"># Copy a file from the device to your computer</span>
+adb pull /sdcard/bugreport.zip ./
+
+<span class="comment"># Copy a file from your computer to the device</span>
+adb push ./local_file.txt /sdcard/</code></pre>
+        </div>
+
+<hr class="article-divider">
+
+</section><section class="article-section"><h2>🗂️ Logging & Bug Reporting</h2>
+
+<p class="article-paragraph">Capturing logs and system state is crucial for debugging.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># View the device logcat stream. *:E filters for Error level messages only.</span>
+adb logcat *:E
+
+<span class="comment"># Clear all existing logs from the buffer</span>
+adb logcat -c
+
+<span class="comment"># Write logcat output to a file and exit</span>
+adb logcat -d &gt; device_logs.txt
+
+<span class="comment"># Capture a complete bugreport, which includes dumpsys, logs, and other diagnostics</span>
+adb bugreport ./bugreport.zip
+
+<span class="comment"># Take a screenshot and save it on the device</span>
+adb shell screencap /sdcard/screenshot.png</code></pre>
+        </div>
+
+<hr class="article-divider">
+
+</section><section class="article-section"><h2>💡 Key Debugging Techniques</h2>
+
+<p class="article-paragraph">This section covers critical ADB features for network, settings, and performance diagnostics that are essential for modern development.</p>
+
+<h3>🌐 Network Port Forwarding (<code class="inline-code">forward</code> & <code class="inline-code">reverse</code>)</h3>
+
+<p class="article-paragraph">Bridge the network connection between the Android device and your development machine.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Forward: Access a port on the device from your computer&#x27;s localhost.</span>
+<span class="comment"># Example: Access a web server on the device at port 8080 via your computer&#x27;s localhost:9090</span>
+adb forward tcp:9090 tcp:8080
+
+<span class="comment"># Reverse: Allow the device to access a port on your computer&#x27;s localhost.</span>
+<span class="comment"># Example: Let your app connect to a backend server on your computer at localhost:3000</span>
+adb reverse tcp:8000 tcp:3000</code></pre>
+        </div>
+
+<p class="article-paragraph"><strong>Use Case for forward:</strong> Debugging an app's web view or local server directly from your desktop browser.</p>
+
+<p class="article-paragraph"><strong>Use Case for reverse:</strong> Developing an app that communicates with a backend server that you are running locally on your development machine.</p>
+
+<h3>⚙️ Interacting with the Settings Provider (<code class="inline-code">settings</code>)</h3>
+
+<p class="article-paragraph">Directly query, modify, or delete system settings. This is incredibly useful for test automation and debugging.</p>
+
+<p class="article-paragraph"><strong>Namespaces:</strong> <code class="inline-code">system</code>, <code class="inline-code">secure</code>, <code class="inline-code">global</code></p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># List all settings in a specific namespace</span>
+adb shell settings list secure
+
+<span class="comment"># Get the value of a specific setting</span>
+adb shell settings get system screen_brightness
+
+<span class="comment"># Put (write or create) a value for a setting</span>
+<span class="comment"># Example: Enable <span class="string">&quot;Stay awake while charging&quot;</span></span>
+adb shell settings put global stay_on_while_plugged_in 3</code></pre>
+        </div>
+
+<h3>😴 Simulating System States (Doze & App Standby)</h3>
+
+<p class="article-paragraph">Force the device into power-saving modes to test how your app behaves. Requires root access.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># --- Simulating Doze Mode ---</span>
+<span class="comment"># Put the device into an idle (Doze) state</span>
+adb shell dumpsys deviceidle force-idle
+
+<span class="comment"># Take the device out of idle mode</span>
+adb shell dumpsys deviceidle step
+
+<span class="comment"># --- Simulating App Standby ---</span>
+<span class="comment"># Put a specific app into standby mode</span>
+adb shell dumpsys battery unplug
+adb shell am set-inactive com.example.myapp true
+
+<span class="comment"># Take an app out of standby mode</span>
+adb shell am set-inactive com.example.myapp false</code></pre>
+        </div>
+
+<h3>🔍 Process & Memory Analysis</h3>
+
+<p class="article-paragraph">Monitor and analyze running processes and memory usage.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Get a list of running processes</span>
+adb shell ps
+
+<span class="comment"># Get detailed memory information for a specific process</span>
+adb shell dumpsys meminfo com.android.settings
+
+<span class="comment"># Get CPU usage statistics</span>
+adb shell top -m 10
+
+<span class="comment"># Get battery statistics</span>
+adb shell dumpsys batterystats</code></pre>
+        </div>
+
+<hr class="article-divider">
+
+</section><section class="article-section"><h2>🎯 Expert-Level "Magical" Commands</h2>
+
+<p class="article-paragraph">These advanced commands can save hours of debugging time and provide deep system insights.</p>
+
+<h3>🔗 Direct Binder Service Calls (<code class="inline-code">service call</code>)</h3>
+
+<p class="article-paragraph">Make direct calls to Android system services through the Binder interface.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Call the ActivityManager service to get the current top activity</span>
+adb shell service call activity 51
+
+<span class="comment"># Call the PackageManager service to get package info</span>
+adb shell service call package 1 s16 com.android.settings</code></pre>
+        </div>
+
+<h3>📊 System-Wide Performance Tracing (<code class="inline-code">perfetto</code>)</h3>
+
+<p class="article-paragraph">Capture detailed performance traces for analysis.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Start a trace with default configuration</span>
+adb shell perfetto --txt -c /data/misc/perfetto-configs/trace_config.pbtxt -o /data/misc/perfetto-traces/trace.pftrace
+
+<span class="comment"># Pull the trace file to your computer</span>
+adb pull /data/misc/perfetto-traces/trace.pftrace ./</code></pre>
+        </div>
+
+<h3>🎮 Low-Level Input Injection (<code class="inline-code">sendevent</code>)</h3>
+
+<p class="article-paragraph">Send low-level input events directly to the device.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Send a tap event at coordinates (500, 1000)</span>
+adb shell sendevent /dev/input/event2 3 57 0
+adb shell sendevent /dev/input/event2 1 330 1
+adb shell sendevent /dev/input/event2 3 53 500
+adb shell sendevent /dev/input/event2 3 54 1000
+adb shell sendevent /dev/input/event2 0 0 0
+adb shell sendevent /dev/input/event2 3 57 4294967295
+adb shell sendevent /dev/input/event2 1 330 0
+adb shell sendevent /dev/input/event2 0 0 0</code></pre>
+        </div>
+
+<h3>🗄️ Quick Database & Content Provider Inspection</h3>
+
+<p class="article-paragraph">Directly inspect app databases and content providers.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># List all databases for an app</span>
+adb shell run-as com.example.myapp <span class="keyword">ls</span> databases/
+
+<span class="comment"># Query a content provider</span>
+adb shell content query --uri content://com.example.myapp.provider/data
+
+<span class="comment"># Insert data into a content provider</span>
+adb shell content insert --uri content://com.example.myapp.provider/data --bind name:s:<span class="string">&quot;Test Item&quot;</span></code></pre>
+        </div>
+
+<hr class="article-divider">
+
+</section><section class="article-section"><h2>🔧 Advanced Internals & Native Debugging</h2>
+
+<p class="article-paragraph">Deep dive into Android's internal systems and native components.</p>
+
+<h3>🆕 The Modern <code class="inline-code">cmd</code> Service Interface</h3>
+
+<p class="article-paragraph">The modern way to interact with system services (Android 10+).</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># List all available cmd services</span>
+adb shell cmd -l
+
+<span class="comment"># Interact with the overlay service</span>
+adb shell cmd overlay list
+
+<span class="comment"># Interact with the device config service</span>
+adb shell cmd device_config list</code></pre>
+        </div>
+
+<h3>🔌 Hardware Abstraction Layer (HAL) Introspection (<code class="inline-code">lshal</code>)</h3>
+
+<p class="article-paragraph">Inspect the Hardware Abstraction Layer services.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># List all HAL services</span>
+adb shell lshal
+
+<span class="comment"># Get detailed information about a specific HAL service</span>
+adb shell lshal -i android.hardware.camera.provider@2.4::ICameraProvider</code></pre>
+        </div>
+
+<h3>📝 Accessing Specific Logcat Buffers</h3>
+
+<p class="article-paragraph">Access different logcat buffers for specific debugging needs.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Access the radio buffer (telephony-related logs)</span>
+adb logcat -b radio
+
+<span class="comment"># Access the events buffer (system events)</span>
+adb logcat -b events
+
+<span class="comment"># Access the main buffer (default)</span>
+adb logcat -b main
+
+<span class="comment"># Access all buffers</span>
+adb logcat -b all</code></pre>
+        </div>
+
+<h3>💀 Analyzing Native Crashes (Tombstones)</h3>
+
+<p class="article-paragraph">Investigate native crashes and system-level issues.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># List all tombstone files</span>
+adb shell <span class="keyword">ls</span> /data/tombstones/
+
+<span class="comment"># Pull a specific tombstone file</span>
+adb pull /data/tombstones/tombstone_01 ./
+
+<span class="comment"># Get crash information from the system</span>
+adb shell dumpsys dropbox --print</code></pre>
+        </div>
+
+<hr class="article-divider">
+
+</section><section class="article-section"><h2>🔐 Runtime Properties & SELinux</h2>
+
+<p class="article-paragraph">Manage system properties and security contexts.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Get all system properties</span>
+adb shell getprop
+
+<span class="comment"># Set a system property (requires root)</span>
+adb shell setprop debug.sf.showupdates 1
+
+<span class="comment"># Check SELinux status</span>
+adb shell getenforce
+
+<span class="comment"># Set SELinux to permissive mode (requires root)</span>
+adb shell setenforce 0
+
+<span class="comment"># Get SELinux context for a process</span>
+adb shell ps -Z | <span class="keyword">grep</span> com.android.settings</code></pre>
+        </div>
+
+<hr class="article-divider">
+
+</section><section class="article-section"><h2>🚗 Android Automotive Commands</h2>
+
+<p class="article-paragraph">Specialized commands for Android Automotive development and testing.</p>
+
+<h3>🎮 Car Service Interaction (<code class="inline-code">car_service</code>)</h3>
+
+<p class="article-paragraph">Interact with the Android Automotive car service.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># List all car services</span>
+adb shell cmd car_service list
+
+<span class="comment"># Get car service information</span>
+adb shell dumpsys car_service
+
+<span class="comment"># Control car features</span>
+adb shell cmd car_service set-property com.android.car.CAR_PROPERTY_ID_SPEED 60</code></pre>
+        </div>
+
+<h3>🎛️ Controlling Automotive Features</h3>
+
+<p class="article-paragraph">Control various automotive features for testing.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Simulate vehicle speed</span>
+adb shell cmd car_service set-property com.android.car.CAR_PROPERTY_ID_SPEED 80
+
+<span class="comment"># Simulate gear position</span>
+adb shell cmd car_service set-property com.android.car.CAR_PROPERTY_ID_GEAR_SELECTION 1
+
+<span class="comment"># Simulate fuel level</span>
+adb shell cmd car_service set-property com.android.car.CAR_PROPERTY_ID_FUEL_LEVEL 75</code></pre>
+        </div>
+
+<h3>🔌 Simulating Hardware with VHAL Injection</h3>
+
+<p class="article-paragraph">Simulate Vehicle Hardware Abstraction Layer (VHAL) events.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Inject a VHAL event</span>
+adb shell cmd car_service inject-vhal-event com.android.car.CAR_PROPERTY_ID_SPEED 65
+
+<span class="comment"># Get VHAL information</span>
+adb shell dumpsys car_service | <span class="keyword">grep</span> -A 10 <span class="string">&quot;VHAL&quot;</span></code></pre>
+        </div>
+
+<h3>👤 Automotive User Management</h3>
+
+<p class="article-paragraph">Manage users in Android Automotive.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># List all users</span>
+adb shell pm list-users
+
+<span class="comment"># Create a new user</span>
+adb shell pm create-user <span class="string">&quot;Test User&quot;</span>
+
+<span class="comment"># Switch to a specific user</span>
+adb shell am switch-user 10</code></pre>
+        </div>
+
+<hr class="article-divider">
+
+</section><section class="article-section"><h2>🛠️ Dumpsys Encyclopedia</h2>
+
+<p class="article-paragraph">The <code class="inline-code">dumpsys</code> command provides detailed information about system services. Here are the most important ones:</p>
+
+<h3>📱 Activity Manager (<code class="inline-code">am</code>)</h3>
+
+<p class="article-paragraph">Monitor and control activities and tasks.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Get detailed activity information</span>
+adb shell dumpsys activity
+
+<span class="comment"># Get information about a specific activity</span>
+adb shell dumpsys activity com.android.settings</code></pre>
+        </div>
+
+<p class="article-paragraph"><strong>Key Information:</strong></p>
+
+<ul class="article-list"><li class="list-item">Running activities and their states</li><li class="list-item">Recent tasks and their history</li><li class="list-item">Activity lifecycle information</li><li class="list-item">ANR (Application Not Responding) details</li></ul>
+<h3>📦 Package Manager (<code class="inline-code">pm</code>)</h3>
+
+<p class="article-paragraph">Manage packages and their permissions.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Get package information</span>
+adb shell dumpsys package com.android.settings
+
+<span class="comment"># List all packages</span>
+adb shell pm list packages</code></pre>
+        </div>
+
+<p class="article-paragraph"><strong>Key Information:</strong></p>
+
+<ul class="article-list"><li class="list-item">Installed packages and their versions</li><li class="list-item">Permission grants and denials</li><li class="list-item">Package signatures</li><li class="list-item">Install locations</li></ul>
+<h3>🪟 Window Manager (<code class="inline-code">wm</code>)</h3>
+
+<p class="article-paragraph">Monitor window states and display information.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Get window information</span>
+adb shell dumpsys window
+
+<span class="comment"># Get display information</span>
+adb shell dumpsys display</code></pre>
+        </div>
+
+<p class="article-paragraph"><strong>Key Information:</strong></p>
+
+<ul class="article-list"><li class="list-item">Active windows and their states</li><li class="list-item">Display metrics and orientation</li><li class="list-item">Window animations and transitions</li><li class="list-item">Focus information</li></ul>
+<h3>🎵 Media Services</h3>
+
+<p class="article-paragraph">Monitor audio, video, and camera services.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Get audio information</span>
+adb shell dumpsys audio
+
+<span class="comment"># Get camera information</span>
+adb shell dumpsys media.camera
+
+<span class="comment"># Get media session information</span>
+adb shell dumpsys media_session</code></pre>
+        </div>
+
+<h3>🔋 Battery & Power</h3>
+
+<p class="article-paragraph">Monitor battery and power management.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Get battery information</span>
+adb shell dumpsys battery
+
+<span class="comment"># Get power information</span>
+adb shell dumpsys power
+
+<span class="comment"># Get battery statistics</span>
+adb shell dumpsys batterystats</code></pre>
+        </div>
+
+<h3>🌐 Connectivity</h3>
+
+<p class="article-paragraph">Monitor network connectivity and statistics.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Get connectivity information</span>
+adb shell dumpsys connectivity
+
+<span class="comment"># Get Wi-Fi information</span>
+adb shell dumpsys wifi
+
+<span class="comment"># Get network statistics</span>
+adb shell dumpsys netstats</code></pre>
+        </div>
+
+<hr class="article-divider">
+
+</section><section class="article-section"><h2>🖲️ Automation & UI</h2>
+
+<p class="article-paragraph">Automate UI interactions and capture UI information.</p>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Capture UI hierarchy</span>
+adb shell uiautomator dump /sdcard/view.xml
+
+<span class="comment"># Pull the UI hierarchy file</span>
+adb pull /sdcard/view.xml ./
+
+<span class="comment"># Take a screenshot</span>
+adb shell screencap /sdcard/screenshot.png
+
+<span class="comment"># Record screen (Android 4.4+)</span>
+adb shell screenrecord /sdcard/demo.mp4</code></pre>
+        </div>
+
+<hr class="article-divider">
+
+</section><section class="article-section"><h2>📦 Advanced Commands: Backup, Sideload & Fastboot</h2>
+
+<h3>💾 Backup & Restore</h3>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Create a backup of an app</span>
+adb backup -f backup.ab com.example.myapp
+
+<span class="comment"># Restore an app from backup</span>
+adb restore backup.ab
+
+<span class="comment"># Create a full system backup (requires root)</span>
+adb shell su -c <span class="string">&quot;tar -czf /sdcard/system_backup.tar.gz /data&quot;</span></code></pre>
+        </div>
+
+<h3>📱 Sideload & OTA</h3>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Install an OTA update via sideload</span>
+adb sideload update.zip
+
+<span class="comment"># Reboot into recovery mode for sideload</span>
+adb reboot recovery</code></pre>
+        </div>
+
+<h3>⚡ Fastboot Commands</h3>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Reboot into fastboot mode</span>
+adb reboot bootloader
+
+<span class="comment"># List fastboot devices</span>
+fastboot devices
+
+<span class="comment"># Flash a partition</span>
+fastboot flash system system.img
+
+<span class="comment"># Unlock bootloader (warning: erases all data)</span>
+fastboot oem unlock</code></pre>
+        </div>
+
+<hr class="article-divider">
+
+</section><section class="article-section"><h2>🐞 Debugging Scenarios</h2>
+
+<h3>🔍 App Crashes</h3>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Monitor app crashes</span>
+adb logcat | <span class="keyword">grep</span> -i <span class="string">&quot;fatal\|crash\|exception&quot;</span>
+
+<span class="comment"># Get crash information</span>
+adb shell dumpsys dropbox --print | <span class="keyword">grep</span> -i crash
+
+<span class="comment"># Check ANR traces</span>
+adb shell cat /data/anr/traces.txt</code></pre>
+        </div>
+
+<h3>🔋 Battery Drain</h3>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Get battery statistics</span>
+adb shell dumpsys batterystats
+
+<span class="comment"># Reset battery statistics</span>
+adb shell dumpsys batterystats --reset
+
+<span class="comment"># Get wake lock information</span>
+adb shell dumpsys power | <span class="keyword">grep</span> -A 10 <span class="string">&quot;Wake Locks&quot;</span></code></pre>
+        </div>
+
+<h3>🌐 Network Issues</h3>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Check network connectivity</span>
+adb shell dumpsys connectivity
+
+<span class="comment"># Get network statistics</span>
+adb shell dumpsys netstats
+
+<span class="comment"># Check Wi-Fi state</span>
+adb shell dumpsys wifi</code></pre>
+        </div>
+
+<h3>🎮 Performance Issues</h3>
+
+<div class="code-example">
+          <div class="code-header">
+            <span class="code-language">BASH</span>
+            <span class="code-copy" onclick="copyCode(this)">Copy</span>
+          </div>
+          <pre><code class="language-bash"><span class="comment"># Get graphics performance information</span>
+adb shell dumpsys gfxinfo com.example.myapp
+
+<span class="comment"># Get memory information</span>
+adb shell dumpsys meminfo com.example.myapp
+
+<span class="comment"># Get CPU usage</span>
+adb shell top -m 10</code></pre>
+        </div>
+
+<hr class="article-divider">
+
+</section><section class="article-section"><h2>📚 References</h2>
+
+
+<ul class="article-list"><li class="list-item"><a href="https://developer.android.com/studio/command-line/adb" class="article-link" target="_blank" rel="noopener noreferrer">ADB Official Documentation</a></li><li class="list-item"><a href="https://source.android.com/docs/core/graphics/winscope/capture/adb" class="article-link" target="_blank" rel="noopener noreferrer">Android System Service Dumps</a></li><li class="list-item"><a href="https://source.android.com/docs/devices/automotive" class="article-link" target="_blank" rel="noopener noreferrer">Android Automotive Documentation</a></li><li class="list-item"><a href="https://perfetto.dev/docs/" class="article-link" target="_blank" rel="noopener noreferrer">Android Performance Tracing</a></li><li class="list-item"><a href="https://source.android.com/docs/core/hal" class="article-link" target="_blank" rel="noopener noreferrer">Android HAL Documentation</a></li></ul>
+<hr class="article-divider">
+
+</section><section class="article-section"><h2>✅ Conclusion</h2>
+
+<p class="article-paragraph">This comprehensive encyclopedia serves as the definitive reference for Android Debug Bridge (ADB) and system-level debugging. You've learned:</p>
+
+
+<ul class="article-list"><li class="list-item"><strong>Fundamental ADB operations</strong> for device management and file transfer</li><li class="list-item"><strong>Advanced debugging techniques</strong> including network forwarding and settings manipulation</li><li class="list-item"><strong>Expert-level commands</strong> that provide deep system insights</li><li class="list-item"><strong>Android Automotive-specific</strong> commands for automotive development</li><li class="list-item"><strong>Performance analysis tools</strong> for optimizing Android applications</li><li class="list-item"><strong>Real-world debugging scenarios</strong> with practical solutions</li></ul>
+<p class="article-paragraph">This guide is designed to be your go-to reference for Android development, testing, and system analysis. Whether you're a beginner learning ADB basics or an expert looking for advanced techniques, this encyclopedia provides the knowledge and tools you need to master Android debugging.</p>
+
+<p class="article-paragraph">Remember that ADB is a powerful tool that can significantly impact device behavior. Always test commands in a safe environment and understand their implications before using them in production scenarios.</p>
+</section>
+          </div>
+          
+          <!-- Article Footer -->
+          <div class="article-footer">
+            <div class="article-tags">
+              <span class="tag-label">Tags:</span>
+              <span class="tag">Android</span>
+              <span class="tag">Internals</span>
+              <span class="tag">Development Tools</span>
+            </div>
+            <div class="article-share">
+              <span class="share-label">Share:</span>
+              <a href="https://twitter.com/intent/tweet?text=The Ultimate Encyclopedia of ADB, Dumpsys & Android Internals&url=https://www.hemangpandhi.com/articles/adb-enclopidia.html" target="_blank" class="share-link">🐦 Twitter</a>
+              <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://www.hemangpandhi.com/articles/adb-enclopidia.html" target="_blank" class="share-link">💼 LinkedIn</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Article Sidebar -->
+        <aside class="article-sidebar" id="articleSidebar">
+          <!-- Table of Contents -->
+          <div class="sidebar-widget toc-widget">
+            <h4>📋 Table of Contents</h4>
+            <nav class="article-toc" id="tableOfContents">
+              <ul>
+                <li><a href="#introduction">Loading...</a></li>
+              </ul>
+            </nav>
+          </div>
+
+          <!-- Author Info -->
+          <div class="sidebar-widget author-widget">
+            <h4>👤 About the Author</h4>
+            <div class="author-card">
+              <img src="../assets/images/android_logo.PNG" alt="Android Internals Team" class="author-avatar-small">
+              <div class="author-details">
+                <h5>Android Internals Team</h5>
+                <p>Android Internals expert with deep knowledge of system architecture and development tools. Specializing in HAL, Framework, and system optimization.</p>
+                <div class="author-stats">
+                  <span class="stat">📚 50+ Articles</span>
+                  <span class="stat">🔧 10+ Years Experience</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Related Articles -->
+          <div class="sidebar-widget related-widget">
+            <h4>🔗 Related Articles</h4>
+            <div class="related-articles">
+              <a href="../adb.html" class="related-article">
+                <h5>ADB (Android Debug Bridge)</h5>
+                <p>Powerful tool for Android development and debugging</p>
+              </a>
+              <a href="../hal.html" class="related-article">
+                <h5>HAL (Hardware Abstraction Layer)</h5>
+                <p>Bridging Android software and device hardware</p>
+              </a>
+              <a href="../framework.html" class="related-article">
+                <h5>Android Framework</h5>
+                <p>The backbone of Android app development</p>
+              </a>
+            </div>
+          </div>
+
+          <!-- Newsletter Signup -->
+          <div class="sidebar-widget newsletter-widget">
+            <h4>📧 Stay Updated</h4>
+            <p>Get the latest Android Internals articles delivered to your inbox.</p>
+            <form class="newsletter-form">
+              <input type="email" placeholder="Enter your email" required>
+              <button type="submit" class="btn btn-primary">Subscribe</button>
+            </form>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <a href="../index.html" class="footer-logo-link">
+            <img src="../assets/images/android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
+          </a>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="../hal.html">HAL</a></li>
+            <li><a href="../framework.html">Framework</a></li>
+            <li><a href="../adb.html">ADB</a></li>
+            <li><a href="../books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/scripts.js"></script>
+  <script>
+    // Article functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      // Reading mode toggle
+      const toggleReadingMode = document.getElementById('toggleReadingMode');
+      const toggleSidebar = document.getElementById('toggleSidebar');
+      const articleLayout = document.getElementById('articleLayout');
+      const articleSidebar = document.getElementById('articleSidebar');
+      
+      toggleReadingMode.addEventListener('click', function() {
+        articleLayout.classList.toggle('full-screen');
+        const isFullScreen = articleLayout.classList.contains('full-screen');
+        
+        if (isFullScreen) {
+          toggleReadingMode.querySelector('.reading-mode-text').textContent = 'Exit Full Screen';
+          articleSidebar.style.display = 'none';
+        } else {
+          toggleReadingMode.querySelector('.reading-mode-text').textContent = 'Full Screen';
+          articleSidebar.style.display = 'block';
+        }
+      });
+      
+      toggleSidebar.addEventListener('click', function() {
+        const isHidden = articleSidebar.style.display === 'none';
+        articleSidebar.style.display = isHidden ? 'block' : 'none';
+        toggleSidebar.querySelector('.sidebar-text').textContent = isHidden ? 'Hide Sidebar' : 'Show Sidebar';
+      });
+      
+      // Generate Table of Contents
+      function generateTOC() {
+        const headings = document.querySelectorAll('.article-content-wrapper h1, .article-content-wrapper h2, .article-content-wrapper h3');
+        const tocContainer = document.getElementById('tableOfContents');
+        
+        if (headings.length === 0) return;
+        
+        let tocHTML = '<ul>';
+        headings.forEach((heading, index) => {
+          const id = `heading-${index}`;
+          heading.id = id;
+          
+          const level = parseInt(heading.tagName.charAt(1));
+          const indent = level > 2 ? 'style="margin-left: ' + ((level - 2) * 20) + 'px;"' : '';
+          
+          tocHTML += `<li ${indent}><a href="#${id}">${heading.textContent}</a></li>`;
+        });
+        tocHTML += '</ul>';
+        
+        tocContainer.innerHTML = tocHTML;
+      }
+      
+      // Smooth scrolling for TOC links
+      function addSmoothScrolling() {
+        document.querySelectorAll('.article-toc a').forEach(link => {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+              target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }
+          });
+        });
+      }
+      
+      // Copy code functionality
+      function addCopyCodeButtons() {
+        document.querySelectorAll('.code-copy').forEach(button => {
+          button.addEventListener('click', function() {
+            const codeBlock = this.closest('.code-example').querySelector('code');
+            const text = codeBlock.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+              this.textContent = 'Copied!';
+              setTimeout(() => {
+                this.textContent = 'Copy';
+              }, 2000);
+            });
+          });
+        });
+      }
+      
+      // Initialize functionality
+      generateTOC();
+      setTimeout(() => {
+        addSmoothScrolling();
+        addCopyCodeButtons();
+      }, 100);
+    });
+  </script>
+</body>
+</html> 

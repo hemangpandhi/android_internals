@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter Admin - Android Internals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0d1117;
+            color: #f0f6fc;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: #3ddc84;
+            margin-bottom: 0.5rem;
+        }
+
+        .card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .status {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status.sending {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .status.completed {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .btn {
+            background: #3ddc84;
+            color: #0d1117;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #2bc470;
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .email-list {
+            margin-top: 1rem;
+        }
+
+        .email-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+
+        .email-status {
+            font-size: 0.9rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+        }
+
+        .email-status.pending {
+            background: #374151;
+            color: #d1d5db;
+        }
+
+        .email-status.sent {
+            background: #065f46;
+            color: #d1fae5;
+        }
+
+        .email-status.failed {
+            background: #7f1d1d;
+            color: #fecaca;
+        }
+
+        .progress {
+            margin-top: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #30363d;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #3ddc84;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .log {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-top: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 Newsletter Admin</h1>
+            <p>Send newsletter emails to subscribers</p>
+        </div>
+
+        <div class="card">
+            <div id="status" class="status pending">
+                📧 Loading newsletter queue...
+            </div>
+
+            <div id="article-info" style="display: none;">
+                <h3>Article Details</h3>
+                <p><strong>Title:</strong> <span id="article-title"></span></p>
+                <p><strong>Description:</strong> <span id="article-description"></span></p>
+                <p><strong>Date:</strong> <span id="article-date"></span></p>
+            </div>
+
+            <div id="send-section" style="display: none;">
+                <button id="test-btn" class="btn" style="margin-right: 1rem;">Test EmailJS</button>
+            <button id="send-btn" class="btn">Send Newsletters</button>
+                
+                <div class="progress" id="progress" style="display: none;">
+                    <p>Sending emails... <span id="progress-text">0/0</span></p>
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="email-list" class="email-list" style="display: none;">
+                <h4>Subscribers</h4>
+                <div id="emails"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📝 Sending Log</h3>
+            <div id="log" class="log"></div>
+        </div>
+    </div>
+
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript" src="config.js"></script>
+    <script type="text/javascript">
+        
+        let newsletterQueue = null;
+        let emailStatuses = {};
+
+        // Test EmailJS connection
+        async function testEmailJS() {
+            try {
+                log('🧪 Testing EmailJS connection...');
+                
+                // Test with comprehensive parameters (including all possible recipient field names)
+                const testParams = {
+                    from_name: 'Test Sender',
+                    from_email: 'info@hemangpandhi.com',
+                    message: 'This is a test message from the newsletter admin panel.',
+                    to_email: 'info@hemangpandhi.com',
+                    to_name: 'Hemang Pandhi',
+                    subject: 'Test Newsletter - EmailJS Connection',
+                    reply_to: 'info@hemangpandhi.com',
+                    // Alternative parameter names that EmailJS might expect
+                    email: 'info@hemangpandhi.com',
+                    name: 'Hemang Pandhi',
+                    contact_email: 'info@hemangpandhi.com',
+                    contact_name: 'Hemang Pandhi',
+                    to: 'info@hemangpandhi.com',
+                    recipient: 'info@hemangpandhi.com',
+                    recipient_email: 'info@hemangpandhi.com',
+                    recipient_name: 'Hemang Pandhi'
+                };
+                
+                log(`Test params: ${JSON.stringify(testParams, null, 2)}`);
+                
+                const response = await emailjs.send(
+                    window.EMAILJS_CONFIG.serviceId,
+                    window.EMAILJS_CONFIG.newsletterTemplate,
+                    testParams
+                );
+                
+                log('✅ EmailJS test successful!');
+                return true;
+            } catch (error) {
+                log(`❌ EmailJS test failed: ${error.message}`);
+                log(`Error details: ${JSON.stringify(error, null, 2)}`);
+                return false;
+            }
+        }
+
+        // Load newsletter queue and test EmailJS
+        async function loadNewsletterQueue() {
+            try {
+                const response = await fetch('/data/newsletter-queue.json');
+                if (!response.ok) {
+                    throw new Error('No newsletter queue found');
+                }
+                
+                newsletterQueue = await response.json();
+                displayNewsletterInfo();
+                log('Newsletter queue loaded successfully');
+            } catch (error) {
+                document.getElementById('status').innerHTML = '❌ No pending newsletters found';
+                document.getElementById('status').className = 'status error';
+                log('Error: ' + error.message);
+            }
+        }
+
+        function displayNewsletterInfo() {
+            const status = document.getElementById('status');
+            const articleInfo = document.getElementById('article-info');
+            const sendSection = document.getElementById('send-section');
+            const emailList = document.getElementById('email-list');
+
+            // Update status
+            status.innerHTML = `📧 Newsletter ready to send to ${newsletterQueue.emails.length} subscribers`;
+            status.className = 'status pending';
+
+            // Show article info
+            document.getElementById('article-title').textContent = newsletterQueue.article.title;
+            document.getElementById('article-description').textContent = newsletterQueue.article.description;
+            document.getElementById('article-date').textContent = newsletterQueue.article.date;
+            articleInfo.style.display = 'block';
+
+            // Show send section
+            sendSection.style.display = 'block';
+
+            // Show email list
+            const emailsContainer = document.getElementById('emails');
+            emailsContainer.innerHTML = '';
+            
+            newsletterQueue.emails.forEach((email, index) => {
+                const emailItem = document.createElement('div');
+                emailItem.className = 'email-item';
+                emailItem.innerHTML = `
+                    <span>${email.to_email}</span>
+                    <span id="status-${index}" class="email-status pending">Pending</span>
+                `;
+                emailsContainer.appendChild(emailItem);
+                emailStatuses[index] = 'pending';
+            });
+            
+            emailList.style.display = 'block';
+        }
+
+        async function sendNewsletters() {
+            const sendBtn = document.getElementById('send-btn');
+            const progress = document.getElementById('progress');
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+            const status = document.getElementById('status');
+
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
+            progress.style.display = 'block';
+            status.innerHTML = '📧 Sending newsletters...';
+            status.className = 'status sending';
+
+            let sent = 0;
+            let failed = 0;
+            const total = newsletterQueue.emails.length;
+
+            for (let i = 0; i < total; i++) {
+                const emailData = newsletterQueue.emails[i];
+                
+                try {
+                    log(`Sending email ${i + 1}/${total} to ${emailData.to_email}...`);
+                    log(`Email data: ${JSON.stringify(emailData, null, 2)}`);
+                    
+                    // Use the correct parameter structure for your EmailJS template
+                    const templateParams = {
+                        from_name: emailData.from_name,
+                        from_email: emailData.from_email,
+                        message: emailData.message,
+                        // Add recipient email for EmailJS to send to
+                        to_email: emailData.to_email,
+                        to_name: emailData.to_name,
+                        subject: emailData.subject,
+                        reply_to: emailData.reply_to,
+                        // Alternative parameter names that EmailJS might expect
+                        email: emailData.to_email,
+                        name: emailData.to_name,
+                        contact_email: emailData.to_email,
+                        contact_name: emailData.to_name,
+                        to: emailData.to_email,
+                        recipient: emailData.to_email
+                    };
+                    
+                    log(`Template params: ${JSON.stringify(templateParams, null, 2)}`);
+                    
+                    const response = await emailjs.send(
+                        window.EMAILJS_CONFIG.serviceId,
+                        window.EMAILJS_CONFIG.newsletterTemplate,
+                        templateParams
+                    );
+                    
+                    document.getElementById(`status-${i}`).textContent = 'Sent';
+                    document.getElementById(`status-${i}`).className = 'email-status sent';
+                    emailStatuses[i] = 'sent';
+                    sent++;
+                    
+                    log(`✅ Email sent to ${emailData.to_email}`);
+                } catch (error) {
+                    document.getElementById(`status-${i}`).textContent = 'Failed';
+                    document.getElementById(`status-${i}`).className = 'email-status failed';
+                    emailStatuses[i] = 'failed';
+                    failed++;
+                    
+                    log(`❌ Failed to send email to ${emailData.to_email}: ${error.message}`);
+                }
+
+                // Update progress
+                const progress = ((i + 1) / total) * 100;
+                progressFill.style.width = `${progress}%`;
+                progressText.textContent = `${i + 1}/${total}`;
+
+                // Add delay between emails to avoid rate limiting
+                if (i < total - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+            }
+
+            // Final status
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Send Complete';
+            
+            if (failed === 0) {
+                status.innerHTML = `✅ All ${sent} newsletters sent successfully!`;
+                status.className = 'status completed';
+                log(`🎉 Newsletter campaign completed! ${sent} emails sent, ${failed} failed.`);
+            } else {
+                status.innerHTML = `⚠️ Campaign completed: ${sent} sent, ${failed} failed`;
+                status.className = 'status error';
+                log(`⚠️ Newsletter campaign completed with errors: ${sent} emails sent, ${failed} failed.`);
+            }
+        }
+
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        // Event listeners
+        document.getElementById('test-btn').addEventListener('click', testEmailJS);
+        document.getElementById('send-btn').addEventListener('click', sendNewsletters);
+
+        // Load newsletter queue on page load
+        window.addEventListener('load', loadNewsletterQueue);
+    </script>
+</body>
+</html>

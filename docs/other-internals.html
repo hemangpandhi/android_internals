@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Other Internals Concepts - Android Internals</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="icon" href="assets/images/android_logo.PNG" type="image/png">
+  <link rel="manifest" href="assets/manifest.json">
+  <meta name="theme-color" content="#3ddc84">
+</head>
+<body>
+  <header class="hero">
+    <nav class="main-nav">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo-link">
+          <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+        </a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="index.html#topics" class="nav-link">Topics</a>
+          <a href="index.html#blogs" class="nav-link">Blogs</a>
+          <a href="index.html#about" class="nav-link">About</a>
+          <a href="books.html" class="nav-link">Books</a>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="hero-content">
+      <h1 class="hero-title animate-fadein">Other Internals Concepts</h1>
+      <p class="hero-subtitle animate-slidein">Advanced topics in Android internals</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="content-section">
+      <div class="container">
+        <div class="content-card">
+          <h2>Boot Process</h2>
+          <p>Learn how Android boots from the bootloader to the system UI, including the role of the kernel, init, and Zygote.</p>
+          
+          <div class="architecture-stack">
+            <div class="stack-item">Bootloader</div>
+            <div class="stack-item">Linux Kernel</div>
+            <div class="stack-item">Init Process</div>
+            <div class="stack-item highlight">Zygote</div>
+            <div class="stack-item">System Server</div>
+            <div class="stack-item">System UI</div>
+          </div>
+          
+          <h2>Core System Components</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>SELinux</h3>
+              <p>Security-Enhanced Linux (SELinux) enforces mandatory access control, improving Android security by confining processes and restricting access.</p>
+            </div>
+            <div class="module-card">
+              <h3>Verified Boot</h3>
+              <p>Ensures system integrity by verifying the boot chain from bootloader to system partition, preventing unauthorized modifications.</p>
+            </div>
+            <div class="module-card">
+              <h3>Vendor Partition</h3>
+              <p>Separate partition for vendor-specific code and drivers, enabling modular updates and better maintainability.</p>
+            </div>
+            <div class="module-card">
+              <h3>System as Root</h3>
+              <p>Modern Android architecture where the system partition is mounted as root, improving security and update mechanisms.</p>
+            </div>
+          </div>
+          
+          <h2>System Updates</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>OTA Updates</h3>
+              <p>Over-the-Air updates allow seamless system updates without user intervention or data loss.</p>
+            </div>
+            <div class="module-card">
+              <h3>A/B Partitioning</h3>
+              <p>Dual partition system enabling seamless updates with rollback capability and minimal downtime.</p>
+            </div>
+            <div class="module-card">
+              <h3>Project Treble</h3>
+              <p>Modular architecture separating vendor implementation from Android framework for easier updates.</p>
+            </div>
+            <div class="module-card">
+              <h3>Dynamic Partitions</h3>
+              <p>Flexible partitioning system allowing dynamic allocation of storage space for different partitions.</p>
+            </div>
+          </div>
+          
+          <h2>Advanced Topics</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>Init Process</h3>
+              <p>First user-space process that initializes the system, starts services, and manages system lifecycle.</p>
+            </div>
+            <div class="module-card">
+              <h3>Zygote Process</h3>
+              <p>Pre-initialized process that forks to create new app processes, improving startup performance.</p>
+            </div>
+            <div class="module-card">
+              <h3>System Server</h3>
+              <p>Core system service that manages Android framework services and coordinates system operations.</p>
+            </div>
+            <div class="module-card">
+              <h3>Binder IPC</h3>
+              <p>Inter-Process Communication mechanism used throughout Android for secure service communication.</p>
+            </div>
+          </div>
+          
+          <div class="cta-content">
+            <h3>Learn More</h3>
+            <p>Explore the official Android documentation for detailed information about boot process and system architecture.</p>
+            <a href="https://source.android.com/docs/core/architecture/bootloader" target="_blank" class="cta-button">Android Boot Process</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <a href="index.html" class="footer-logo-link">
+            <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
+          </a>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="hal.html">HAL</a></li>
+            <li><a href="framework.html">Framework</a></li>
+            <li><a href="adb.html">ADB</a></li>
+            <li><a href="books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/scripts.js"></script>
+</body>
+</html> 

@@ -3080,7 +3080,7 @@ html {
   box-shadow: 0 6px 25px rgba(61, 220, 132, 0.4);
 }
 
-/* Article Layout */
+/* Article Layout - Desktop Default */
 .article-layout {
   max-width: 1600px;
   margin: 0 auto;
@@ -3090,6 +3090,49 @@ html {
   padding: 0 2rem;
   overflow-x: hidden;
   transition: all 0.3s ease;
+}
+
+/* Desktop-specific styles to ensure they're not overridden */
+@media (min-width: 1025px) {
+  .article-layout {
+    max-width: 1600px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 2.5rem;
+    padding: 0 2rem;
+  }
+  
+  .article-content-wrapper {
+    padding: 2.5rem 3.5rem;
+    max-width: none;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 1.05rem;
+    line-height: 1.75;
+  }
+  
+  .article-body h2 {
+    font-size: 2rem;
+    margin-top: 3rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .article-body h3 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .article-body p {
+    margin-bottom: 1.5rem;
+    line-height: 1.75;
+  }
+  
+  .lead-text {
+    font-size: 1.25rem;
+    line-height: 1.8;
+  }
 }
 
 .article-layout.full-screen {
@@ -4224,7 +4267,7 @@ del {
     line-height: 1.6;
   }
   
-  /* Reading mode controls */
+  /* Reading mode controls - Mobile only */
   .reading-mode-controls {
     position: fixed;
     bottom: 1rem;
@@ -4233,6 +4276,13 @@ del {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+  }
+  
+  /* Hide reading controls on desktop */
+  @media (min-width: 1025px) {
+    .reading-mode-controls {
+      display: none;
+    }
   }
   
   .reading-mode-btn, .sidebar-toggle-btn {

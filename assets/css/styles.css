@@ -3094,6 +3094,83 @@ html {
 
 /* Desktop-specific styles to ensure they're not overridden */
 @media (min-width: 1025px) {
+  /* Desktop Navigation */
+  .nav-container {
+    padding: 1rem 2rem;
+  }
+  
+  .nav-logo {
+    height: 40px;
+  }
+  
+  .nav-links {
+    display: flex !important;
+    position: static;
+    width: auto;
+    height: auto;
+    background: none;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    z-index: auto;
+    gap: 2rem;
+  }
+  
+  .nav-link {
+    font-size: 1rem;
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+  }
+  
+  .nav-link:hover {
+    background: rgba(61, 220, 132, 0.1);
+    color: #3ddc84;
+  }
+  
+  .mobile-menu-toggle {
+    display: none !important;
+  }
+  
+  /* Desktop Hero Section */
+  .hero {
+    padding: 4rem 2rem;
+    text-align: center;
+  }
+  
+  .hero-logo {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 2rem;
+  }
+  
+  .hero-title {
+    font-size: 3.5rem;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.25rem;
+    line-height: 1.6;
+    margin-bottom: 3rem;
+  }
+  
+  .hero-stats {
+    flex-direction: row;
+    gap: 2rem;
+  }
+  
+  .stat {
+    padding: 1.5rem;
+  }
+  
+  .stat-number {
+    font-size: 2.5rem;
+  }
+  
+  /* Desktop Article Layout */
   .article-layout {
     max-width: 1600px;
     margin: 0 auto;
@@ -3103,6 +3180,31 @@ html {
     padding: 0 2rem;
   }
   
+  .article-header {
+    padding: 2rem 0;
+  }
+  
+  .article-title {
+    font-size: 2.5rem;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+  }
+  
+  .article-subtitle {
+    font-size: 1.25rem;
+    line-height: 1.6;
+  }
+  
+  .article-meta {
+    gap: 1rem;
+    flex-wrap: nowrap;
+  }
+  
+  .article-meta span {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+  }
+  
   .article-content-wrapper {
     padding: 2.5rem 3.5rem;
     max-width: none;
@@ -3110,6 +3212,24 @@ html {
     box-sizing: border-box;
     font-size: 1.05rem;
     line-height: 1.75;
+  }
+  
+  .article-body section {
+    padding: 0 3rem 2rem 3rem;
+  }
+  
+  .article-intro {
+    padding: 3rem;
+    margin-bottom: 2rem;
+  }
+  
+  .table-of-contents {
+    margin: 2rem;
+    padding: 2rem;
+  }
+  
+  .article-footer {
+    padding: 2rem;
   }
   
   .article-body h2 {
@@ -3129,9 +3249,66 @@ html {
     line-height: 1.75;
   }
   
+  .article-body ul, .article-body ol {
+    margin-left: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .article-body li {
+    margin-bottom: 0.75rem;
+  }
+  
   .lead-text {
     font-size: 1.25rem;
     line-height: 1.8;
+  }
+  
+  /* Desktop Footer */
+  .footer-content {
+    flex-direction: row;
+    gap: 3rem;
+    text-align: left;
+  }
+  
+  .footer-logo {
+    width: 80px;
+    height: 80px;
+  }
+  
+  /* Desktop Forms */
+  .newsletter-form, .contact-form {
+    padding: 2rem;
+  }
+  
+  .newsletter-form input[type="email"],
+  .contact-form input,
+  .contact-form textarea {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+  
+  .newsletter-form button,
+  .contact-form button {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+  }
+  
+  /* Hide mobile controls on desktop */
+  .reading-mode-controls {
+    display: none !important;
+  }
+  
+  .article-sidebar {
+    position: static !important;
+    right: auto !important;
+    width: auto !important;
+    height: auto !important;
+    background: none !important;
+    box-shadow: none !important;
+    z-index: auto !important;
+    transition: none !important;
+    overflow-y: visible !important;
+    padding: 0 !important;
   }
 }
 

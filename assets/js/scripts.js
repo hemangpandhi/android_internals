@@ -492,6 +492,88 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // ===== READING MODE AND SIDEBAR FUNCTIONALITY =====
+  
+  // Reading mode toggle
+  const toggleReadingModeBtn = document.getElementById('toggleReadingMode');
+  const articleBody = document.getElementById('articleBody');
+  
+  if (toggleReadingModeBtn && articleBody) {
+    toggleReadingModeBtn.addEventListener('click', function() {
+      articleBody.classList.toggle('reading-mode');
+      const isReadingMode = articleBody.classList.contains('reading-mode');
+      
+      if (isReadingMode) {
+        toggleReadingModeBtn.querySelector('.reading-mode-icon').textContent = '📱';
+        toggleReadingModeBtn.querySelector('.reading-mode-text').textContent = 'Exit Full Screen';
+      } else {
+        toggleReadingModeBtn.querySelector('.reading-mode-icon').textContent = '📖';
+        toggleReadingModeBtn.querySelector('.reading-mode-text').textContent = 'Full Screen';
+      }
+    });
+  }
+  
+  // Sidebar toggle
+  const toggleSidebarBtn = document.getElementById('toggleSidebar');
+  const articleSidebar = document.getElementById('articleSidebar');
+  
+  if (toggleSidebarBtn && articleSidebar) {
+    toggleSidebarBtn.addEventListener('click', function() {
+      articleSidebar.classList.toggle('active');
+      
+      // Add overlay for mobile
+      if (window.innerWidth <= 768) {
+        if (articleSidebar.classList.contains('active')) {
+          const overlay = document.createElement('div');
+          overlay.className = 'sidebar-overlay';
+          overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+          `;
+          document.body.appendChild(overlay);
+          
+          overlay.addEventListener('click', function() {
+            articleSidebar.classList.remove('active');
+            overlay.remove();
+          });
+        } else {
+          const overlay = document.querySelector('.sidebar-overlay');
+          if (overlay) overlay.remove();
+        }
+      }
+    });
+  }
+  
+  // Auto-generate table of contents
+  const tableOfContents = document.getElementById('tableOfContents');
+  if (tableOfContents) {
+    const headings = articleBody ? articleBody.querySelectorAll('h2, h3') : [];
+    const tocList = tableOfContents.querySelector('ul');
+    
+    if (tocList && headings.length > 0) {
+      tocList.innerHTML = '';
+      
+      headings.forEach((heading, index) => {
+        const id = heading.id || `heading-${index}`;
+        heading.id = id;
+        
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = `#${id}`;
+        a.textContent = heading.textContent;
+        a.className = heading.tagName.toLowerCase() === 'h3' ? 'toc-h3' : 'toc-h2';
+        
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+    }
+  }
+
   // Get Started Button
   const getStartedBtn = document.getElementById('getStartedBtn');
   console.log('Get Started button found:', getStartedBtn);

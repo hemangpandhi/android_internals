@@ -4180,6 +4180,103 @@ del {
 }
 
 @media (max-width: 768px) {
+  /* Mobile Navigation */
+  .nav-container {
+    padding: 0.75rem 1rem;
+  }
+  
+  .nav-logo {
+    height: 32px;
+  }
+  
+  .nav-links {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    gap: 2rem;
+  }
+  
+  .nav-links.active {
+    display: flex;
+  }
+  
+  .nav-link {
+    font-size: 1.25rem;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+  
+  .nav-link:hover {
+    background: rgba(61, 220, 132, 0.2);
+    color: #3ddc84;
+  }
+  
+  .mobile-menu-toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+  }
+  
+  .hamburger-line {
+    width: 25px;
+    height: 3px;
+    background: #3ddc84;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+  
+  /* Mobile Hero Section */
+  .hero {
+    padding: 3rem 1rem;
+    text-align: center;
+  }
+  
+  .hero-logo {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 1.5rem;
+  }
+  
+  .hero-title {
+    font-size: 2.5rem;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+  
+  .hero-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .stat {
+    padding: 1rem;
+  }
+  
+  .stat-number {
+    font-size: 2rem;
+  }
+  
+  /* Mobile Article Layout */
   .article-header {
     padding: 1.5rem 0;
   }
@@ -4266,6 +4363,165 @@ del {
     font-size: 1.1rem;
     line-height: 1.6;
   }
+  
+  /* Mobile Reading Controls */
+  .reading-mode-controls {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .reading-mode-btn, .sidebar-toggle-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #3ddc84;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 12px rgba(61, 220, 132, 0.3);
+    transition: all 0.3s ease;
+  }
+  
+  .reading-mode-btn:hover, .sidebar-toggle-btn:hover {
+    background: #2bb673;
+    transform: scale(1.1);
+  }
+  
+  .reading-mode-text, .sidebar-text {
+    font-size: 0.7rem;
+    color: #666;
+    text-align: center;
+    margin-top: 0.25rem;
+  }
+  
+  /* Mobile Sidebar */
+  .article-sidebar {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 280px;
+    height: 100vh;
+    background: white;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+    transition: right 0.3s ease;
+    overflow-y: auto;
+    padding: 2rem 1rem;
+  }
+  
+  .article-sidebar.active {
+    right: 0;
+  }
+  
+  .sidebar-widget {
+    margin-bottom: 2rem;
+  }
+  
+  .sidebar-widget h4 {
+    color: #1f2937;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+  
+  /* Mobile Footer */
+  .footer-content {
+    flex-direction: column;
+    gap: 2rem;
+    text-align: center;
+  }
+  
+  .footer-logo {
+    width: 60px;
+    height: 60px;
+  }
+  
+  /* Mobile Forms */
+  .newsletter-form, .contact-form {
+    padding: 1.5rem;
+  }
+  
+  .newsletter-form input[type="email"],
+  .contact-form input,
+  .contact-form textarea {
+    padding: 0.75rem;
+    font-size: 1rem;
+  }
+  
+  .newsletter-form button,
+  .contact-form button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+}
+
+/* Very Small Screens */
+@media (max-width: 480px) {
+  .hero {
+    padding: 2rem 0.5rem;
+  }
+  
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+  
+  .article-header {
+    padding: 1rem 0;
+  }
+  
+  .article-title {
+    font-size: 1.5rem;
+  }
+  
+  .article-content-wrapper {
+    padding: 1rem 0.5rem;
+    font-size: 0.95rem;
+  }
+  
+  .article-body h2 {
+    font-size: 1.3rem;
+  }
+  
+  .article-body h3 {
+    font-size: 1.1rem;
+  }
+  
+  .reading-mode-controls {
+    bottom: 0.5rem;
+    right: 0.5rem;
+  }
+  
+  .reading-mode-btn, .sidebar-toggle-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 1rem;
+  }
+  
+  .article-sidebar {
+    width: 100%;
+    right: -100%;
+  }
+  
+  .nav-container {
+    padding: 0.5rem;
+  }
+  
+  .nav-logo {
+    height: 28px;
+  }
+}
   
   /* Reading mode controls - Mobile only */
   .reading-mode-controls {

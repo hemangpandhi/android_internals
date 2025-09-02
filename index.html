@@ -258,7 +258,7 @@
             <div class="about-me-contact">
               <h4>Get in Touch</h4>
               <p>Interested in Android internals? Let's connect and discuss system development, custom ROMs, or any Android-related topics.</p>
-              <a href="#contact" class="contact-button">Contact Me</a>
+              <a href="#contact" class="contact-button" role="button" aria-label="Scroll to contact section">Contact Me</a>
             </div>
           </div>
           <div class="about-me-image">
@@ -275,7 +275,7 @@
           <h2>Stay Updated</h2>
           <p>Get notified when new articles are published and receive exclusive Android internals insights.</p>
           <form id="newsletterForm" class="newsletter-form">
-            <input type="email" id="newsletterEmail" placeholder="Enter your email address" required>
+            <input type="email" id="newsletterEmail" placeholder="Enter your email address" required inputmode="email" autocomplete="email" aria-label="Email address">
             <button type="submit" id="newsletterSubmitBtn" class="newsletter-submit">Subscribe</button>
           </form>
           <p class="newsletter-note">No spam, unsubscribe at any time.</p>

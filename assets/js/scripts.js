@@ -10,10 +10,18 @@ document.addEventListener('DOMContentLoaded', function() {
   const mobileNavLinks = document.getElementById('navLinks');
   
   if (mobileMenuToggle && mobileNavLinks) {
+    // Initialize accessibility attributes
+    mobileMenuToggle.setAttribute('aria-controls', 'navLinks');
+    mobileMenuToggle.setAttribute('aria-expanded', 'false');
+    mobileNavLinks.setAttribute('aria-hidden', 'true');
+
     mobileMenuToggle.addEventListener('click', function() {
       mobileMenuToggle.classList.toggle('active');
       mobileNavLinks.classList.toggle('active');
-      document.body.style.overflow = mobileNavLinks.classList.contains('active') ? 'hidden' : '';
+      const isOpen = mobileNavLinks.classList.contains('active');
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+      mobileMenuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      mobileNavLinks.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
     });
     
     // Close menu when clicking on a link
@@ -23,6 +31,8 @@ document.addEventListener('DOMContentLoaded', function() {
         mobileMenuToggle.classList.remove('active');
         mobileNavLinks.classList.remove('active');
         document.body.style.overflow = '';
+        mobileMenuToggle.setAttribute('aria-expanded', 'false');
+        mobileNavLinks.setAttribute('aria-hidden', 'true');
       });
     });
     
@@ -32,6 +42,19 @@ document.addEventListener('DOMContentLoaded', function() {
         mobileMenuToggle.classList.remove('active');
         mobileNavLinks.classList.remove('active');
         document.body.style.overflow = '';
+        mobileMenuToggle.setAttribute('aria-expanded', 'false');
+        mobileNavLinks.setAttribute('aria-hidden', 'true');
+      }
+    });
+
+    // Close menu on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && mobileNavLinks.classList.contains('active')) {
+        mobileMenuToggle.classList.remove('active');
+        mobileNavLinks.classList.remove('active');
+        document.body.style.overflow = '';
+        mobileMenuToggle.setAttribute('aria-expanded', 'false');
+        mobileNavLinks.setAttribute('aria-hidden', 'true');
       }
     });
   }

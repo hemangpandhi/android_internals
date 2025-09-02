@@ -79,11 +79,11 @@
   <main class="article-content">
     <!-- Reading Mode Toggle -->
     <div class="reading-mode-controls">
-      <button id="toggleReadingMode" class="reading-mode-btn">
+      <button id="toggleReadingMode" class="reading-mode-btn" aria-pressed="false">
         <span class="reading-mode-icon">📖</span>
         <span class="reading-mode-text">Full Screen</span>
       </button>
-      <button id="toggleSidebar" class="sidebar-toggle-btn">
+      <button id="toggleSidebar" class="sidebar-toggle-btn" aria-expanded="true" aria-controls="articleSidebar">
         <span class="sidebar-icon">📋</span>
         <span class="sidebar-text">Sidebar</span>
       </button>
@@ -122,7 +122,7 @@
           <!-- Table of Contents -->
           <div class="sidebar-widget toc-widget">
             <h4>📋 Table of Contents</h4>
-            <nav class="article-toc" id="tableOfContents">
+            <nav class="article-toc" id="tableOfContents" aria-label="Table of contents">
               <ul>
                 <li><a href="#introduction">Loading...</a></li>
               </ul>
@@ -229,9 +229,11 @@
         if (isFullScreen) {
           toggleReadingMode.querySelector('.reading-mode-text').textContent = 'Exit Full Screen';
           articleSidebar.style.display = 'none';
+          toggleReadingMode.setAttribute('aria-pressed', 'true');
         } else {
           toggleReadingMode.querySelector('.reading-mode-text').textContent = 'Full Screen';
           articleSidebar.style.display = 'block';
+          toggleReadingMode.setAttribute('aria-pressed', 'false');
         }
       });
       
@@ -239,6 +241,7 @@
         const isHidden = articleSidebar.style.display === 'none';
         articleSidebar.style.display = isHidden ? 'block' : 'none';
         toggleSidebar.querySelector('.sidebar-text').textContent = isHidden ? 'Hide Sidebar' : 'Show Sidebar';
+        toggleSidebar.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
       });
       
       // Generate Table of Contents

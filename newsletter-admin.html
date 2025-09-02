@@ -105,6 +105,9 @@
             border: 1px solid #30363d;
             border-radius: 4px;
             margin-bottom: 0.5rem;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            word-break: break-word;
         }
 
         .email-status {
@@ -138,6 +141,12 @@
             background: #30363d;
             border-radius: 4px;
             overflow: hidden;
+        }
+        
+        @media (max-width: 480px) {
+            .container { padding: 1rem; }
+            .email-item { flex-direction: column; align-items: flex-start; }
+            .btn { width: 100%; margin-bottom: 0.5rem; }
         }
 
         .progress-fill {

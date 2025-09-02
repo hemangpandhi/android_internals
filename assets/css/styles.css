@@ -4727,6 +4727,28 @@ del {
     pointer-events: none;
 }
 
+/* Temporary Dev Badge */
+.dev-badge {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9999;
+  background: linear-gradient(135deg, rgba(61, 220, 132, 0.9), rgba(21, 128, 61, 0.9));
+  color: #0a0a0a;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.25);
+  user-select: none;
+}
+
+@media (max-width: 480px) {
+  .dev-badge { right: 10px; bottom: 10px; font-size: 11px; padding: 5px 8px; }
+}
+
 .toast {
     background: #fff;
     border-radius: 8px;

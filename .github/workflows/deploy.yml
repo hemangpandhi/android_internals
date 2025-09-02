@@ -2,9 +2,13 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
+      - feat/mobile-ui-improvements
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
+      - feat/mobile-ui-improvements
 
 permissions:
   contents: read

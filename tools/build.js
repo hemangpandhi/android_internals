@@ -669,7 +669,7 @@ function copyAssets() {
   });
   
   // Copy root files
-  const rootFiles = ['config.js', 'robots.txt', 'sitemap.xml'];
+  const rootFiles = ['config.js', 'robots.txt', 'sitemap.xml', 'CNAME'];
   rootFiles.forEach(file => {
     const source = path.join(rootDir, file);
     const dest = path.join(buildDir, file);

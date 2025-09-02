@@ -707,16 +707,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     toast[type](title, message);
   }
-  
-  // DEV BUILD badge (temporary)
-  try {
-    const badge = document.createElement('div');
-    badge.className = 'dev-badge';
-    const ts = new Date().toISOString().replace('T',' ').substring(0,16);
-    badge.textContent = `DEV BUILD • ${ts}`;
-    document.body.appendChild(badge);
-  } catch (e) {
-    console.warn('Dev badge injection failed', e);
-  }
+
   
 }); 

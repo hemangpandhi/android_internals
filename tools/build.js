@@ -791,6 +791,39 @@ function generateRedirects() {
   });
 }
 
+function generate404Fallback() {
+  console.log('🛟 Generating 404 fallback redirect...');
+  const buildDir = path.join(__dirname, '..', 'build');
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Not Found</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body><script>
+    (function(){
+      var lower = (location.pathname||'').toLowerCase();
+      function go(u){ location.replace(u); }
+      if (lower.indexOf('adb-enclopidia')>-1) return go('/articles/adb-encyclopedia.html');
+      if (lower.endsWith('/articles/adb-encyclopedia') || lower.endsWith('/adb-encyclopedia')) return go('/articles/adb-encyclopedia.html');
+      go('/');
+    })();
+  </script></body></html>`;
+  fs.writeFileSync(path.join(buildDir, '404.html'), html);
+  console.log('  ✅ Created 404.html fallback');
+}
+
+function duplicateKeyArticlesAtRoot(articles) {
+  try {
+    const buildDir = path.join(__dirname, '..', 'build');
+    const adb = articles.find(a => a.slug === 'adb-encyclopedia');
+    if (adb) {
+      const src = path.join(buildDir, 'articles', 'adb-encyclopedia.html');
+      const dest = path.join(buildDir, 'adb-encyclopedia.html');
+      if (fs.existsSync(src)) {
+        fs.copyFileSync(src, dest);
+        console.log('  ✅ Duplicated adb-encyclopedia.html at site root');
+      }
+    }
+  } catch (e) {
+    console.warn('  ⚠️  Could not duplicate key article at root:', e.message);
+  }
+}
+
 // Main build function
 function build() {
   console.log('🚀 Starting build process...');
@@ -810,6 +843,8 @@ function build() {
   copyAssets();
   generateSitemap(articles);
   generateRedirects();
+  generate404Fallback();
+  duplicateKeyArticlesAtRoot(articles);
   
   console.log('\n🎉 Build completed successfully!');
   console.log(`📊 Generated ${articles.length} articles`);

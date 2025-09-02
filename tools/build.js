@@ -537,6 +537,7 @@ function updateIndexPage(articles) {
   console.log('🏠 Updating index page...');
   
   const indexTemplate = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const siteBase = 'https://www.hemangpandhi.com';
   
   // Generate articles list for homepage
   const articlesList = articles
@@ -551,7 +552,7 @@ function updateIndexPage(articles) {
                   <div class="blog-placeholder">${icon}</div>
                 </div>
                 <div class="blog-content">
-                  <h3><a href="articles/${article.slug}.html">${article.title}</a></h3>
+                  <h3><a href="${siteBase}/articles/${article.slug}.html">${article.title}</a></h3>
                   <p>${article.description || 'Read more about Android internals...'}</p>
                   <div class="blog-meta">
                     <span class="blog-date">${article.date}</span>

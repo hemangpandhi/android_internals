@@ -122,6 +122,19 @@ document.addEventListener('DOMContentLoaded', function() {
     el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
     observer.observe(el);
   });
+
+  // Make entire blog cards clickable (navigate to inner link)
+  document.querySelectorAll('.blog-card').forEach(card => {
+    const anchor = card.querySelector('a[href]');
+    if (anchor) {
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', function(e) {
+        // Avoid double-handling if actual anchor clicked
+        if (e.target.closest('a')) return;
+        window.location.href = anchor.getAttribute('href');
+      });
+    }
+  });
   
   // ===== ENHANCED BOOK COVER MODAL =====
   const modal = document.getElementById('bookModal');

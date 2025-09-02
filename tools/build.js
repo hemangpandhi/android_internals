@@ -771,6 +771,25 @@ function generateSitemap(articles) {
   console.log('  ✅ Generated sitemap.xml');
 }
 
+function generateRedirects() {
+  console.log('↪️  Generating redirects...');
+  const buildArticlesDir = path.join(__dirname, '..', 'build', 'articles');
+  if (!fs.existsSync(buildArticlesDir)) {
+    fs.mkdirSync(buildArticlesDir, { recursive: true });
+  }
+
+  // Map old slugs to new slugs
+  const redirects = {
+    'adb-enclopidia.html': 'adb-encyclopedia.html'
+  };
+
+  Object.entries(redirects).forEach(([from, to]) => {
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=${to}"><link rel="canonical" href="${to}"></head><body>Redirecting to <a href="${to}">${to}</a>...</body></html>`;
+    fs.writeFileSync(path.join(buildArticlesDir, from), html);
+    console.log(`  ✅ Redirect: ${from} -> ${to}`);
+  });
+}
+
 // Main build function
 function build() {
   console.log('🚀 Starting build process...');
@@ -789,6 +808,7 @@ function build() {
   updateIndexPage(articles);
   copyAssets();
   generateSitemap(articles);
+  generateRedirects();
   
   console.log('\n🎉 Build completed successfully!');
   console.log(`📊 Generated ${articles.length} articles`);

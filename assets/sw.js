@@ -1,16 +1,15 @@
-const CACHE_NAME = 'android-internals-v1.0';
+const CACHE_NAME = 'android-internals-v1.1';
 const urlsToCache = [
   '/',
   '/index.html',
   '/books.html',
-  '/styles.css',
-  '/scripts.js',
-  '/android_logo.PNG',
+  '/assets/css/styles.css',
+  '/assets/js/scripts.js',
+  '/assets/images/android_logo.PNG',
   '/hal.html',
   '/framework.html',
   '/adb.html',
-  '/articles/adb-complete-guide.html',
-  '/articles/android-hal-deep-dive.html'
+  '/articles/adb-encyclopedia.html'
 ];
 
 // Install event

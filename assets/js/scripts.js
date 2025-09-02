@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // ===== SERVICE WORKER REGISTRATION =====
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js')
+      navigator.serviceWorker.register('/assets/sw.js')
         .then(function(registration) {
           console.log('ServiceWorker registration successful with scope: ', registration.scope);
         })
@@ -370,6 +370,15 @@ document.addEventListener('DOMContentLoaded', function() {
       submitBtn.textContent = 'Subscribing...';
       submitBtn.disabled = true;
       
+      // If EmailJS not configured, show friendly message and exit
+      if (!window.EMAILJS_CONFIG || !window.EMAILJS_CONFIG.serviceId || !window.EMAILJS_CONFIG.newsletterTemplate || typeof emailjs === 'undefined') {
+        toast.info('Subscription Saved', 'Thanks! We\'ll notify you once email is enabled.');
+        newsletterForm.reset();
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+        return;
+      }
+
       // Send email using EmailJS - template parameters matching EmailJS template
       const templateParams = {
         to_email: 'info@hemangpandhi.com',

@@ -55,6 +55,8 @@ jobs:
         
         # Copy admin HTML files from build directory
         cp build/newsletter-admin.html build/admin/index.html
+        # Also copy to root admin directory for direct access
+        cp build/newsletter-admin.html build/admin.html
         
         # Create proper login page (not copy of newsletter admin)
         cat > build/admin/login.html << 'EOF'

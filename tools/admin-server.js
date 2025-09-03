@@ -110,15 +110,25 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'build', 'admin', 'login.html'));
 });
 
-// Redirect old admin URL to login
+// Direct access to newsletter admin (for testing)
 app.get('/newsletter-admin.html', (req, res) => {
-    res.redirect('/login');
+    res.sendFile(path.join(__dirname, '..', 'build', 'newsletter-admin.html'));
 });
 
-// Protected admin panel route
-app.get('/admin', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'build', 'admin', 'index.html'));
-});
+        // Protected admin panel route
+        app.get('/admin', requireAuth, (req, res) => {
+            res.sendFile(path.join(__dirname, '..', 'build', 'newsletter-admin.html'));
+        });
+
+        // Protected admin panel route with trailing slash
+        app.get('/admin/', requireAuth, (req, res) => {
+            res.sendFile(path.join(__dirname, '..', 'build', 'newsletter-admin.html'));
+        });
+
+        // Alternative admin route for easier access
+        app.get('/admin-panel', requireAuth, (req, res) => {
+            res.sendFile(path.join(__dirname, '..', 'build', 'newsletter-admin.html'));
+        });
 
 // Protected API routes
 app.get('/api/subscribers', requireAuth, (req, res) => {

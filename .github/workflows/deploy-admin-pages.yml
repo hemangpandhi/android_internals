@@ -100,3 +100,13 @@ jobs:
         publish_dir: ./build
         publish_branch: gh-pages
         cname: hemangpandhi.com
+        
+    - name: Show deployment info
+      run: |
+        echo "🚀 Admin panel deployment completed!"
+        echo "📁 Admin files created in build/admin/"
+        echo "🌐 Access URLs:"
+        echo "   - Main site: https://hemangpandhi.com"
+        echo "   - Admin panel: https://hemangpandhi.com/admin"
+        echo "   - Admin login: https://hemangpandhi.com/admin/login.html"
+        echo "🔐 Demo credentials: admin / demo123"

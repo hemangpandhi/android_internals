@@ -126,6 +126,24 @@ For production, set these GitHub Secrets:
 node tools/new-article.js "Your Article Title"
 ```
 
+## 🔐 Admin Panel
+
+**⚠️ SECURITY**: This is a public repository. Admin credentials are NOT committed.
+
+### Setup
+1. **Run setup script**: `./setup-admin.sh`
+2. **Set secure credentials** when prompted
+3. **Start admin server**: `node tools/admin-server.js`
+4. **Access admin panel**: `http://localhost:3001/login`
+
+### Features
+- **Subscriber Management**: View, add, remove subscribers
+- **Newsletter Queue**: Sync and manage newsletter data
+- **EmailJS Testing**: Test email functionality
+- **Secure Authentication**: Session-based login system
+
+**📖 For detailed security setup, see**: `docs/deployment/ADMIN_SECURITY.md`
+
 ## 🔒 Security
 
 - No sensitive data in source code

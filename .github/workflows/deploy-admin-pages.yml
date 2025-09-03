@@ -23,17 +23,22 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
+    - name: Build main site first
+      run: |
+        # Build the main site first
+        npm run build
+        
     - name: Build admin interface
       run: |
-        # Create build directory structure
+        # Create admin subdirectory in build
         mkdir -p build/admin
         
-        # Copy admin HTML files
-        cp newsletter-admin.html build/admin/index.html
-        cp admin-login.html build/admin/login.html
+        # Copy admin HTML files from build directory
+        cp build/newsletter-admin.html build/admin/index.html
+        cp build/admin-login.html build/admin/login.html
         
-        # Copy assets
-        cp -r assets build/admin/
+        # Copy assets to admin subdirectory
+        cp -r build/assets build/admin/
         
         # Create admin configuration
         cat > build/admin/config.js << 'EOF'
@@ -89,19 +94,6 @@ jobs:
         sed -i 's|window\.location\.href = .\/admin.;|window\.location\.href = \"./index.html\";|g' build/admin/*.html
         
     - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build
-        publish_branch: gh-pages
-        cname: hemangpandhi.com
-        
-    - name: Deploy main site
-      run: |
-        # Also build and deploy the main site
-        npm run build
-        
-    - name: Deploy main site to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}

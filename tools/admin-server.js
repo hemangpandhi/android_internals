@@ -107,7 +107,7 @@ app.get('/api/auth/status', (req, res) => {
 
 // Login page route
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'build', 'admin-login.html'));
+    res.sendFile(path.join(__dirname, '..', 'build', 'admin', 'login.html'));
 });
 
 // Redirect old admin URL to login
@@ -117,7 +117,7 @@ app.get('/newsletter-admin.html', (req, res) => {
 
 // Protected admin panel route
 app.get('/admin', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'build', 'newsletter-admin.html'));
+    res.sendFile(path.join(__dirname, '..', 'build', 'admin', 'index.html'));
 });
 
 // Protected API routes

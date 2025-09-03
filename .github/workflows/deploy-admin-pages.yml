@@ -6,9 +6,21 @@ on:
   pull_request:
     branches: [ main, master ]
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   deploy-admin:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     
     steps:
     - name: Checkout code
@@ -96,20 +108,24 @@ jobs:
         sed -i 's|fetch.*\/api\/|mockAPI\.|g' build/admin/*.html
         sed -i 's|window\.location\.href = .\/admin.;|window\.location\.href = \"./index.html\";|g' build/admin/*.html
         
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build
-        publish_branch: gh-pages
-        cname: hemangpandhi.com
+        path: './build'
         
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+      
     - name: Show deployment info
       run: |
         echo "🚀 Admin panel deployment completed!"
         echo "📁 Admin files created in build/admin/"
         echo "🌐 Access URLs:"
-        echo "   - Main site: https://hemangpandhi.com"
-        echo "   - Admin panel: https://hemangpandhi.com/admin"
-        echo "   - Admin login: https://hemangpandhi.com/admin/login.html"
+        echo "   - Main site: ${{ steps.deployment.outputs.page_url }}"
+        echo "   - Admin panel: ${{ steps.deployment.outputs.page_url }}/admin"
+        echo "   - Admin login: ${{ steps.deployment.outputs.page_url }}/admin/login.html"
         echo "🔐 Demo credentials: admin / demo123"

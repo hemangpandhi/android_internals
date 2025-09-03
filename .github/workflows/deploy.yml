@@ -1,10 +1,10 @@
-name: Deploy to GitHub Pages
+name: Deploy Website and Admin Panel to GitHub Pages
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, main, login_test ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, main ]
 
 permissions:
   contents: read
@@ -48,6 +48,77 @@ jobs:
     - name: Build website
       run: node tools/build.js
       
+    - name: Build admin interface
+      run: |
+        # Create admin subdirectory in build
+        mkdir -p build/admin
+        
+        # Copy admin HTML files from build directory
+        cp build/newsletter-admin.html build/admin/index.html
+        cp build/newsletter-admin.html build/admin/login.html
+        
+        # Copy assets to admin subdirectory
+        cp -r build/assets build/admin/
+        
+        # Create admin configuration
+        cat > build/admin/config.js << 'EOF'
+        window.ADMIN_CONFIG = {
+          // Note: This is a static-only deployment
+          // For full functionality, you'll need to deploy the admin server separately
+          // or use a serverless function service
+          apiBase: '/api',
+          loginUrl: '/admin/login.html',
+          adminUrl: '/admin/index.html',
+          siteName: 'Android Internals Admin',
+          staticMode: true
+        };
+        
+        // Note: Using newsletter-admin.html for both login and admin panel
+        // This provides a unified admin interface
+        
+        // Mock API responses for static demo
+        window.mockAPI = {
+          login: function(username, password) {
+            if (username === 'admin' && password === 'demo123') {
+              return Promise.resolve({
+                success: true,
+                message: 'Login successful (Demo Mode)',
+                user: { username: 'admin' }
+              });
+            } else {
+              return Promise.reject({ error: 'Invalid credentials' });
+            }
+          },
+          
+          getSubscribers: function() {
+            return Promise.resolve([
+              {
+                email: 'demo@example.com',
+                name: 'Demo User',
+                date: '2025-01-01',
+                status: 'active',
+                source: 'demo'
+              }
+            ]);
+          },
+          
+          getStats: function() {
+            return Promise.resolve({
+              totalSubscribers: 1,
+              activeSubscribers: 1,
+              newslettersSent: 0
+            });
+          }
+        };
+        EOF
+        
+        # Update admin HTML files to use mock API in static mode
+        sed -i 's|fetch.*\/api\/|mockAPI\.|g' build/admin/*.html
+        sed -i 's|window\.location\.href = .\/admin.;|window\.location\.href = \"./index.html\";|g' build/admin/*.html
+        
+        echo "✅ Admin interface built successfully"
+        echo "📁 Admin files created in build/admin/"
+      
     - name: Setup Pages
       uses: actions/configure-pages@v4
       
@@ -59,3 +130,13 @@ jobs:
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
+      
+    - name: Show deployment info
+      run: |
+        echo "🚀 Website and Admin Panel deployment completed!"
+        echo "📁 Admin files created in build/admin/"
+        echo "🌐 Access URLs:"
+        echo "   - Main site: ${{ steps.deployment.outputs.page_url }}"
+        echo "   - Admin panel: ${{ steps.deployment.outputs.page_url }}/admin"
+        echo "   - Admin login: ${{ steps.deployment.outputs.page_url }}/admin/login.html"
+        echo "🔐 Demo credentials: admin / demo123"

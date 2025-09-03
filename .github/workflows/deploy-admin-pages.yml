@@ -35,7 +35,7 @@ jobs:
         
         # Copy admin HTML files from build directory
         cp build/newsletter-admin.html build/admin/index.html
-        cp build/admin-login.html build/admin/login.html
+        cp build/newsletter-admin.html build/admin/login.html
         
         # Copy assets to admin subdirectory
         cp -r build/assets build/admin/
@@ -52,6 +52,9 @@ jobs:
           siteName: 'Android Internals Admin',
           staticMode: true
         };
+        
+        // Note: Using newsletter-admin.html for both login and admin panel
+        // This provides a unified admin interface
         
         // Mock API responses for static demo
         window.mockAPI = {

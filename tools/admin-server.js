@@ -21,7 +21,19 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'android_internals_2025';
 const sessions = new Map();
 
 // Middleware
-app.use(cors());
+// Configure CORS to support GitHub Pages frontend with credentials
+const allowedOrigins = (process.env.ADMIN_ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+const corsOptions = {
+    origin: function(origin, callback) {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.length === 0) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '..', 'build')));
@@ -61,8 +73,8 @@ app.post('/api/login', (req, res) => {
         
         res.cookie('sessionId', sessionId, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: (process.env.NODE_ENV === 'production') || (process.env.CROSS_SITE_COOKIES === 'true'),
+            sameSite: (process.env.CROSS_SITE_COOKIES === 'true') ? 'none' : 'lax',
             path: '/',
             maxAge: 24 * 60 * 60 * 1000 // 24 hours
         });

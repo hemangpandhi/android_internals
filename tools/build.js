@@ -712,6 +712,17 @@ function copyAssets() {
     console.log(`  ✅ Copied: newsletter-admin.html`);
   }
   
+  // Also expose admin dashboard under /admin/index.html for GitHub Pages
+  const adminIndexDestDir = path.join(buildDir, 'admin');
+  if (!fs.existsSync(adminIndexDestDir)) {
+    fs.mkdirSync(adminIndexDestDir, { recursive: true });
+  }
+  if (fs.existsSync(newsletterAdmin)) {
+    const adminIndexDest = path.join(adminIndexDestDir, 'index.html');
+    fs.copyFileSync(newsletterAdmin, adminIndexDest);
+    console.log(`  ✅ Copied: admin/index.html`);
+  }
+  
   // Copy admin directory (e.g., login page)
   const adminSrcDir = path.join(rootDir, 'admin');
   const adminDestDir = path.join(buildDir, 'admin');

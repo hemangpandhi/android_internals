@@ -36,10 +36,12 @@
 		<div class="footer">Trouble logging in? Contact the site owner.</div>
 	</div>
 
+	<script type="text/javascript" src="/config.js"></script>
 	<script>
+		const API_BASE = (window.EMAILJS_CONFIG && window.EMAILJS_CONFIG.apiServer) || '';
 		async function checkAuthAndRedirect() {
 			try {
-				const res = await fetch('/api/auth/status', { credentials: 'include' });
+				const res = await fetch(`${API_BASE}/api/auth/status`, { credentials: 'include' });
 				if (res.ok) {
 					const data = await res.json();
 					if (data.authenticated) {
@@ -71,7 +73,7 @@
 			btn.disabled = true;
 			btn.textContent = 'Signing in...';
 			try {
-				const res = await fetch('/api/login', {
+				const res = await fetch(`${API_BASE}/api/login`, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					credentials: 'include',
@@ -82,7 +84,6 @@
 					throw new Error(err.error || 'Login failed');
 				}
 				showMessage('success', 'Login successful. Redirecting...');
-				// Small delay to show message
 				setTimeout(() => { window.location.href = '/admin'; }, 300);
 			} catch (err) {
 				showMessage('error', err.message || 'Login failed');
@@ -92,7 +93,6 @@
 			}
 		});
 
-		// If already authenticated, redirect to admin
 		checkAuthAndRedirect();
 	</script>
 </body>

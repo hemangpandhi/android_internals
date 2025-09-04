@@ -712,6 +712,26 @@ function copyAssets() {
     console.log(`  ✅ Copied: newsletter-admin.html`);
   }
   
+  // Copy admin directory (e.g., login page)
+  const adminSrcDir = path.join(rootDir, 'admin');
+  const adminDestDir = path.join(buildDir, 'admin');
+  if (fs.existsSync(adminSrcDir)) {
+    if (!fs.existsSync(adminDestDir)) {
+      fs.mkdirSync(adminDestDir, { recursive: true });
+    }
+    const adminFiles = fs.readdirSync(adminSrcDir);
+    adminFiles.forEach(file => {
+      const source = path.join(adminSrcDir, file);
+      const dest = path.join(adminDestDir, file);
+      const stat = fs.statSync(source);
+      if (stat.isFile()) {
+        fs.copyFileSync(source, dest);
+        console.log(`  ✅ Copied: admin/${file}`);
+      }
+      // If needed, extend to handle subdirectories in admin/
+    });
+  }
+  
   // Copy data directory for newsletter system
   const dataDir = path.join(rootDir, 'data');
   const dataDirDest = path.join(buildDir, 'data');

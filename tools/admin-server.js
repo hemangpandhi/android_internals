@@ -105,8 +105,8 @@ app.get('/api/auth/status', (req, res) => {
     res.json({ authenticated: false });
 });
 
-// Login page route
-app.get('/login', (req, res) => {
+// Login page routes
+app.get(['/login', '/admin/login.html'], (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'build', 'admin', 'login.html'));
 });
 

@@ -207,6 +207,24 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script type="text/javascript" src="config.js"></script>
     <script type="text/javascript">
+        const API_BASE = (window.EMAILJS_CONFIG && window.EMAILJS_CONFIG.apiServer) || '';
+        async function guardAuth() {
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/status`, { credentials: 'include' });
+                if (!res.ok) throw new Error('Auth check failed');
+                const data = await res.json();
+                if (!data.authenticated) {
+                    window.location.href = '/admin/login.html';
+                    return false;
+                }
+                return true;
+            } catch (e) {
+                window.location.href = '/admin/login.html';
+                return false;
+            }
+        }
+        
+        guardAuth();
         
         let newsletterQueue = null;
         let emailStatuses = {};

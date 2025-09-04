@@ -141,8 +141,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Android Debug Bridge (ADB) documentation
 - EmailJS for email functionality
-- GitHub Pages for hosting
-- The Android developer community
+- GitHub Pages for hosting 
+- The Android developer community 
 
 ## 📞 Contact
 

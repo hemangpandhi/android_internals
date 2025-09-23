@@ -367,6 +367,42 @@
       font-weight: 600;
     }
     
+    .fps-good {
+      color: #3ddc84 !important;
+      font-weight: 700 !important;
+    }
+    
+    .fps-poor {
+      color: #ff6b6b !important;
+      font-weight: 700 !important;
+    }
+    
+    .streaming-performance {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+    }
+    
+    .performance-metric {
+      text-align: center;
+    }
+    
+    .performance-metric .label {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-bottom: 0.25rem;
+    }
+    
+    .performance-metric .value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #3ddc84;
+    }
+    
     @media (max-width: 768px) {
       .streaming-container {
         grid-template-columns: 1fr;
@@ -466,9 +502,26 @@
               <div class="input-section">
                 <h4>Streaming Info</h4>
                 <div class="streaming-info">
-                  <div>FPS: <span id="fps-counter">0</span></div>
-                  <div>Latency: <span id="latency-counter">0ms</span></div>
                   <div>Status: <span id="connection-status">Disconnected</span></div>
+                </div>
+                
+                <div class="streaming-performance">
+                  <div class="performance-metric">
+                    <div class="label">FPS</div>
+                    <div class="value" id="streaming-fps">0</div>
+                  </div>
+                  <div class="performance-metric">
+                    <div class="label">Latency</div>
+                    <div class="value" id="streaming-latency">0ms</div>
+                  </div>
+                  <div class="performance-metric">
+                    <div class="label">Frame Size</div>
+                    <div class="value" id="streaming-size">0KB</div>
+                  </div>
+                  <div class="performance-metric">
+                    <div class="label">Target</div>
+                    <div class="value">60 FPS</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1047,6 +1100,23 @@
         case 'screenshot':
           displayScreenshot(data.data);
           updateFpsCounter();
+          
+          // Update performance info if available
+          if (data.captureTime) {
+            document.getElementById('streaming-latency').textContent = `${data.captureTime}ms`;
+          }
+          if (data.size) {
+            const sizeKB = Math.round(data.size / 1024);
+            document.getElementById('streaming-size').textContent = `${sizeKB}KB`;
+          }
+          break;
+          
+        case 'fps_update':
+          // Update FPS display with real-time data
+          if (data.fps !== undefined) {
+            document.getElementById('streaming-fps').textContent = `${data.fps} FPS`;
+            document.getElementById('streaming-fps').className = data.fps >= 50 ? 'fps-good' : 'fps-poor';
+          }
           break;
           
         case 'touch_result':

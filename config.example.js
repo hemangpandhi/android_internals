@@ -19,6 +19,15 @@ window.EMAILJS_CONFIG = {
   enableContactForm: true,
   enableAnalytics: false,
   
+  // Emulator Streaming Configuration
+  emulatorStreaming: {
+    targetFps: 60,
+    maxWidth: 1080,
+    maxHeight: 1920,
+    quality: 0.8,
+    compression: true
+  },
+  
   // Development Settings
   debugMode: false,
   logLevel: 'error' // 'debug', 'info', 'warn', 'error'

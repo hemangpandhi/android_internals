@@ -20,6 +20,12 @@ class EmulatorManager {
     this.avdManagerPath = this.findAvdManagerPath();
     this.adbPath = this.findAdbPath();
     this.streamingClients = new Map(); // Track streaming clients
+    
+    // Log the paths being used for debugging
+    console.log(`🔧 Android SDK: ${this.androidHome}`);
+    console.log(`📱 Emulator: ${this.emulatorPath}`);
+    console.log(`⚙️  AVD Manager: ${this.avdManagerPath}`);
+    console.log(`🔧 ADB: ${this.adbPath}`);
   }
 
   findEmulatorPath() {
@@ -877,12 +883,12 @@ class EmulatorAPIServer {
     let consecutiveErrors = 0;
     let lastFrameTime = 0;
     
-    // Optimized streaming configuration for better performance
+    // Optimized streaming configuration for better performance and quality
     const defaultConfig = {
-      targetFps: 30, // Reduced from 60 to 30 for better stability
-      maxWidth: 720,  // Reduced resolution for better performance
-      maxHeight: 1280,
-      quality: 0.7,   // Reduced quality for faster processing
+      targetFps: 20, // Optimized for stability while maintaining good quality
+      maxWidth: 1080,  // Higher resolution for better quality
+      maxHeight: 1920,
+      quality: 0.8,   // Higher quality for better visual experience
       compression: true
     };
     
@@ -900,10 +906,12 @@ class EmulatorAPIServer {
         // Reset error counter on successful capture
         consecutiveErrors = 0;
         
-        // Apply basic compression for performance
+        // Apply compression for performance while maintaining quality
         let processedData = screenshotData;
-        if (defaultConfig.compression && screenshotData.length > 50000) { // Compress if > 50KB
-          processedData = screenshotData; // In real implementation, apply actual compression
+        if (defaultConfig.compression && screenshotData.length > 200000) { // Compress if > 200KB
+          // For now, we'll use the raw data but in a real implementation,
+          // you would resize the image here using sharp or jimp
+          processedData = screenshotData;
         }
         
         const base64Data = processedData.toString('base64');

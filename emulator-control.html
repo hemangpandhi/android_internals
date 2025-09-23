@@ -535,10 +535,10 @@
                     <div class="label">Frame Size</div>
                     <div class="value" id="streaming-size">0KB</div>
                   </div>
-                  <div class="performance-metric">
-                    <div class="label">Target</div>
-                    <div class="value">60 FPS</div>
-                  </div>
+        <div class="performance-metric">
+          <div class="label">Target</div>
+          <div class="value">20 FPS</div>
+        </div>
                 </div>
               </div>
             </div>
@@ -1132,7 +1132,7 @@
           // Update FPS display with real-time data
           if (data.fps !== undefined) {
             document.getElementById('streaming-fps').textContent = `${data.fps} FPS`;
-            document.getElementById('streaming-fps').className = data.fps >= 50 ? 'fps-good' : 'fps-poor';
+            document.getElementById('streaming-fps').className = data.fps >= 15 ? 'fps-good' : 'fps-poor';
           }
           break;
           
@@ -1186,13 +1186,23 @@
             offsetX = (containerWidth - displayWidth) / 2;
           }
           
-          // Set canvas size to container size
-          streamingCanvas.width = containerWidth;
-          streamingCanvas.height = containerHeight;
+          // Set canvas size to container size with device pixel ratio for better quality
+          const devicePixelRatio = window.devicePixelRatio || 1;
+          streamingCanvas.width = containerWidth * devicePixelRatio;
+          streamingCanvas.height = containerHeight * devicePixelRatio;
+          streamingCanvas.style.width = containerWidth + 'px';
+          streamingCanvas.style.height = containerHeight + 'px';
+          
+          // Scale context for better quality
+          streamingContext.scale(devicePixelRatio, devicePixelRatio);
           
           // Clear canvas with black background
           streamingContext.fillStyle = '#000000';
           streamingContext.fillRect(0, 0, containerWidth, containerHeight);
+          
+          // Enable image smoothing for better quality
+          streamingContext.imageSmoothingEnabled = true;
+          streamingContext.imageSmoothingQuality = 'high';
           
           // Draw image centered with proper aspect ratio
           streamingContext.drawImage(img, offsetX, offsetY, displayWidth, displayHeight);

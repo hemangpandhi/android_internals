@@ -628,23 +628,36 @@
     
     // Refresh the list of available emulators (defined early for button onclick)
     async function refreshEmulators() {
+      console.log('🔄 refreshEmulators called');
       logToConsole('Refreshing emulator list...', 'info');
       
       try {
         // Show loading state
         const emulatorList = document.getElementById('emulator-list');
-        const noEmulators = document.getElementById('no-emulators');
+        console.log('📱 emulatorList element:', emulatorList);
+        
+        if (!emulatorList) {
+          console.error('❌ emulator-list element not found!');
+          return;
+        }
         
         emulatorList.innerHTML = '<div style="text-align: center; padding: 2rem;"><div class="loading-spinner"></div><p style="margin-top: 1rem;">Loading emulators...</p></div>';
+        console.log('⏳ Loading state set');
         
         // Try to fetch real emulator data first
         try {
+          console.log('🌐 Fetching from API: http://localhost:3002/api/emulators');
           const response = await fetch('http://localhost:3002/api/emulators');
+          console.log('📡 API Response:', response.status, response.statusText);
+          
           if (response.ok) {
             const data = await response.json();
+            console.log('📊 API Data received:', data);
+            
             if (data && data.length > 0) {
               emulators = data;
               logToConsole(`Loaded ${emulators.length} real emulators from system`, 'success');
+              console.log('✅ Real emulators loaded:', emulators);
             } else {
               throw new Error('No emulators found');
             }
@@ -652,15 +665,19 @@
             throw new Error(`API returned ${response.status}`);
           }
         } catch (apiError) {
+          console.warn('⚠️ API call failed:', apiError);
           logToConsole(`API call failed: ${apiError.message}`, 'warning');
           logToConsole('Using mock data for demonstration', 'info');
           emulators = getMockEmulators();
+          console.log('🎭 Using mock data:', emulators);
         }
         
+        console.log('🎨 Calling displayEmulators with:', emulators);
         displayEmulators();
         updateRunningEmulators();
         
       } catch (error) {
+        console.error('💥 Error in refreshEmulators:', error);
         logToConsole(`Error refreshing emulators: ${error.message}`, 'error');
         // Use mock data as fallback
         emulators = getMockEmulators();
@@ -683,14 +700,22 @@
     
     // Display emulators in the grid
     function displayEmulators() {
+      console.log('🎨 displayEmulators called with emulators:', emulators);
+      
       const emulatorList = document.getElementById('emulator-list');
       const noEmulators = document.getElementById('no-emulators');
       
+      console.log('📱 emulatorList element:', emulatorList);
+      console.log('📝 noEmulators element:', noEmulators);
+      
       if (emulators.length === 0) {
+        console.log('❌ No emulators to display');
         emulatorList.style.display = 'none';
         noEmulators.style.display = 'block';
         return;
       }
+      
+      console.log(`✅ Displaying ${emulators.length} emulators`);
       
       emulatorList.style.display = 'grid';
       noEmulators.style.display = 'none';

@@ -602,6 +602,30 @@
     let fpsCounter = 0;
     let lastFpsTime = Date.now();
     
+    // Test API connection function (defined early for button onclick)
+    async function testAPIConnection() {
+      logToConsole('Testing API connection to http://localhost:3002...', 'info');
+      
+      try {
+        const response = await fetch('http://localhost:3002/api/emulators');
+        logToConsole(`API Response Status: ${response.status}`, 'info');
+        
+        if (response.ok) {
+          const data = await response.json();
+          logToConsole(`✅ API connection successful! Received ${data.length} emulators`, 'success');
+          
+          // Update emulators with real data
+          emulators = data;
+          displayEmulators();
+        } else {
+          logToConsole(`❌ API returned error: ${response.status} ${response.statusText}`, 'error');
+        }
+      } catch (error) {
+        logToConsole(`❌ API connection failed: ${error.message}`, 'error');
+        logToConsole('Make sure the emulator server is running on port 3002', 'info');
+      }
+    }
+    
     // Initialize the emulator control interface
     document.addEventListener('DOMContentLoaded', function() {
       logToConsole('Initializing emulator control interface...', 'info');
@@ -1076,30 +1100,6 @@
         document.getElementById('fps-counter').textContent = fpsCounter;
         fpsCounter = 0;
         lastFpsTime = now;
-      }
-    }
-    
-    // Test API connection
-    async function testAPIConnection() {
-      logToConsole('Testing API connection to http://localhost:3002...', 'info');
-      
-      try {
-        const response = await fetch('http://localhost:3002/api/emulators');
-        logToConsole(`API Response Status: ${response.status}`, 'info');
-        
-        if (response.ok) {
-          const data = await response.json();
-          logToConsole(`✅ API connection successful! Received ${data.length} emulators`, 'success');
-          
-          // Update emulators with real data
-          emulators = data;
-          displayEmulators();
-        } else {
-          logToConsole(`❌ API returned error: ${response.status} ${response.statusText}`, 'error');
-        }
-      } catch (error) {
-        logToConsole(`❌ API connection failed: ${error.message}`, 'error');
-        logToConsole('Make sure the emulator server is running on port 3002', 'info');
       }
     }
   </script>

@@ -649,9 +649,25 @@
         
         emulatorList.innerHTML = '<div style="text-align: center; padding: 2rem;"><div class="loading-spinner"></div><p style="margin-top: 1rem;">Loading emulators...</p></div>';
         
-        // Always use mock data for now to ensure the interface works
-        emulators = getMockEmulators();
-        logToConsole(`Loaded ${emulators.length} mock emulators for demonstration`, 'info');
+        // Try to fetch real emulator data first
+        try {
+          const response = await fetch('http://localhost:3002/api/emulators');
+          if (response.ok) {
+            const data = await response.json();
+            if (data && data.length > 0) {
+              emulators = data;
+              logToConsole(`Loaded ${emulators.length} real emulators from system`, 'success');
+            } else {
+              throw new Error('No emulators found');
+            }
+          } else {
+            throw new Error(`API returned ${response.status}`);
+          }
+        } catch (apiError) {
+          logToConsole(`API call failed: ${apiError.message}`, 'warning');
+          logToConsole('Using mock data for demonstration', 'info');
+          emulators = getMockEmulators();
+        }
         
         displayEmulators();
         updateRunningEmulators();

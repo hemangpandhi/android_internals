@@ -107,7 +107,12 @@ class EmulatorManager {
       const trimmedLine = line.trim();
       
       if (trimmedLine.startsWith('Name:')) {
-        if (currentAvd) avds.push(currentAvd);
+        if (currentAvd) {
+          // Only add AVD if it has a name and path (basic validation)
+          if (currentAvd.name && currentAvd.path) {
+            avds.push(currentAvd);
+          }
+        }
         currentAvd = {
           id: trimmedLine.replace('Name:', '').trim(),
           name: trimmedLine.replace('Name:', '').trim(),
@@ -116,27 +121,86 @@ class EmulatorManager {
           apiLevel: '',
           abi: '',
           skin: '',
-          sdcard: ''
+          sdcard: '',
+          resolution: 'Unknown',
+          ram: 'Unknown',
+          storage: 'Unknown',
+          androidVersion: 'Unknown'
         };
       } else if (currentAvd && trimmedLine.startsWith('Path:')) {
         currentAvd.path = trimmedLine.replace('Path:', '').trim();
       } else if (currentAvd && trimmedLine.startsWith('Target:')) {
         currentAvd.target = trimmedLine.replace('Target:', '').trim();
         // Extract API level from target
-        const apiMatch = currentAvd.target.match(/API (\d+)/);
+        let apiMatch = currentAvd.target.match(/API (\d+)/);
+        if (!apiMatch && currentAvd.name) {
+          // Try to extract API level from AVD name
+          apiMatch = currentAvd.name.match(/API[_-]?(\d+)/);
+        }
         if (apiMatch) {
           currentAvd.apiLevel = apiMatch[1];
+          // Map API level to Android version
+          const versionMap = {
+            '29': 'Android 10', '30': 'Android 11', '31': 'Android 12',
+            '32': 'Android 12L', '33': 'Android 13', '34': 'Android 14',
+            '35': 'Android 15'
+          };
+          currentAvd.androidVersion = versionMap[apiMatch[1]] || `Android API ${apiMatch[1]}`;
         }
       } else if (currentAvd && trimmedLine.startsWith('ABI:')) {
         currentAvd.abi = trimmedLine.replace('ABI:', '').trim();
       } else if (currentAvd && trimmedLine.startsWith('Skin:')) {
         currentAvd.skin = trimmedLine.replace('Skin:', '').trim();
+        // Extract resolution from skin name
+        const skinResolutions = {
+          'pixel_xl_silver': '1440x2560',
+          'pixel_3a': '1080x2220',
+          'pixel_3a_xl': '1080x2160',
+          'pixel_4': '1080x2280',
+          'pixel_4_xl': '1440x3040',
+          'pixel_5': '1080x2340',
+          'pixel_6': '1080x2400',
+          'pixel_6_pro': '1440x3120',
+          'pixel_7': '1080x2400',
+          'pixel_7_pro': '1440x3120',
+          'nexus_5': '1080x1920',
+          'nexus_6': '1440x2560',
+          'nexus_9': '1536x2048'
+        };
+        currentAvd.resolution = skinResolutions[currentAvd.skin] || 'Unknown';
       } else if (currentAvd && trimmedLine.startsWith('Sdcard:')) {
         currentAvd.sdcard = trimmedLine.replace('Sdcard:', '').trim();
+        currentAvd.storage = currentAvd.sdcard;
       }
     }
 
-    if (currentAvd) avds.push(currentAvd);
+    // Add the last AVD if it's valid
+    if (currentAvd && currentAvd.name && currentAvd.path) {
+      avds.push(currentAvd);
+    }
+
+    // Add default values for missing fields and extract API levels from names
+    avds.forEach(avd => {
+      if (!avd.ram) avd.ram = '2GB';
+      if (!avd.storage) avd.storage = '16GB';
+      if (!avd.resolution) avd.resolution = '1080x1920';
+      if (!avd.abi) avd.abi = 'arm64-v8a';
+      
+      // Extract API level from name if not already set
+      if (!avd.apiLevel && avd.name) {
+        const apiMatch = avd.name.match(/API[_-]?(\d+)/);
+        if (apiMatch) {
+          avd.apiLevel = apiMatch[1];
+          const versionMap = {
+            '29': 'Android 10', '30': 'Android 11', '31': 'Android 12',
+            '32': 'Android 12L', '33': 'Android 13', '34': 'Android 14',
+            '35': 'Android 15'
+          };
+          avd.androidVersion = versionMap[apiMatch[1]] || `Android API ${apiMatch[1]}`;
+        }
+      }
+    });
+
     return avds;
   }
 
@@ -838,3 +902,4 @@ process.on('SIGTERM', () => {
   console.log('\n🛑 Shutting down Emulator API Server...');
   process.exit(0);
 });
+

@@ -771,10 +771,10 @@
           
           <div class="emulator-actions">
             ${!runningEmulators.has(emulator.id) ? 
-              `<button class="btn-emulator btn-launch" onclick="launchEmulator('${emulator.id}')">
+              `<button class="btn-emulator btn-launch" onclick="launchEmulator('${emulator.id}', event)">
                 🚀 Launch
               </button>` : 
-              `<button class="btn-emulator btn-stop" onclick="stopEmulator('${emulator.id}')">
+              `<button class="btn-emulator btn-stop" onclick="stopEmulator('${emulator.id}', event)">
                 ⏹️ Stop
               </button>`
             }
@@ -792,18 +792,23 @@
     }
     
     // Launch an emulator
-    async function launchEmulator(emulatorId) {
+    async function launchEmulator(emulatorId, event) {
       const emulator = emulators.find(e => e.id === emulatorId);
       if (!emulator) return;
       
       logToConsole(`Launching emulator: ${emulator.name}`, 'info');
       
+      let button = null;
+      let originalText = '';
+      
       try {
         // Show loading state
-        const button = event.target;
-        const originalText = button.textContent;
-        button.innerHTML = '<div class="loading-spinner"></div> Starting...';
-        button.disabled = true;
+        if (event && event.target) {
+          button = event.target;
+          originalText = button.textContent;
+          button.innerHTML = '<div class="loading-spinner"></div> Starting...';
+          button.disabled = true;
+        }
         
         // Call emulator API to launch emulator
         const response = await fetch(`http://localhost:3002/api/emulators/${emulatorId}/launch`, {
@@ -823,25 +828,31 @@
         logToConsole(`Failed to launch ${emulator.name}: ${error.message}`, 'error');
         
         // Reset button state
-        const button = event.target;
-        button.textContent = '🚀 Launch';
-        button.disabled = false;
+        if (button) {
+          button.textContent = '🚀 Launch';
+          button.disabled = false;
+        }
       }
     }
     
     // Stop an emulator
-    async function stopEmulator(emulatorId) {
+    async function stopEmulator(emulatorId, event) {
       const emulator = emulators.find(e => e.id === emulatorId);
       if (!emulator) return;
       
       logToConsole(`Stopping emulator: ${emulator.name}`, 'info');
       
+      let button = null;
+      let originalText = '';
+      
       try {
         // Show loading state
-        const button = event.target;
-        const originalText = button.textContent;
-        button.innerHTML = '<div class="loading-spinner"></div> Stopping...';
-        button.disabled = true;
+        if (event && event.target) {
+          button = event.target;
+          originalText = button.textContent;
+          button.innerHTML = '<div class="loading-spinner"></div> Stopping...';
+          button.disabled = true;
+        }
         
         // Call emulator API to stop emulator
         const response = await fetch(`http://localhost:3002/api/emulators/${emulatorId}/stop`, {
@@ -861,9 +872,10 @@
         logToConsole(`Failed to stop ${emulator.name}: ${error.message}`, 'error');
         
         // Reset button state
-        const button = event.target;
-        button.textContent = '⏹️ Stop';
-        button.disabled = false;
+        if (button) {
+          button.textContent = '⏹️ Stop';
+          button.disabled = false;
+        }
       }
     }
     

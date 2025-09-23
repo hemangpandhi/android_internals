@@ -654,8 +654,10 @@ class EmulatorAPIServer {
     }
   }
 
-  async handleLaunchEmulator(req, res, avdId, options) {
+  async handleLaunchEmulator(req, res) {
     try {
+      const { avdId } = req.params;
+      const options = req.body;
       const result = await this.emulatorManager.launchEmulator(avdId, options);
       this.sendResponse(res, 200, result);
     } catch (error) {
@@ -664,8 +666,9 @@ class EmulatorAPIServer {
     }
   }
 
-  async handleStopEmulator(req, res, avdId) {
+  async handleStopEmulator(req, res) {
     try {
+      const { avdId } = req.params;
       const result = await this.emulatorManager.stopEmulator(avdId);
       this.sendResponse(res, 200, result);
     } catch (error) {

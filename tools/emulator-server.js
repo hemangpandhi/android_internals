@@ -26,6 +26,8 @@ class EmulatorManager {
     if (!this.androidHome) return null;
     
     const possiblePaths = [
+      path.join(this.androidHome, 'emulator_bk', 'emulator'),
+      path.join(this.androidHome, 'emulator_bk', 'emulator.exe'),
       path.join(this.androidHome, 'emulator', 'emulator'),
       path.join(this.androidHome, 'emulator', 'emulator.exe'),
       path.join(this.androidHome, 'tools', 'emulator'),
@@ -34,6 +36,7 @@ class EmulatorManager {
     
     for (const emulatorPath of possiblePaths) {
       if (fs.existsSync(emulatorPath)) {
+        console.log(`🔧 Using emulator binary: ${emulatorPath}`);
         return emulatorPath;
       }
     }

@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Android Emulator Control - Android Internals</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="icon" href="assets/images/android_logo.PNG" type="image/png">
+  <link rel="manifest" href="assets/manifest.json">
+  <meta name="theme-color" content="#3ddc84">
+  <style>
+    .emulator-control-section {
+      margin: 2rem 0;
+      padding: 2rem;
+      background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+      border-radius: 16px;
+      color: white;
+    }
+    
+    .emulator-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+    
+    .emulator-card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+    }
+    
+    .emulator-card h3 {
+      color: #3ddc84;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .emulator-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ef4444;
+    }
+    
+    .status-indicator.running {
+      background: #10b981;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .emulator-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    
+    .btn-emulator {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+    }
+    
+    .btn-launch {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+    }
+    
+    .btn-launch:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      transform: translateY(-2px);
+    }
+    
+    .btn-stop {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+    }
+    
+    .btn-stop:hover {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      transform: translateY(-2px);
+    }
+    
+    .btn-config {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white;
+    }
+    
+    .btn-config:hover {
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      transform: translateY(-2px);
+    }
+    
+    .avd-selector {
+      margin: 1rem 0;
+    }
+    
+    .avd-selector select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 1rem;
+    }
+    
+    .avd-selector select option {
+      background: #1f2937;
+      color: white;
+    }
+    
+    .emulator-specs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+    }
+    
+    .spec-item {
+      text-align: center;
+    }
+    
+    .spec-label {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-bottom: 0.25rem;
+    }
+    
+    .spec-value {
+      font-weight: 600;
+      color: #3ddc84;
+    }
+    
+    .emulator-console {
+      background: #000;
+      color: #00ff00;
+      padding: 1rem;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 1rem;
+    }
+    
+    .console-line {
+      margin-bottom: 0.25rem;
+    }
+    
+    .console-error {
+      color: #ff4444;
+    }
+    
+    .console-success {
+      color: #44ff44;
+    }
+    
+    .console-info {
+      color: #4444ff;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #3ddc84;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .no-emulators {
+      text-align: center;
+      padding: 3rem;
+      color: #9ca3af;
+    }
+    
+    .refresh-btn {
+      background: linear-gradient(135deg, #3ddc84, #2bb673);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      margin: 1rem 0;
+      transition: all 0.3s ease;
+    }
+    
+    .refresh-btn:hover {
+      background: linear-gradient(135deg, #2bb673, #1ea863);
+      transform: translateY(-2px);
+    }
+    
+    /* Streaming Interface Styles */
+    .streaming-interface {
+      margin-top: 2rem;
+      background: rgba(0, 0, 0, 0.9);
+      border-radius: 16px;
+      padding: 2rem;
+      color: white;
+    }
+    
+    .streaming-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .streaming-header h3 {
+      color: #3ddc84;
+      margin: 0;
+    }
+    
+    .streaming-container {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+    }
+    
+    .emulator-screen-container {
+      position: relative;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+    
+    .emulator-screen {
+      width: 100%;
+      height: 600px;
+      background: #000;
+      cursor: crosshair;
+      display: block;
+    }
+    
+    .streaming-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .streaming-status {
+      background: rgba(0, 0, 0, 0.8);
+      color: #3ddc84;
+      padding: 0.5rem 1rem;
+      border-radius: 0 0 8px 0;
+      font-weight: 600;
+      pointer-events: auto;
+    }
+    
+    .streaming-controls {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 8px 0 0 0;
+      pointer-events: auto;
+    }
+    
+    .control-btn {
+      background: rgba(61, 220, 132, 0.2);
+      border: 1px solid #3ddc84;
+      color: #3ddc84;
+      padding: 0.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: all 0.3s ease;
+    }
+    
+    .control-btn:hover {
+      background: rgba(61, 220, 132, 0.4);
+      transform: scale(1.1);
+    }
+    
+    .input-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    
+    .input-section {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .input-section h4 {
+      color: #3ddc84;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+    
+    .input-section input[type="text"] {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .input-section input[type="text"]::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    
+    .quick-actions .btn-emulator {
+      font-size: 0.9rem;
+      padding: 0.5rem 0.75rem;
+    }
+    
+    .streaming-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+    
+    .streaming-info span {
+      color: #3ddc84;
+      font-weight: 600;
+    }
+    
+    @media (max-width: 768px) {
+      .streaming-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .emulator-screen {
+        height: 400px;
+      }
+      
+      .quick-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <nav class="main-nav">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo-link">
+          <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+        </a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="index.html#topics" class="nav-link">Topics</a>
+          <a href="index.html#blogs" class="nav-link">Blogs</a>
+          <a href="emulator.html" class="nav-link">Emulator</a>
+          <a href="emulator-control.html" class="nav-link active">Control</a>
+          <a href="books.html" class="nav-link">Books</a>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="hero-content">
+      <h1 class="hero-title animate-fadein">Android Emulator Control</h1>
+      <p class="hero-subtitle animate-slidein">Manage and launch Android emulators from your browser</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="emulator-control-section">
+      <div class="container">
+        <h2>🚀 Emulator Management</h2>
+        <p>Control your Android Virtual Devices (AVDs) directly from this interface. Launch, stop, and monitor emulators with ease.</p>
+        
+        <div style="text-align: center; margin: 2rem 0;">
+          <button class="refresh-btn" onclick="refreshEmulators()">
+            🔄 Refresh Emulators
+          </button>
+        </div>
+        
+        <div id="emulator-list" class="emulator-grid">
+          <!-- Emulator cards will be populated here -->
+        </div>
+        
+        <!-- Emulator Streaming Interface -->
+        <div id="streaming-interface" class="streaming-interface" style="display: none;">
+          <div class="streaming-header">
+            <h3 id="streaming-title">📱 Emulator Streaming</h3>
+            <button class="btn-emulator btn-stop" onclick="stopStreaming()">⏹️ Stop Stream</button>
+          </div>
+          
+          <div class="streaming-container">
+            <div class="emulator-screen-container">
+              <canvas id="emulator-screen" class="emulator-screen"></canvas>
+              <div class="streaming-overlay">
+                <div class="streaming-status" id="streaming-status">Connecting...</div>
+                <div class="streaming-controls">
+                  <button class="control-btn" onclick="sendKeyInput('home')" title="Home">🏠</button>
+                  <button class="control-btn" onclick="sendKeyInput('back')" title="Back">⬅️</button>
+                  <button class="control-btn" onclick="sendKeyInput('menu')" title="Menu">📋</button>
+                  <button class="control-btn" onclick="sendKeyInput('power')" title="Power">🔌</button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="input-panel">
+              <div class="input-section">
+                <h4>Text Input</h4>
+                <input type="text" id="text-input" placeholder="Type text to send to emulator" />
+                <button class="btn-emulator btn-config" onclick="sendTextToEmulator()">Send Text</button>
+              </div>
+              
+              <div class="input-section">
+                <h4>Quick Actions</h4>
+                <div class="quick-actions">
+                  <button class="btn-emulator btn-launch" onclick="sendKeyInput('volume_up')">🔊 Vol Up</button>
+                  <button class="btn-emulator btn-launch" onclick="sendKeyInput('volume_down')">🔉 Vol Down</button>
+                  <button class="btn-emulator btn-launch" onclick="sendKeyInput('enter')">↵ Enter</button>
+                  <button class="btn-emulator btn-launch" onclick="sendKeyInput('escape')">⎋ Escape</button>
+                </div>
+              </div>
+              
+              <div class="input-section">
+                <h4>Streaming Info</h4>
+                <div class="streaming-info">
+                  <div>FPS: <span id="fps-counter">0</span></div>
+                  <div>Latency: <span id="latency-counter">0ms</span></div>
+                  <div>Status: <span id="connection-status">Disconnected</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="no-emulators" class="no-emulators" style="display: none;">
+          <h3>📱 No Emulators Found</h3>
+          <p>No Android Virtual Devices (AVDs) are currently available.</p>
+          <p>Create an AVD using Android Studio's AVD Manager or the command line.</p>
+          <div style="margin-top: 1rem;">
+            <a href="https://developer.android.com/studio/run/managing-avds" target="_blank" class="cta-button">
+              📖 Learn How to Create AVDs
+            </a>
+          </div>
+        </div>
+        
+        <div class="emulator-console" id="emulator-console">
+          <div class="console-line console-info">Android Emulator Control Console</div>
+          <div class="console-line">Ready to manage your emulators...</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section">
+      <div class="container">
+        <div class="content-card">
+          <h2>🔧 Emulator Features</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>📱 AVD Management</h3>
+              <p>List, select, and manage your Android Virtual Devices with detailed specifications and status monitoring.</p>
+            </div>
+            <div class="module-card">
+              <h3>🚀 Quick Launch</h3>
+              <p>Launch emulators with one click, including cold boot and snapshot restore options for faster startup.</p>
+            </div>
+            <div class="module-card">
+              <h3>📊 Real-time Monitoring</h3>
+              <p>Monitor emulator status, performance metrics, and console output in real-time.</p>
+            </div>
+            <div class="module-card">
+              <h3>⚙️ Configuration</h3>
+              <p>Configure emulator settings, hardware profiles, and launch parameters through the web interface.</p>
+            </div>
+          </div>
+          
+          <h2>🎯 Supported Operations</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>Launch Emulator</h3>
+              <p>Start selected AVD with configurable launch parameters and hardware acceleration.</p>
+            </div>
+            <div class="module-card">
+              <h3>Stop Emulator</h3>
+              <p>Gracefully shut down running emulators and clean up resources.</p>
+            </div>
+            <div class="module-card">
+              <h3>View Logs</h3>
+              <p>Access emulator console output and debug information in real-time.</p>
+            </div>
+            <div class="module-card">
+              <h3>Status Monitoring</h3>
+              <p>Track emulator state, performance metrics, and resource usage.</p>
+            </div>
+          </div>
+          
+          <h2>📋 Prerequisites</h2>
+          <div class="architecture-stack">
+            <div class="stack-item">Android SDK Installed</div>
+            <div class="stack-item">AVD Manager Access</div>
+            <div class="stack-item">Emulator Binary</div>
+            <div class="stack-item highlight">Virtual Device Images</div>
+            <div class="stack-item">Hardware Acceleration</div>
+            <div class="stack-item">Network Access</div>
+          </div>
+          
+          <div class="cta-content">
+            <h3>Need Help?</h3>
+            <p>Check the Android Emulator documentation for detailed setup instructions and troubleshooting guides.</p>
+            <a href="https://developer.android.com/studio/run/emulator" target="_blank" class="cta-button">📚 Emulator Documentation</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <a href="index.html" class="footer-logo-link">
+            <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
+          </a>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="hal.html">HAL</a></li>
+            <li><a href="framework.html">Framework</a></li>
+            <li><a href="adb.html">ADB</a></li>
+            <li><a href="emulator.html">Emulator</a></li>
+            <li><a href="books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/scripts.js"></script>
+  <script>
+    // Emulator Control JavaScript
+    let emulators = [];
+    let runningEmulators = new Set();
+    let currentStreamingEmulator = null;
+    let websocket = null;
+    let streamingCanvas = null;
+    let streamingContext = null;
+    let fpsCounter = 0;
+    let lastFpsTime = Date.now();
+    
+    // Initialize the emulator control interface
+    document.addEventListener('DOMContentLoaded', function() {
+      logToConsole('Initializing emulator control interface...', 'info');
+      refreshEmulators();
+      
+      // Set up periodic refresh for running emulators
+      setInterval(updateRunningEmulators, 5000);
+    });
+    
+    // Refresh the list of available emulators
+    async function refreshEmulators() {
+      logToConsole('Refreshing emulator list...', 'info');
+      
+      try {
+        // Show loading state
+        const emulatorList = document.getElementById('emulator-list');
+        const noEmulators = document.getElementById('no-emulators');
+        
+        emulatorList.innerHTML = '<div style="text-align: center; padding: 2rem;"><div class="loading-spinner"></div><p style="margin-top: 1rem;">Loading emulators...</p></div>';
+        
+        // Simulate API call to get emulators
+        // In a real implementation, this would call your backend API
+        const response = await fetch('/api/emulators');
+        
+        if (response.ok) {
+          emulators = await response.json();
+          logToConsole(`Found ${emulators.length} emulators`, 'success');
+        } else {
+          // Fallback to mock data for demonstration
+          emulators = getMockEmulators();
+          logToConsole('Using mock emulator data for demonstration', 'info');
+        }
+        
+        displayEmulators();
+        updateRunningEmulators();
+        
+      } catch (error) {
+        logToConsole(`Error refreshing emulators: ${error.message}`, 'error');
+        // Use mock data as fallback
+        emulators = getMockEmulators();
+        displayEmulators();
+      }
+    }
+    
+    // Display emulators in the grid
+    function displayEmulators() {
+      const emulatorList = document.getElementById('emulator-list');
+      const noEmulators = document.getElementById('no-emulators');
+      
+      if (emulators.length === 0) {
+        emulatorList.style.display = 'none';
+        noEmulators.style.display = 'block';
+        return;
+      }
+      
+      emulatorList.style.display = 'grid';
+      noEmulators.style.display = 'none';
+      
+      emulatorList.innerHTML = emulators.map(emulator => `
+        <div class="emulator-card">
+          <h3>📱 ${emulator.name}</h3>
+          <div class="emulator-status">
+            <div class="status-indicator ${runningEmulators.has(emulator.id) ? 'running' : ''}"></div>
+            <span>${runningEmulators.has(emulator.id) ? 'Running' : 'Stopped'}</span>
+          </div>
+          
+          <div class="emulator-specs">
+            <div class="spec-item">
+              <div class="spec-label">API Level</div>
+              <div class="spec-value">${emulator.apiLevel}</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Resolution</div>
+              <div class="spec-value">${emulator.resolution}</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">RAM</div>
+              <div class="spec-value">${emulator.ram}</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Storage</div>
+              <div class="spec-value">${emulator.storage}</div>
+            </div>
+          </div>
+          
+          <div class="emulator-actions">
+            ${!runningEmulators.has(emulator.id) ? 
+              `<button class="btn-emulator btn-launch" onclick="launchEmulator('${emulator.id}')">
+                🚀 Launch
+              </button>` : 
+              `<button class="btn-emulator btn-stop" onclick="stopEmulator('${emulator.id}')">
+                ⏹️ Stop
+              </button>`
+            }
+            ${runningEmulators.has(emulator.id) ? 
+              `<button class="btn-emulator btn-config" onclick="startStreaming('${emulator.id}', '${emulator.name}')">
+                📺 Stream
+              </button>` : 
+              `<button class="btn-emulator btn-config" onclick="configureEmulator('${emulator.id}')">
+                ⚙️ Config
+              </button>`
+            }
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // Launch an emulator
+    async function launchEmulator(emulatorId) {
+      const emulator = emulators.find(e => e.id === emulatorId);
+      if (!emulator) return;
+      
+      logToConsole(`Launching emulator: ${emulator.name}`, 'info');
+      
+      try {
+        // Show loading state
+        const button = event.target;
+        const originalText = button.textContent;
+        button.innerHTML = '<div class="loading-spinner"></div> Starting...';
+        button.disabled = true;
+        
+        // Simulate API call to launch emulator
+        const response = await fetch(`/api/emulators/${emulatorId}/launch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+          runningEmulators.add(emulatorId);
+          logToConsole(`Emulator ${emulator.name} launched successfully`, 'success');
+          displayEmulators(); // Refresh the display
+        } else {
+          throw new Error('Failed to launch emulator');
+        }
+        
+      } catch (error) {
+        logToConsole(`Failed to launch ${emulator.name}: ${error.message}`, 'error');
+        
+        // Reset button state
+        const button = event.target;
+        button.textContent = '🚀 Launch';
+        button.disabled = false;
+      }
+    }
+    
+    // Stop an emulator
+    async function stopEmulator(emulatorId) {
+      const emulator = emulators.find(e => e.id === emulatorId);
+      if (!emulator) return;
+      
+      logToConsole(`Stopping emulator: ${emulator.name}`, 'info');
+      
+      try {
+        // Show loading state
+        const button = event.target;
+        const originalText = button.textContent;
+        button.innerHTML = '<div class="loading-spinner"></div> Stopping...';
+        button.disabled = true;
+        
+        // Simulate API call to stop emulator
+        const response = await fetch(`/api/emulators/${emulatorId}/stop`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+          runningEmulators.delete(emulatorId);
+          logToConsole(`Emulator ${emulator.name} stopped successfully`, 'success');
+          displayEmulators(); // Refresh the display
+        } else {
+          throw new Error('Failed to stop emulator');
+        }
+        
+      } catch (error) {
+        logToConsole(`Failed to stop ${emulator.name}: ${error.message}`, 'error');
+        
+        // Reset button state
+        const button = event.target;
+        button.textContent = '⏹️ Stop';
+        button.disabled = false;
+      }
+    }
+    
+    // Configure emulator settings
+    function configureEmulator(emulatorId) {
+      const emulator = emulators.find(e => e.id === emulatorId);
+      if (!emulator) return;
+      
+      logToConsole(`Opening configuration for: ${emulator.name}`, 'info');
+      
+      // In a real implementation, this would open a configuration modal
+      alert(`Configuration for ${emulator.name}\n\nThis would open a configuration panel with:\n• Hardware settings\n• Network configuration\n• Performance options\n• Launch parameters`);
+    }
+    
+    // Update running emulators status
+    async function updateRunningEmulators() {
+      if (runningEmulators.size === 0) return;
+      
+      try {
+        // Simulate API call to check running emulators
+        const response = await fetch('/api/emulators/running');
+        if (response.ok) {
+          const runningIds = await response.json();
+          runningEmulators = new Set(runningIds);
+          displayEmulators(); // Update the display
+        }
+      } catch (error) {
+        // Silently handle errors for background updates
+      }
+    }
+    
+    // Log messages to the console
+    function logToConsole(message, type = 'info') {
+      const console = document.getElementById('emulator-console');
+      const timestamp = new Date().toLocaleTimeString();
+      const line = document.createElement('div');
+      line.className = `console-line console-${type}`;
+      line.textContent = `[${timestamp}] ${message}`;
+      console.appendChild(line);
+      console.scrollTop = console.scrollHeight;
+      
+      // Keep only the last 50 lines
+      while (console.children.length > 50) {
+        console.removeChild(console.firstChild);
+      }
+    }
+    
+    // Mock emulator data for demonstration
+    function getMockEmulators() {
+      return [
+        {
+          id: 'pixel_7_api_34',
+          name: 'Pixel 7 API 34',
+          apiLevel: '34',
+          resolution: '1080x2400',
+          ram: '4GB',
+          storage: '32GB',
+          androidVersion: 'Android 14',
+          architecture: 'x86_64'
+        },
+        {
+          id: 'pixel_6_api_33',
+          name: 'Pixel 6 API 33',
+          apiLevel: '33',
+          resolution: '1080x2400',
+          ram: '8GB',
+          storage: '64GB',
+          androidVersion: 'Android 13',
+          architecture: 'x86_64'
+        },
+        {
+          id: 'nexus_5_api_30',
+          name: 'Nexus 5 API 30',
+          apiLevel: '30',
+          resolution: '1080x1920',
+          ram: '2GB',
+          storage: '16GB',
+          androidVersion: 'Android 11',
+          architecture: 'x86'
+        },
+        {
+          id: 'tablet_api_31',
+          name: '10.1" Tablet API 31',
+          apiLevel: '31',
+          resolution: '1200x1920',
+          ram: '6GB',
+          storage: '32GB',
+          androidVersion: 'Android 12',
+          architecture: 'x86_64'
+        }
+      ];
+    
+    // Streaming Functions
+    function startStreaming(avdId, emulatorName) {
+      currentStreamingEmulator = avdId;
+      
+      // Show streaming interface
+      document.getElementById('streaming-interface').style.display = 'block';
+      document.getElementById('streaming-title').textContent = `📱 ${emulatorName} - Streaming`;
+      
+      // Initialize canvas
+      streamingCanvas = document.getElementById('emulator-screen');
+      streamingContext = streamingCanvas.getContext('2d');
+      
+      // Set up canvas for touch events
+      streamingCanvas.addEventListener('click', handleTouchEvent);
+      streamingCanvas.addEventListener('touchstart', handleTouchEvent);
+      streamingCanvas.addEventListener('touchend', handleTouchEvent);
+      
+      // Connect WebSocket
+      connectWebSocket(avdId);
+      
+      logToConsole(`Starting streaming for ${emulatorName}`, 'info');
+    }
+    
+    function stopStreaming() {
+      if (websocket) {
+        websocket.close();
+        websocket = null;
+      }
+      
+      // Hide streaming interface
+      document.getElementById('streaming-interface').style.display = 'none';
+      currentStreamingEmulator = null;
+      
+      // Clear canvas
+      if (streamingContext) {
+        streamingContext.clearRect(0, 0, streamingCanvas.width, streamingCanvas.height);
+      }
+      
+      logToConsole('Streaming stopped', 'info');
+    }
+    
+    function connectWebSocket(avdId) {
+      const wsUrl = `ws://localhost:3002`;
+      websocket = new WebSocket(wsUrl);
+      
+      websocket.onopen = function() {
+        logToConsole('WebSocket connected', 'success');
+        updateConnectionStatus('Connected');
+        
+        // Start streaming
+        websocket.send(JSON.stringify({
+          type: 'start_streaming',
+          avdId: avdId
+        }));
+      };
+      
+      websocket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        handleWebSocketMessage(data);
+      };
+      
+      websocket.onclose = function() {
+        logToConsole('WebSocket disconnected', 'error');
+        updateConnectionStatus('Disconnected');
+      };
+      
+      websocket.onerror = function(error) {
+        logToConsole(`WebSocket error: ${error}`, 'error');
+        updateConnectionStatus('Error');
+      };
+    }
+    
+    function handleWebSocketMessage(data) {
+      switch (data.type) {
+        case 'streaming_started':
+          updateStreamingStatus('Streaming...');
+          logToConsole(`Streaming started for ${data.avdId}`, 'success');
+          break;
+          
+        case 'screenshot':
+          displayScreenshot(data.data);
+          updateFpsCounter();
+          break;
+          
+        case 'touch_result':
+          logToConsole(`Touch input sent: ${data.result.action} at (${data.result.x}, ${data.result.y})`, 'info');
+          break;
+          
+        case 'key_result':
+          logToConsole(`Key input sent: ${data.result.key}`, 'info');
+          break;
+          
+        case 'text_result':
+          logToConsole(`Text input sent: "${data.result.text}"`, 'info');
+          break;
+          
+        case 'error':
+          logToConsole(`Error: ${data.message}`, 'error');
+          break;
+          
+        default:
+          console.log('Unknown message type:', data.type);
+      }
+    }
+    
+    function displayScreenshot(base64Data) {
+      if (!streamingContext) return;
+      
+      const img = new Image();
+      img.onload = function() {
+        // Scale canvas to fit the container while maintaining aspect ratio
+        const containerWidth = streamingCanvas.parentElement.clientWidth;
+        const containerHeight = 600; // Fixed height
+        const aspectRatio = img.width / img.height;
+        
+        let displayWidth = containerWidth;
+        let displayHeight = containerWidth / aspectRatio;
+        
+        if (displayHeight > containerHeight) {
+          displayHeight = containerHeight;
+          displayWidth = containerHeight * aspectRatio;
+        }
+        
+        streamingCanvas.width = displayWidth;
+        streamingCanvas.height = displayHeight;
+        
+        streamingContext.clearRect(0, 0, displayWidth, displayHeight);
+        streamingContext.drawImage(img, 0, 0, displayWidth, displayHeight);
+      };
+      img.src = `data:image/png;base64,${base64Data}`;
+    }
+    
+    function handleTouchEvent(event) {
+      if (!currentStreamingEmulator || !websocket) return;
+      
+      event.preventDefault();
+      
+      const rect = streamingCanvas.getBoundingClientRect();
+      const scaleX = streamingCanvas.width / rect.width;
+      const scaleY = streamingCanvas.height / rect.height;
+      
+      let x, y;
+      
+      if (event.type === 'touchstart' || event.type === 'touchend') {
+        const touch = event.touches[0] || event.changedTouches[0];
+        x = (touch.clientX - rect.left) * scaleX;
+        y = (touch.clientY - rect.top) * scaleY;
+      } else {
+        x = (event.clientX - rect.left) * scaleX;
+        y = (event.clientY - rect.top) * scaleY;
+      }
+      
+      // Send touch input to emulator
+      websocket.send(JSON.stringify({
+        type: 'touch_input',
+        avdId: currentStreamingEmulator,
+        x: Math.round(x),
+        y: Math.round(y),
+        action: 'tap'
+      }));
+    }
+    
+    function sendKeyInput(key) {
+      if (!currentStreamingEmulator || !websocket) return;
+      
+      websocket.send(JSON.stringify({
+        type: 'key_input',
+        avdId: currentStreamingEmulator,
+        key: key
+      }));
+    }
+    
+    function sendTextToEmulator() {
+      if (!currentStreamingEmulator || !websocket) return;
+      
+      const textInput = document.getElementById('text-input');
+      const text = textInput.value.trim();
+      
+      if (text) {
+        websocket.send(JSON.stringify({
+          type: 'text_input',
+          avdId: currentStreamingEmulator,
+          text: text
+        }));
+        
+        textInput.value = '';
+      }
+    }
+    
+    function updateStreamingStatus(status) {
+      document.getElementById('streaming-status').textContent = status;
+    }
+    
+    function updateConnectionStatus(status) {
+      document.getElementById('connection-status').textContent = status;
+    }
+    
+    function updateFpsCounter() {
+      fpsCounter++;
+      const now = Date.now();
+      if (now - lastFpsTime >= 1000) {
+        document.getElementById('fps-counter').textContent = fpsCounter;
+        fpsCounter = 0;
+        lastFpsTime = now;
+      }
+    }
+  </script>
+</body>
+</html>

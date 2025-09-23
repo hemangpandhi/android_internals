@@ -1,0 +1,27 @@
+{
+  "name": "android-emulator-server",
+  "version": "1.0.0",
+  "description": "Android Emulator Control Server with Streaming Support",
+  "main": "emulator-server.js",
+  "scripts": {
+    "start": "node emulator-server.js",
+    "dev": "nodemon emulator-server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "android",
+    "emulator",
+    "streaming",
+    "websocket",
+    "adb"
+  ],
+  "author": "Android Internals Team",
+  "license": "MIT"
+}

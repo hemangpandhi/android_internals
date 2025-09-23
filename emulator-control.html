@@ -416,6 +416,9 @@
           <button class="refresh-btn" onclick="refreshEmulators()">
             🔄 Refresh Emulators
           </button>
+          <button class="refresh-btn" onclick="testAPIConnection()" style="margin-left: 1rem;">
+            🧪 Test API
+          </button>
         </div>
         
         <div id="emulator-list" class="emulator-grid">
@@ -602,6 +605,9 @@
     // Initialize the emulator control interface
     document.addEventListener('DOMContentLoaded', function() {
       logToConsole('Initializing emulator control interface...', 'info');
+      logToConsole('Loading emulator list...', 'info');
+      
+      // Load emulators directly
       refreshEmulators();
       
       // Set up periodic refresh for running emulators
@@ -619,18 +625,9 @@
         
         emulatorList.innerHTML = '<div style="text-align: center; padding: 2rem;"><div class="loading-spinner"></div><p style="margin-top: 1rem;">Loading emulators...</p></div>';
         
-        // Simulate API call to get emulators
-        // In a real implementation, this would call your backend API
-        const response = await fetch('/api/emulators');
-        
-        if (response.ok) {
-          emulators = await response.json();
-          logToConsole(`Found ${emulators.length} emulators`, 'success');
-        } else {
-          // Fallback to mock data for demonstration
-          emulators = getMockEmulators();
-          logToConsole('Using mock emulator data for demonstration', 'info');
-        }
+        // Always use mock data for now to ensure the interface works
+        emulators = getMockEmulators();
+        logToConsole(`Loaded ${emulators.length} mock emulators for demonstration`, 'info');
         
         displayEmulators();
         updateRunningEmulators();
@@ -720,8 +717,8 @@
         button.innerHTML = '<div class="loading-spinner"></div> Starting...';
         button.disabled = true;
         
-        // Simulate API call to launch emulator
-        const response = await fetch(`/api/emulators/${emulatorId}/launch`, {
+        // Call emulator API to launch emulator
+        const response = await fetch(`http://localhost:3002/api/emulators/${emulatorId}/launch`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
         });
@@ -758,8 +755,8 @@
         button.innerHTML = '<div class="loading-spinner"></div> Stopping...';
         button.disabled = true;
         
-        // Simulate API call to stop emulator
-        const response = await fetch(`/api/emulators/${emulatorId}/stop`, {
+        // Call emulator API to stop emulator
+        const response = await fetch(`http://localhost:3002/api/emulators/${emulatorId}/stop`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
         });
@@ -798,12 +795,16 @@
       if (runningEmulators.size === 0) return;
       
       try {
-        // Simulate API call to check running emulators
-        const response = await fetch('/api/emulators/running');
-        if (response.ok) {
-          const runningIds = await response.json();
-          runningEmulators = new Set(runningIds);
-          displayEmulators(); // Update the display
+        // Call emulator API to check running emulators
+        try {
+          const response = await fetch('http://localhost:3002/api/emulators/running');
+          if (response.ok) {
+            const runningIds = await response.json();
+            runningEmulators = new Set(runningIds);
+            displayEmulators(); // Update the display
+          }
+        } catch (error) {
+          // Silently handle errors for background updates
         }
       } catch (error) {
         // Silently handle errors for background updates
@@ -1075,6 +1076,30 @@
         document.getElementById('fps-counter').textContent = fpsCounter;
         fpsCounter = 0;
         lastFpsTime = now;
+      }
+    }
+    
+    // Test API connection
+    async function testAPIConnection() {
+      logToConsole('Testing API connection to http://localhost:3002...', 'info');
+      
+      try {
+        const response = await fetch('http://localhost:3002/api/emulators');
+        logToConsole(`API Response Status: ${response.status}`, 'info');
+        
+        if (response.ok) {
+          const data = await response.json();
+          logToConsole(`✅ API connection successful! Received ${data.length} emulators`, 'success');
+          
+          // Update emulators with real data
+          emulators = data;
+          displayEmulators();
+        } else {
+          logToConsole(`❌ API returned error: ${response.status} ${response.statusText}`, 'error');
+        }
+      } catch (error) {
+        logToConsole(`❌ API connection failed: ${error.message}`, 'error');
+        logToConsole('Make sure the emulator server is running on port 3002', 'info');
       }
     }
   </script>

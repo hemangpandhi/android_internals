@@ -64,16 +64,25 @@ class EmulatorManager {
   }
 
   findAdbPath() {
-    if (!this.androidHome) return null;
-    
     const possiblePaths = [
-      path.join(this.androidHome, 'platform-tools', 'adb'),
-      path.join(this.androidHome, 'platform-tools', 'adb.exe')
+      'adb', // Check system PATH first
+      path.join(this.androidHome || '', 'platform-tools', 'adb'),
+      path.join(this.androidHome || '', 'platform-tools', 'adb.exe')
     ];
     
     for (const adbPath of possiblePaths) {
-      if (fs.existsSync(adbPath)) {
-        return adbPath;
+      try {
+        if (adbPath === 'adb') {
+          // Check if adb is available in PATH
+          const { execSync } = require('child_process');
+          execSync('which adb', { stdio: 'ignore' });
+          return adbPath; // Return 'adb' to use system PATH
+        } else if (fs.existsSync(adbPath)) {
+          console.log(`🔧 Using ADB binary: ${adbPath}`);
+          return adbPath;
+        }
+      } catch (error) {
+        // Continue to next path
       }
     }
     
@@ -429,37 +438,46 @@ class EmulatorManager {
       try {
         const serial = await this.getDeviceSerial(avdId);
         
-        // Use direct streaming instead of file-based approach for better performance
+        // Use direct streaming with optimized settings
         const child = spawn(this.adbPath, ['-s', serial, 'exec-out', 'screencap', '-p'], {
-          stdio: ['ignore', 'pipe', 'pipe']
+          stdio: ['ignore', 'pipe', 'pipe'],
+          timeout: 2000 // Reduced timeout for faster failure detection
         });
         
         let data = Buffer.alloc(0);
+        let hasData = false;
         
         child.stdout.on('data', (chunk) => {
           data = Buffer.concat([data, chunk]);
+          hasData = true;
         });
         
         child.on('close', (code) => {
-          if (code === 0 && data.length > 0) {
+          if (code === 0 && hasData && data.length > 1000) { // Ensure we have actual image data
             resolve(data);
           } else {
-            reject(new Error(`Screenshot failed with code ${code}`));
+            reject(new Error(`Screenshot failed with code ${code}, data length: ${data.length}`));
           }
         });
         
         child.on('error', (error) => {
-          reject(error);
+          reject(new Error(`Screenshot process error: ${error.message}`));
         });
         
-        // Set timeout to prevent hanging
-        setTimeout(() => {
-          child.kill();
-          reject(new Error('Screenshot timeout'));
-        }, 5000);
+        // Set timeout to prevent hanging - reduced from 5000ms to 2000ms
+        const timeout = setTimeout(() => {
+          if (!child.killed) {
+            child.kill('SIGTERM');
+          }
+          reject(new Error('Screenshot timeout - emulator may not be ready'));
+        }, 2000);
+        
+        child.on('close', () => {
+          clearTimeout(timeout);
+        });
         
       } catch (error) {
-        reject(error);
+        reject(new Error(`Screenshot error: ${error.message}`));
       }
     });
   }
@@ -856,17 +874,19 @@ class EmulatorAPIServer {
     let isStreaming = true;
     let frameCount = 0;
     let lastFpsTime = Date.now();
+    let consecutiveErrors = 0;
+    let lastFrameTime = 0;
     
-    // Default streaming configuration (can be overridden by client)
+    // Optimized streaming configuration for better performance
     const defaultConfig = {
-      targetFps: 60,
-      maxWidth: 1080,
-      maxHeight: 1920,
-      quality: 0.8,
+      targetFps: 30, // Reduced from 60 to 30 for better stability
+      maxWidth: 720,  // Reduced resolution for better performance
+      maxHeight: 1280,
+      quality: 0.7,   // Reduced quality for faster processing
       compression: true
     };
     
-    // High-performance streaming with configurable FPS
+    // High-performance streaming with error recovery
     const streamFrame = async () => {
       if (!isStreaming || ws.readyState !== WebSocket.OPEN || !this.emulatorManager.isStreaming(avdId)) {
         return;
@@ -877,11 +897,13 @@ class EmulatorAPIServer {
         const screenshotData = await this.emulatorManager.takeScreenshot(avdId);
         const captureTime = Date.now() - startTime;
         
-        // Apply compression if enabled
+        // Reset error counter on successful capture
+        consecutiveErrors = 0;
+        
+        // Apply basic compression for performance
         let processedData = screenshotData;
-        if (defaultConfig.compression && screenshotData.length > 100000) { // Compress if > 100KB
-          // Simple compression by reducing quality (in real implementation, you'd use image compression)
-          processedData = screenshotData;
+        if (defaultConfig.compression && screenshotData.length > 50000) { // Compress if > 50KB
+          processedData = screenshotData; // In real implementation, apply actual compression
         }
         
         const base64Data = processedData.toString('base64');
@@ -896,6 +918,7 @@ class EmulatorAPIServer {
         }));
         
         frameCount++;
+        lastFrameTime = Date.now();
         
         // Calculate FPS every second
         const now = Date.now();
@@ -912,18 +935,34 @@ class EmulatorAPIServer {
           }));
         }
         
-        // Schedule next frame based on target FPS
+        // Adaptive frame timing based on performance
         const frameInterval = 1000 / defaultConfig.targetFps;
-        setTimeout(streamFrame, Math.max(0, frameInterval - captureTime));
+        const adaptiveDelay = Math.max(10, frameInterval - captureTime);
+        setTimeout(streamFrame, adaptiveDelay);
         
       } catch (error) {
-        console.error('Error streaming screenshot:', error);
-        isStreaming = false;
+        consecutiveErrors++;
+        console.error(`Error streaming screenshot (attempt ${consecutiveErrors}):`, error.message);
+        
+        // If too many consecutive errors, stop streaming
+        if (consecutiveErrors >= 5) {
+          console.error('Too many consecutive errors, stopping stream');
+          isStreaming = false;
+          ws.send(JSON.stringify({
+            type: 'error',
+            message: 'Stream stopped due to repeated errors'
+          }));
+          return;
+        }
+        
+        // Exponential backoff for errors
+        const backoffDelay = Math.min(1000, 100 * Math.pow(2, consecutiveErrors));
+        setTimeout(streamFrame, backoffDelay);
       }
     };
     
-    // Start streaming
-    streamFrame();
+    // Start streaming with initial delay
+    setTimeout(streamFrame, 100);
     
     ws.on('close', () => {
       isStreaming = false;

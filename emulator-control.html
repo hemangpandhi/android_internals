@@ -1162,39 +1162,55 @@
       
       const img = new Image();
       img.onload = function() {
-        // Get container dimensions
-        const container = streamingCanvas.parentElement;
-        const containerWidth = container.clientWidth;
-        const containerHeight = container.clientHeight || 600;
-        
-        // Calculate aspect ratios
-        const imageAspectRatio = img.width / img.height;
-        const containerAspectRatio = containerWidth / containerHeight;
-        
-        let displayWidth, displayHeight, offsetX = 0, offsetY = 0;
-        
-        if (imageAspectRatio > containerAspectRatio) {
-          // Image is wider than container - fit to width
-          displayWidth = containerWidth;
-          displayHeight = containerWidth / imageAspectRatio;
-          offsetY = (containerHeight - displayHeight) / 2;
-        } else {
-          // Image is taller than container - fit to height
-          displayHeight = containerHeight;
-          displayWidth = containerHeight * imageAspectRatio;
-          offsetX = (containerWidth - displayWidth) / 2;
+        try {
+          // Get container dimensions
+          const container = streamingCanvas.parentElement;
+          const containerWidth = container.clientWidth;
+          const containerHeight = container.clientHeight || 600;
+          
+          // Calculate aspect ratios
+          const imageAspectRatio = img.width / img.height;
+          const containerAspectRatio = containerWidth / containerHeight;
+          
+          let displayWidth, displayHeight, offsetX = 0, offsetY = 0;
+          
+          if (imageAspectRatio > containerAspectRatio) {
+            // Image is wider than container - fit to width
+            displayWidth = containerWidth;
+            displayHeight = containerWidth / imageAspectRatio;
+            offsetY = (containerHeight - displayHeight) / 2;
+          } else {
+            // Image is taller than container - fit to height
+            displayHeight = containerHeight;
+            displayWidth = containerHeight * imageAspectRatio;
+            offsetX = (containerWidth - displayWidth) / 2;
+          }
+          
+          // Set canvas size to container size
+          streamingCanvas.width = containerWidth;
+          streamingCanvas.height = containerHeight;
+          
+          // Clear canvas with black background
+          streamingContext.fillStyle = '#000000';
+          streamingContext.fillRect(0, 0, containerWidth, containerHeight);
+          
+          // Draw image centered with proper aspect ratio
+          streamingContext.drawImage(img, offsetX, offsetY, displayWidth, displayHeight);
+          
+          // Update streaming status to show we're receiving frames
+          updateStreamingStatus('Streaming...');
+          
+        } catch (error) {
+          console.error('Error displaying screenshot:', error);
+          updateStreamingStatus('Display Error');
         }
-        
-        // Set canvas size to container size
-        streamingCanvas.width = containerWidth;
-        streamingCanvas.height = containerHeight;
-        
-        // Clear canvas
-        streamingContext.clearRect(0, 0, containerWidth, containerHeight);
-        
-        // Draw image centered with proper aspect ratio
-        streamingContext.drawImage(img, offsetX, offsetY, displayWidth, displayHeight);
       };
+      
+      img.onerror = function() {
+        console.error('Error loading screenshot image');
+        updateStreamingStatus('Image Error');
+      };
+      
       img.src = `data:image/png;base64,${base64Data}`;
     }
     

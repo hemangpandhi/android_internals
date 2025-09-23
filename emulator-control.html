@@ -254,14 +254,22 @@
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 400px;
+      max-height: 600px;
     }
     
     .emulator-screen {
       width: 100%;
-      height: 600px;
+      height: auto;
+      max-height: 600px;
       background: #000;
       cursor: crosshair;
       display: block;
+      object-fit: contain;
+      aspect-ratio: 9/19.5; /* Standard phone aspect ratio */
     }
     
     .streaming-overlay {
@@ -408,12 +416,21 @@
         grid-template-columns: 1fr;
       }
       
+      .emulator-screen-container {
+        min-height: 300px;
+        max-height: 400px;
+      }
+      
       .emulator-screen {
-        height: 400px;
+        max-height: 400px;
       }
       
       .quick-actions {
         grid-template-columns: 1fr;
+      }
+      
+      .streaming-performance {
+        grid-template-columns: repeat(2, 1fr);
       }
     }
   </style>
@@ -1145,24 +1162,38 @@
       
       const img = new Image();
       img.onload = function() {
-        // Scale canvas to fit the container while maintaining aspect ratio
-        const containerWidth = streamingCanvas.parentElement.clientWidth;
-        const containerHeight = 600; // Fixed height
-        const aspectRatio = img.width / img.height;
+        // Get container dimensions
+        const container = streamingCanvas.parentElement;
+        const containerWidth = container.clientWidth;
+        const containerHeight = container.clientHeight || 600;
         
-        let displayWidth = containerWidth;
-        let displayHeight = containerWidth / aspectRatio;
+        // Calculate aspect ratios
+        const imageAspectRatio = img.width / img.height;
+        const containerAspectRatio = containerWidth / containerHeight;
         
-        if (displayHeight > containerHeight) {
+        let displayWidth, displayHeight, offsetX = 0, offsetY = 0;
+        
+        if (imageAspectRatio > containerAspectRatio) {
+          // Image is wider than container - fit to width
+          displayWidth = containerWidth;
+          displayHeight = containerWidth / imageAspectRatio;
+          offsetY = (containerHeight - displayHeight) / 2;
+        } else {
+          // Image is taller than container - fit to height
           displayHeight = containerHeight;
-          displayWidth = containerHeight * aspectRatio;
+          displayWidth = containerHeight * imageAspectRatio;
+          offsetX = (containerWidth - displayWidth) / 2;
         }
         
-        streamingCanvas.width = displayWidth;
-        streamingCanvas.height = displayHeight;
+        // Set canvas size to container size
+        streamingCanvas.width = containerWidth;
+        streamingCanvas.height = containerHeight;
         
-        streamingContext.clearRect(0, 0, displayWidth, displayHeight);
-        streamingContext.drawImage(img, 0, 0, displayWidth, displayHeight);
+        // Clear canvas
+        streamingContext.clearRect(0, 0, containerWidth, containerHeight);
+        
+        // Draw image centered with proper aspect ratio
+        streamingContext.drawImage(img, offsetX, offsetY, displayWidth, displayHeight);
       };
       img.src = `data:image/png;base64,${base64Data}`;
     }

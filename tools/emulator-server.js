@@ -281,7 +281,12 @@ class EmulatorManager {
 
       const args = ['-avd', avdId];
       
-      // Add launch options
+      // Default launch options for better compatibility
+      args.push('-netdelay', 'none');
+      args.push('-netspeed', 'full');
+      args.push('-no-snapshot');
+      
+      // Add user-specified launch options
       if (options.noWindow) args.push('-no-window');
       if (options.noAudio) args.push('-no-audio');
       if (options.noBootAnim) args.push('-no-boot-anim');

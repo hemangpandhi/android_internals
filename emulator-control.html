@@ -810,10 +810,17 @@
           button.disabled = true;
         }
         
-        // Call emulator API to launch emulator
+        // Call emulator API to launch emulator with options to show window
+        const launchOptions = {
+          noWindow: false,  // Show the emulator window
+          noAudio: false,   // Enable audio
+          noBootAnim: false // Show boot animation
+        };
+        
         const response = await fetch(`http://localhost:3002/api/emulators/${emulatorId}/launch`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(launchOptions)
         });
         
         if (response.ok) {

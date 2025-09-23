@@ -108,13 +108,13 @@ function markdownToHtml(markdown) {
       continue;
     }
     
-    // Handle indented code blocks (3 or 4 spaces or tab)
-    if (line.match(/^(   |    |\t)/)) {
+    // Handle indented code blocks (4+ spaces or tab) - but not list items
+    if (line.match(/^(    |\t)/) && !line.match(/^(\s*)[-*+]\s/) && !line.match(/^(\s*)\d+\.\s/)) {
       if (!inIndentedCodeBlock) {
         inIndentedCodeBlock = true;
         indentedCodeContent = '';
       }
-      indentedCodeContent += line.replace(/^(   |    |\t)/, '') + '\n';
+      indentedCodeContent += line.replace(/^(    |\t)/, '') + '\n';
       continue;
     } else if (inIndentedCodeBlock) {
       inIndentedCodeBlock = false;
@@ -268,6 +268,12 @@ function markdownToHtml(markdown) {
       }
     }
     
+    // Handle empty lines in blockquotes
+    if (inBlockquote && line.match(/^(\s*)>\s*$/)) {
+      blockquoteContent += `<p></p>`;
+      continue;
+    }
+    
     // Close blockquote if we encounter a non-blockquote line
     if (inBlockquote && line.trim() !== '') {
       html += `<blockquote class="article-quote">${blockquoteContent}</blockquote>\n`;
@@ -370,6 +376,12 @@ function processInlineMarkdown(text) {
   };
 
   return text
+    // Images (must be processed before links to avoid conflicts)
+    .replace(/!\[([^\]]*)\]\(([^)]+)\s+"([^"]+)"\)/g, (match, alt, src, title) => 
+      `<img src="${validateUrl(src)}" alt="${sanitizeHtml(alt)}" title="${sanitizeHtml(title)}" class="article-image" loading="lazy">`)
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => 
+      `<img src="${validateUrl(src)}" alt="${sanitizeHtml(alt)}" class="article-image" loading="lazy">`)
+    
     // Strikethrough
     .replace(/~~(.*?)~~/g, (match, content) => `<del>${sanitizeHtml(content)}</del>`)
     
@@ -398,12 +410,6 @@ function processInlineMarkdown(text) {
       `<a href="${validateUrl(url)}" class="article-link" target="_blank" rel="noopener noreferrer">${sanitizeHtml(url)}</a>`)
     .replace(/<(mailto:[^>]+)>/g, (match, url) => 
       `<a href="${validateUrl(url)}" class="article-link">${sanitizeHtml(url)}</a>`)
-    
-    // Images
-    .replace(/!\[([^\]]*)\]\(([^)]+)\s+"([^"]+)"\)/g, (match, alt, src, title) => 
-      `<img src="${validateUrl(src)}" alt="${sanitizeHtml(alt)}" title="${sanitizeHtml(title)}" class="article-image" loading="lazy">`)
-    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => 
-      `<img src="${validateUrl(src)}" alt="${sanitizeHtml(alt)}" class="article-image" loading="lazy">`)
     
     // Escaped characters
     .replace(/\\([*_`\[\]()#+\-!])/g, '$1')

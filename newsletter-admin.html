@@ -167,6 +167,20 @@
             <p>Send newsletter emails to subscribers</p>
         </div>
 
+        <!-- Subscriber Management Section -->
+        <div class="card">
+            <h3>👥 Subscriber Management</h3>
+            <div id="subscriber-stats" class="status pending">
+                📊 Loading subscriber data...
+            </div>
+            <div id="subscriber-list" class="email-list" style="display: none;">
+                <!-- Subscribers will be populated here -->
+            </div>
+            <button class="btn" onclick="refreshSubscribers()" style="margin-top: 1rem;">
+                🔄 Refresh Subscribers
+            </button>
+        </div>
+
         <div class="card">
             <div id="status" class="status pending">
                 📧 Loading newsletter queue...
@@ -407,12 +421,85 @@
             logElement.scrollTop = logElement.scrollHeight;
         }
 
+        // Subscriber Management Functions
+        function loadSubscribers() {
+            const statsElement = document.getElementById('subscriber-stats');
+            const listElement = document.getElementById('subscriber-list');
+            
+            fetch('http://localhost:3001/api/subscribers')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const subscribers = data.subscribers;
+                        statsElement.innerHTML = `📊 ${subscribers.length} active subscribers`;
+                        statsElement.className = 'status completed';
+                        
+                        if (subscribers.length > 0) {
+                            listElement.innerHTML = subscribers.map(sub => `
+                                <div class="email-item">
+                                    <span class="email">${sub.email}</span>
+                                    <span class="name">${sub.name || 'No name'}</span>
+                                    <span class="date">${new Date(sub.subscribedAt).toLocaleDateString()}</span>
+                                    <button class="btn" onclick="removeSubscriber('${sub.email}')" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                        🗑️ Remove
+                                    </button>
+                                </div>
+                            `).join('');
+                            listElement.style.display = 'block';
+                        } else {
+                            listElement.innerHTML = '<p style="color: #8b949e; text-align: center; padding: 1rem;">No subscribers found</p>';
+                            listElement.style.display = 'block';
+                        }
+                    } else {
+                        statsElement.innerHTML = '❌ Error loading subscribers';
+                        statsElement.className = 'status error';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading subscribers:', error);
+                    statsElement.innerHTML = '❌ Error loading subscribers';
+                    statsElement.className = 'status error';
+                });
+        }
+
+        function refreshSubscribers() {
+            loadSubscribers();
+        }
+
+        function removeSubscriber(email) {
+            if (confirm(`Are you sure you want to remove ${email} from the subscriber list?`)) {
+                fetch('http://localhost:3001/api/unsubscribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Subscriber removed successfully!');
+                        loadSubscribers(); // Refresh the list
+                    } else {
+                        alert('Error removing subscriber: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error removing subscriber:', error);
+                    alert('Error removing subscriber');
+                });
+            }
+        }
+
         // Event listeners
         document.getElementById('test-btn').addEventListener('click', testEmailJS);
         document.getElementById('send-btn').addEventListener('click', sendNewsletters);
 
-        // Load newsletter queue on page load
-        window.addEventListener('load', loadNewsletterQueue);
+        // Load newsletter queue and subscribers on page load
+        window.addEventListener('load', function() {
+            loadNewsletterQueue();
+            loadSubscribers();
+        });
     </script>
 </body>
 </html>

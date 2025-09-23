@@ -3127,12 +3127,12 @@ html {
 
 /* Article Layout - Desktop Default */
 .article-layout {
-  max-width: 1600px;
+  max-width: 1800px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 2fr 280px;
-  gap: 2.5rem;
-  padding: 0 2rem;
+  grid-template-columns: 1fr 280px;
+  gap: 2rem;
+  padding: 0 1rem;
   overflow-x: visible;
   transition: all 0.3s ease;
   min-height: 100vh;
@@ -3253,12 +3253,12 @@ html {
   
   /* Desktop Article Layout */
   .article-layout {
-    max-width: 1600px !important;
+    max-width: 1800px !important;
     margin: 0 auto !important;
     display: grid !important;
-    grid-template-columns: 2fr 280px !important;
-    gap: 3rem !important;
-    padding: 0 3rem !important;
+    grid-template-columns: 1fr 280px !important;
+    gap: 2rem !important;
+    padding: 0 1rem !important;
   }
   
   .article-header {
@@ -3289,7 +3289,7 @@ html {
   }
   
   .article-content-wrapper {
-    padding: 2.5rem 2rem !important;
+    padding: 2rem 1rem !important;
     max-width: 100% !important;
     width: 100% !important;
     box-sizing: border-box !important;
@@ -3300,7 +3300,7 @@ html {
   }
   
   .article-body section {
-    padding: 0 2rem 2rem 2rem !important;
+    padding: 0 1rem 2rem 1rem !important;
   }
   
   .article-intro {
@@ -3335,6 +3335,11 @@ html {
     margin-bottom: 2rem !important;
     line-height: 1.8 !important;
     font-size: 1.1rem !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
   
   .article-body ul, .article-body ol {
@@ -3443,7 +3448,7 @@ html {
   border-radius: 0 !important;
   box-shadow: none !important;
   box-sizing: border-box !important;
-  overflow-x: auto !important;
+  overflow-x: visible !important;
   background: white !important;
 }
 
@@ -3486,7 +3491,7 @@ body.full-screen-mode {
   margin: 0 !important;
   padding: 0 !important;
   box-sizing: border-box !important;
-  overflow-x: auto !important;
+  overflow-x: visible !important;
 }
 
 /* Article Body */
@@ -3503,10 +3508,11 @@ body.full-screen-mode {
   max-width: 100%;
   box-sizing: border-box;
   min-width: 0;
+  width: 100%;
 }
 
 .article-content-wrapper {
-  padding: 2.5rem 2rem;
+  padding: 2rem 1rem;
   max-width: 100%;
   width: 100%;
   box-sizing: border-box;
@@ -3516,6 +3522,7 @@ body.full-screen-mode {
   word-wrap: break-word;
   overflow-wrap: break-word;
   min-width: 0;
+  hyphens: auto;
 }
 
 .article-layout.full-screen .article-content-wrapper {
@@ -3526,8 +3533,11 @@ body.full-screen-mode {
   width: 100vw !important;
   margin: 0 !important;
   box-sizing: border-box !important;
-  overflow-x: auto !important;
+  overflow-x: visible !important;
   background: white !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  hyphens: auto !important;
 }
 
 .article-intro {
@@ -3591,7 +3601,7 @@ body.full-screen-mode {
 
 /* Article Sections */
 .article-body section {
-  padding: 0 1rem 2rem 1rem;
+  padding: 0 0.5rem 2rem 0.5rem;
   margin-bottom: 2rem;
   width: 100%;
   box-sizing: border-box;
@@ -3702,6 +3712,9 @@ body.full-screen-mode {
   max-width: none !important;
   width: 100% !important;
   box-sizing: border-box !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  hyphens: auto !important;
 }
 
 /* Article Lists */
@@ -4041,6 +4054,30 @@ del {
   font-weight: 400;
   text-align: justify;
   hyphens: auto;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Full screen mode paragraphs */
+.article-layout.full-screen .article-body p {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  hyphens: auto !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure all article paragraphs have proper text wrapping */
+.article-body p,
+.article-content-wrapper p,
+.article-paragraph {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  hyphens: auto !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .article-body ul {

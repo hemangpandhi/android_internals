@@ -593,6 +593,8 @@
   <script src="assets/js/scripts.js"></script>
   <script>
     // Emulator Control JavaScript
+    console.log('🚀 Script starting...');
+    
     let emulators = [];
     let runningEmulators = new Set();
     let currentStreamingEmulator = null;
@@ -601,6 +603,8 @@
     let streamingContext = null;
     let fpsCounter = 0;
     let lastFpsTime = Date.now();
+    
+    console.log('📊 Variables initialized');
     
     // Test API connection function (defined early for button onclick)
     async function testAPIConnection() {
@@ -1144,6 +1148,12 @@
         lastFpsTime = now;
       }
     }
+    
+    // Test that functions are defined
+    console.log('✅ Script loaded completely');
+    console.log('🔍 refreshEmulators defined:', typeof refreshEmulators);
+    console.log('🔍 testAPIConnection defined:', typeof testAPIConnection);
+    console.log('🔍 displayEmulators defined:', typeof displayEmulators);
   </script>
 </body>
 </html>

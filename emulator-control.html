@@ -606,6 +606,24 @@
     
     console.log('📊 Variables initialized');
     
+    // Log messages to the console (defined early for other functions)
+    function logToConsole(message, type = 'info') {
+      const console = document.getElementById('emulator-console');
+      const timestamp = new Date().toLocaleTimeString();
+      
+      if (console) {
+        const messageElement = document.createElement('div');
+        messageElement.className = `console-message ${type}`;
+        messageElement.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+        console.appendChild(messageElement);
+        console.scrollTop = console.scrollHeight;
+      }
+      
+      // Also log to browser console
+      const logMethod = type === 'error' ? 'error' : type === 'warning' ? 'warn' : 'log';
+      console[logMethod](`[${type.toUpperCase()}] ${message}`);
+    }
+    
     // Test API connection function (defined early for button onclick)
     async function testAPIConnection() {
       logToConsole('Testing API connection to http://localhost:3002...', 'info');
@@ -881,21 +899,6 @@
       }
     }
     
-    // Log messages to the console
-    function logToConsole(message, type = 'info') {
-      const console = document.getElementById('emulator-console');
-      const timestamp = new Date().toLocaleTimeString();
-      const line = document.createElement('div');
-      line.className = `console-line console-${type}`;
-      line.textContent = `[${timestamp}] ${message}`;
-      console.appendChild(line);
-      console.scrollTop = console.scrollHeight;
-      
-      // Keep only the last 50 lines
-      while (console.children.length > 50) {
-        console.removeChild(console.firstChild);
-      }
-    }
     
     // Mock emulator data for demonstration
     function getMockEmulators() {

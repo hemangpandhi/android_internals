@@ -626,19 +626,7 @@
       }
     }
     
-    // Initialize the emulator control interface
-    document.addEventListener('DOMContentLoaded', function() {
-      logToConsole('Initializing emulator control interface...', 'info');
-      logToConsole('Loading emulator list...', 'info');
-      
-      // Load emulators directly
-      refreshEmulators();
-      
-      // Set up periodic refresh for running emulators
-      setInterval(updateRunningEmulators, 5000);
-    });
-    
-    // Refresh the list of available emulators
+    // Refresh the list of available emulators (defined early for button onclick)
     async function refreshEmulators() {
       logToConsole('Refreshing emulator list...', 'info');
       
@@ -679,6 +667,19 @@
         displayEmulators();
       }
     }
+    
+    // Initialize the emulator control interface
+    document.addEventListener('DOMContentLoaded', function() {
+      logToConsole('Initializing emulator control interface...', 'info');
+      logToConsole('Loading emulator list...', 'info');
+      
+      // Load emulators directly
+      refreshEmulators();
+      
+      // Set up periodic refresh for running emulators
+      setInterval(updateRunningEmulators, 5000);
+    });
+    
     
     // Display emulators in the grid
     function displayEmulators() {

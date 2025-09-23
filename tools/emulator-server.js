@@ -522,6 +522,44 @@ class EmulatorManager {
     });
   }
 
+  // Send swipe gesture to emulator
+  async sendSwipeInput(avdId, startX, startY, endX, endY, direction, type, distance, duration) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const serial = await this.getDeviceSerial(avdId);
+        
+        // Calculate swipe duration based on distance and velocity
+        // Ensure minimum duration of 100ms and maximum of 2000ms
+        const calculatedDuration = Math.max(100, Math.min(2000, duration || 300));
+        
+        // Use ADB swipe command with calculated duration
+        const command = `${this.adbPath} -s ${serial} shell input swipe ${startX} ${startY} ${endX} ${endY} ${calculatedDuration}`;
+        
+        exec(command, (error, stdout, stderr) => {
+          if (error) {
+            console.error(`Error sending swipe input: ${error.message}`);
+            reject(error);
+          } else {
+            console.log(`Swipe gesture sent: ${type} ${direction} from (${startX}, ${startY}) to (${endX}, ${endY})`);
+            resolve({ 
+              type, 
+              direction, 
+              startX, 
+              startY, 
+              endX, 
+              endY, 
+              distance, 
+              duration: calculatedDuration,
+              success: true 
+            });
+          }
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
   // Send keyboard input to emulator
   async sendKeyInput(avdId, key) {
     return new Promise(async (resolve, reject) => {
@@ -673,6 +711,9 @@ class EmulatorAPIServer {
         break;
       case 'touch_input':
         await this.handleTouchInputWS(ws, avdId, payload);
+        break;
+      case 'swipe_input':
+        await this.handleSwipeInputWS(ws, avdId, payload);
         break;
       case 'key_input':
         await this.handleKeyInputWS(ws, avdId, payload);
@@ -834,6 +875,22 @@ class EmulatorAPIServer {
       const result = await this.emulatorManager.sendTouchInput(avdId, x, y, action);
       ws.send(JSON.stringify({
         type: 'touch_result',
+        result
+      }));
+    } catch (error) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: error.message
+      }));
+    }
+  }
+
+  async handleSwipeInputWS(ws, avdId, payload) {
+    try {
+      const { startX, startY, endX, endY, direction, type, distance, duration } = payload;
+      const result = await this.emulatorManager.sendSwipeInput(avdId, startX, startY, endX, endY, direction, type, distance, duration);
+      ws.send(JSON.stringify({
+        type: 'swipe_result',
         result
       }));
     } catch (error) {

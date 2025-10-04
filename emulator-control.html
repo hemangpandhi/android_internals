@@ -1,9 +1,17 @@
 <!DOCTYPE html>
+<!-- 
+  EMULATOR CONTROL FEATURE FLAG
+  To enable the emulator control feature, change ENABLE_EMULATOR_CONTROL to true in the script section below.
+  Currently disabled for initial rollout.
+-->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Android Emulator Control - Android Internals</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Android Emulator Control - Android Internals - BYPASS CACHE FIX</title>
   <link rel="stylesheet" href="assets/css/styles.css">
   <link rel="icon" href="assets/images/android_logo.PNG" type="image/png">
   <link rel="manifest" href="assets/manifest.json">
@@ -242,93 +250,276 @@
       margin: 0;
     }
     
+    .streaming-controls-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .display-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .display-selector label {
+      color: #fff;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .display-selector select {
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 14px;
+      min-width: 150px;
+    }
+    
+    .display-selector select:focus {
+      outline: none;
+      border-color: #3ddc84;
+      box-shadow: 0 0 0 2px rgba(61, 220, 132, 0.2);
+    }
+    
+    /* Override container max-width for emulator control section - conditional based on emulator type */
+    .emulator-control-section .container {
+      max-width: 2000px; /* Further increased constraint for portrait/phone emulators */
+      width: 100%;
+      padding: 0 2rem;
+      margin: 0 auto;
+      transition: max-width 0.3s ease; /* Smooth transition when changing size */
+    }
+    
+    /* Landscape automotive emulator - expand container */
+    .emulator-control-section .container.landscape-automotive {
+      max-width: none !important; /* Remove 1200px constraint for landscape automotive */
+      width: 100% !important;
+      padding: 0 1rem !important; /* Minimal padding for landscape automotive */
+    }
+    
     .streaming-container {
       display: grid;
-      grid-template-columns: 3fr 1fr; /* Increased first column size */
-      gap: 2rem;
+      grid-template-columns: 8fr 1fr; /* Maximum possible emulator space for portrait displays */
+      gap: 1rem;
       width: 100%;
-      max-width: 1400px; /* Increased from 1200px */
+      max-width: none; /* Remove all width constraints */
+      min-height: 1600px; /* Ensure much larger minimum height for portrait emulators */
       overflow: hidden; /* Prevent overflow */
+      transition: grid-template-columns 0.3s ease;
+    }
+    
+    /* Expand width for portrait emulators to reduce right-side black area - moved to portrait section below */
+    
+    /* Landscape automotive layout: controls on top */
+    .emulator-control-section .container.landscape-automotive .streaming-container {
+      grid-template-columns: 1fr; /* Single column for full width */
+      grid-template-rows: auto 1fr; /* Controls on top, emulator below */
+      gap: 1rem;
+    }
+    
+    /* Controls section for landscape automotive - horizontal layout */
+    .emulator-control-section .container.landscape-automotive .controls-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr; /* Text Input | Quick Actions | Streaming Info */
+      gap: 1.5rem;
+      align-items: stretch; /* Make all sections same height */
+      padding: 1.2rem;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 8px;
+      border: 1px solid #3ddc84;
+      margin-bottom: 1rem;
+    }
+    
+    /* Make input-panel horizontal for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .input-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* Adjust input-section for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .input-section {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 1rem;
+      border-radius: 6px;
+      border: 1px solid rgba(61, 220, 132, 0.3);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: center;
+    }
+    
+    /* Center align headings for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .input-section h4 {
+      text-align: center;
+      margin-bottom: 0.8rem;
+      color: #3ddc84;
+      font-size: 1rem;
+    }
+    
+    /* Center align input field for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .input-section input {
+      width: 100%;
+      margin-bottom: 0.8rem;
+      text-align: center;
+      padding: 0.6rem;
+      border-radius: 4px;
+      border: 1px solid #3ddc84;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+    }
+    
+    /* Center align buttons for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .input-section button {
+      width: 100%;
+      padding: 0.6rem;
+      border-radius: 4px;
+      border: 1px solid #3ddc84;
+      background: linear-gradient(135deg, #3ddc84, #2bc16c);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .emulator-control-section .container.landscape-automotive .input-section button:hover {
+      background: linear-gradient(135deg, #2bc16c, #1ea854);
+      transform: translateY(-1px);
+    }
+    
+    /* Make quick-actions horizontal for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+    
+    /* Style quick action buttons for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .quick-actions button {
+      padding: 0.8rem;
+      border-radius: 6px;
+      border: 1px solid #3ddc84;
+      background: linear-gradient(135deg, #3ddc84, #2bc16c);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+    
+    .emulator-control-section .container.landscape-automotive .quick-actions button:hover {
+      background: linear-gradient(135deg, #2bc16c, #1ea854);
+      transform: translateY(-1px);
+    }
+    
+    /* Make streaming-performance horizontal for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .streaming-performance {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+    
+    /* Style performance metrics for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .performance-metric {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 0.6rem;
+      border-radius: 4px;
+      border: 1px solid rgba(61, 220, 132, 0.3);
+      text-align: center;
+    }
+    
+    .emulator-control-section .container.landscape-automotive .performance-metric .label {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-bottom: 0.3rem;
+    }
+    
+    .emulator-control-section .container.landscape-automotive .performance-metric .value {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #3ddc84;
     }
     
     .emulator-screen-container {
       position: relative;
-      background: linear-gradient(145deg, #2c2c2c, #1a1a1a);
-      border-radius: 30px;
-      padding: 30px; /* Increased from 20px */
-      box-shadow: 
-        0 15px 50px rgba(0, 0, 0, 0.8),
-        inset 0 2px 10px rgba(255, 255, 255, 0.1);
+      background: transparent; /* Remove black background */
+      border-radius: 20px;
+      padding: 10px; /* Minimal padding */
       display: flex;
       justify-content: center;
       align-items: center;
-      width: 100%;
-      max-width: 800px; /* Increased from 450px */
-      height: 900px; /* Increased from 600px */
-      min-height: 900px;
-      max-height: 900px;
-      border: 3px solid #333;
+      /* Dynamic width - will be set by JavaScript based on emulator aspect ratio */
+      width: auto; /* Dynamic width */
+      height: auto; /* Dynamic height */
+      /* Dynamic height - will be set by JavaScript based on emulator aspect ratio */
       overflow: hidden; /* Prevent content overflow */
     }
     
+    /* Ensure automotive landscape emulator doesn't overflow */
+    .emulator-control-section .container.landscape-automotive .emulator-screen-container {
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    
+    /* Portrait emulator layout - remove problematic constraints */
+    
+    /* Automotive portrait emulator - ULTRA expand to use maximum width */
+    .emulator-control-section .container:not(.landscape-automotive) .streaming-container {
+      max-width: 2200px; /* Further increased width for portrait emulators */
+    }
+    
+    .emulator-control-section .container:not(.landscape-automotive) .emulator-screen-container {
+      max-width: none; /* Remove width constraint for portrait emulator container */
+      width: 100%;
+      min-width: 1200px; /* Ensure larger minimum width for portrait displays */
+      min-height: 1800px; /* Ensure much larger minimum height for portrait displays */
+    }
+    
+    .emulator-control-section .container:not(.landscape-automotive) .device-frame {
+      max-width: none; /* Remove width constraint for portrait emulator frame */
+      width: 100%;
+      min-width: 1100px; /* Ensure larger minimum width */
+      min-height: 1700px; /* Ensure much larger minimum height */
+    }
+    
+    .emulator-control-section .container:not(.landscape-automotive) .emulator-screen {
+      max-width: none; /* Remove width constraint for portrait emulator screen */
+      width: 100%;
+      min-width: 1000px; /* Ensure larger minimum width */
+      min-height: 1600px; /* Ensure much larger minimum height */
+    }
+    
     .device-frame {
-      background: linear-gradient(145deg, #2c2c2c, #1a1a1a);
-      border-radius: 30px;
-      padding: 25px; /* Increased from 15px */
-      box-shadow: 
-        0 10px 30px rgba(0, 0, 0, 0.6),
-        inset 0 1px 5px rgba(255, 255, 255, 0.1);
-      border: 2px solid #444;
+      background: transparent; /* Remove black background */
+      border-radius: 15px;
+      padding: 5px; /* Minimal padding */
       position: relative;
       width: 100%;
-      max-width: 750px; /* Increased from 400px */
       height: 100%;
-      max-height: 850px; /* Increased from 550px */
       overflow: hidden; /* Prevent overflow */
+      /* Dynamic sizing will be handled by JavaScript based on aspect ratio */
     }
     
-    .device-frame::before {
-      content: '';
-      position: absolute;
-      top: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60px;
-      height: 4px;
-      background: #555;
-      border-radius: 2px;
-      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
-    }
-    
-    .device-frame::after {
-      content: '';
-      position: absolute;
-      bottom: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 40px;
-      height: 4px;
-      background: #555;
-      border-radius: 2px;
-      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
-    }
+    /* Removed decorative pseudo-elements to eliminate nested frame effect */
     
     .emulator-screen {
       width: 100%;
-      max-width: 650px; /* Slightly reduced from 700px to fit better */
       height: auto;
-      max-height: 750px; /* Slightly reduced from 800px to fit better */
       background: #000;
       cursor: crosshair;
       display: block;
       object-fit: contain;
-      aspect-ratio: 9/19.5; /* Standard phone aspect ratio */
+      /* Dynamic aspect ratio and sizing - will be set by JavaScript based on emulator type */
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
-      border: 2px solid #444;
-      border-radius: 20px;
-      box-shadow: 
-        0 5px 20px rgba(0, 0, 0, 0.7),
-        inset 0 1px 3px rgba(255, 255, 255, 0.1);
+      border: 2px solid #333;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
       overflow: hidden; /* Prevent content overflow */
     }
     
@@ -482,13 +673,13 @@
       }
       
       .emulator-screen-container {
-        min-height: 400px;
-        max-height: 600px;
+        min-height: 600px;
+        max-height: 1000px;
         max-width: 100%;
       }
       
       .emulator-screen {
-        max-height: 500px;
+        max-height: 800px;
         max-width: 100%;
       }
       
@@ -549,7 +740,15 @@
         <div id="streaming-interface" class="streaming-interface" style="display: none;">
           <div class="streaming-header">
             <h3 id="streaming-title">📱 Emulator Streaming</h3>
-            <button class="btn-emulator btn-stop" onclick="stopStreaming()">⏹️ Stop Stream</button>
+            <div class="streaming-controls-header">
+              <div class="display-selector">
+                <label for="display-select">Display:</label>
+                <select id="display-select" onchange="changeDisplay()">
+                  <option value="auto">Auto-detect</option>
+                </select>
+              </div>
+              <button class="btn-emulator btn-stop" onclick="stopStreaming()">⏹️ Stop Stream</button>
+            </div>
           </div>
           
           <div class="streaming-container">
@@ -568,46 +767,48 @@
               </div>
             </div>
             
-            <div class="input-panel">
-              <div class="input-section">
-                <h4>Text Input</h4>
-                <input type="text" id="text-input" placeholder="Type text to send to emulator" />
-                <button class="btn-emulator btn-config" onclick="sendTextToEmulator()">Send Text</button>
-              </div>
-              
-              <div class="input-section">
-                <h4>Quick Actions</h4>
-                <div class="quick-actions">
-                  <button class="btn-emulator btn-launch" onclick="sendKeyInput('volume_up')">🔊 Vol Up</button>
-                  <button class="btn-emulator btn-launch" onclick="sendKeyInput('volume_down')">🔉 Vol Down</button>
-                  <button class="btn-emulator btn-launch" onclick="sendKeyInput('enter')">↵ Enter</button>
-                  <button class="btn-emulator btn-launch" onclick="sendKeyInput('escape')">⎋ Escape</button>
-                </div>
-              </div>
-              
-              <div class="input-section">
-                <h4>Streaming Info</h4>
-                <div class="streaming-info">
-                  <div>Status: <span id="connection-status">Disconnected</span></div>
+            <div class="controls-section">
+              <div class="input-panel">
+                <div class="input-section">
+                  <h4>Text Input</h4>
+                  <input type="text" id="text-input" placeholder="Type text to send to emulator" />
+                  <button class="btn-emulator btn-config" onclick="sendTextToEmulator()">Send Text</button>
                 </div>
                 
-                <div class="streaming-performance">
-                  <div class="performance-metric">
-                    <div class="label">FPS</div>
-                    <div class="value" id="streaming-fps">0</div>
+                <div class="input-section">
+                  <h4>Quick Actions</h4>
+                  <div class="quick-actions">
+                    <button class="btn-emulator btn-launch" onclick="sendKeyInput('volume_up')">🔊 Vol Up</button>
+                    <button class="btn-emulator btn-launch" onclick="sendKeyInput('volume_down')">🔉 Vol Down</button>
+                    <button class="btn-emulator btn-launch" onclick="sendKeyInput('enter')">↵ Enter</button>
+                    <button class="btn-emulator btn-launch" onclick="sendKeyInput('escape')">⎋ Escape</button>
                   </div>
-                  <div class="performance-metric">
-                    <div class="label">Latency</div>
-                    <div class="value" id="streaming-latency">0ms</div>
+                </div>
+                
+                <div class="input-section">
+                  <h4>Streaming Info</h4>
+                  <div class="streaming-info">
+                    <div>Status: <span id="connection-status">Disconnected</span></div>
                   </div>
-                  <div class="performance-metric">
-                    <div class="label">Frame Size</div>
-                    <div class="value" id="streaming-size">0KB</div>
+                  
+                  <div class="streaming-performance">
+                    <div class="performance-metric">
+                      <div class="label">FPS</div>
+                      <div class="value" id="streaming-fps">0</div>
+                    </div>
+                    <div class="performance-metric">
+                      <div class="label">Latency</div>
+                      <div class="value" id="streaming-latency">0ms</div>
+                    </div>
+                    <div class="performance-metric">
+                      <div class="label">Frame Size</div>
+                      <div class="value" id="streaming-size">0KB</div>
+                    </div>
+          <div class="performance-metric">
+            <div class="label">Target</div>
+            <div class="value">20 FPS</div>
+          </div>
                   </div>
-        <div class="performance-metric">
-          <div class="label">Target</div>
-          <div class="value">20 FPS</div>
-        </div>
                 </div>
               </div>
             </div>
@@ -729,10 +930,32 @@
     </div>
   </footer>
 
-  <script src="assets/js/scripts.js"></script>
+  <script src="assets/js/scripts.js?v=BYPASS_CACHE_1735372800000"></script>
   <script>
-    // Emulator Control JavaScript
-    console.log('🚀 Script starting...');
+    // Feature Flags
+    const ENABLE_EMULATOR_CONTROL = false; // Set to true to enable emulator control feature
+    
+    // Emulator Control JavaScript - AGGRESSIVE FIX v1735372800000
+    console.log('🚀 BYPASS CACHE FIX SCRIPT STARTING... v1735372800000');
+    console.log('🔥 BYPASS CACHE FIX APPLIED - COMPLETELY IGNORE ASPECT RATIO FOR AUTOMOTIVE PORTRAIT');
+    
+    if (!ENABLE_EMULATOR_CONTROL) {
+      console.log('🚫 EMULATOR CONTROL FEATURE DISABLED - Feature flag is set to false');
+      document.body.innerHTML = `
+        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: #1a1a1a; color: white; font-family: Arial, sans-serif;">
+          <div style="text-align: center; padding: 2rem; background: #2a2a2a; border-radius: 8px; max-width: 600px;">
+            <h1 style="color: #ff6b6b; margin-bottom: 1rem;">🚫 Emulator Control Disabled</h1>
+            <p style="margin-bottom: 1rem;">The emulator control feature is currently disabled for the initial rollout.</p>
+            <p style="color: #888; font-size: 0.9rem;">This feature will be enabled in a future update.</p>
+            <div style="margin-top: 2rem;">
+              <a href="/" style="color: #4CAF50; text-decoration: none; padding: 0.5rem 1rem; border: 1px solid #4CAF50; border-radius: 4px; display: inline-block;">← Back to Home</a>
+            </div>
+          </div>
+        </div>
+      `;
+      // Stop execution here
+      throw new Error('Emulator control feature disabled');
+    }
     
     let emulators = [];
     let runningEmulators = new Set();
@@ -859,6 +1082,138 @@
         emulators = getMockEmulators();
         displayEmulators();
       }
+    }
+    
+    // Display Selection Functions
+    async function loadAvailableDisplays(avdId) {
+      try {
+        logToConsole(`Loading displays for emulator: ${avdId}`, 'info');
+        const response = await fetch(`http://localhost:3002/api/emulators/${avdId}/displays`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const displays = await response.json();
+        logToConsole(`API returned: ${JSON.stringify(displays)}`, 'info');
+        
+        const select = document.getElementById('display-select');
+        if (!select) {
+          logToConsole('Display select element not found', 'error');
+          return;
+        }
+        
+        select.innerHTML = '<option value="auto">Auto-detect</option>';
+        
+        displays.forEach((display, index) => {
+          const option = document.createElement('option');
+          option.value = display.id;
+          option.textContent = `Display ${index + 1} (${display.name})`;
+          select.appendChild(option);
+        });
+        
+        // Add info about display types
+        if (displays.length > 1) {
+          logToConsole(`Found ${displays.length} displays. Display 1 is typically the main automotive interface. Display 2 might be a secondary screen or cluster display.`, 'info');
+        }
+        
+        logToConsole(`Found ${displays.length} displays`, 'info');
+      } catch (error) {
+        logToConsole(`Failed to load displays: ${error.message}`, 'error');
+        console.error('Display loading error:', error);
+      }
+    }
+
+    // Load emulator configuration (resolution and density)
+    async function loadEmulatorConfig(avdId) {
+      try {
+        logToConsole(`Loading emulator configuration for: ${avdId}`, 'info');
+        const response = await fetch(`http://localhost:3002/api/emulators/${avdId}/config`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const config = await response.json();
+        logToConsole(`Emulator config: ${JSON.stringify(config)}`, 'info');
+        
+        // Store config globally for use in displayScreenshot
+        window.currentEmulatorConfig = config;
+        
+        return config;
+      } catch (error) {
+        logToConsole(`Error loading emulator config: ${error.message}`, 'error');
+        return null;
+      }
+    }
+    
+    function changeDisplay() {
+      const select = document.getElementById('display-select');
+      const displayId = select.value;
+      
+      logToConsole(`changeDisplay called - currentStreamingEmulator: ${currentStreamingEmulator}, displayId: ${displayId}`, 'info');
+      
+      if (currentStreamingEmulator && displayId !== 'auto') {
+        logToConsole(`Switching to display: ${displayId}`, 'info');
+        // Store the avdId before stopping streaming
+        const avdId = currentStreamingEmulator;
+        
+        // Stop current WebSocket but don't clear currentStreamingEmulator
+        if (websocket) {
+          websocket.close();
+          websocket = null;
+        }
+        
+        setTimeout(() => {
+          logToConsole(`Starting streaming with display - avdId: ${avdId}, displayId: ${displayId}`, 'info');
+          startStreamingWithDisplay(avdId, displayId);
+        }, 1000);
+      }
+    }
+    
+    function startStreamingWithDisplay(avdId, displayId) {
+      logToConsole(`startStreamingWithDisplay called - avdId: ${avdId}, displayId: ${displayId}`, 'info');
+      currentStreamingEmulator = avdId;
+      currentDisplayId = displayId;
+      
+      // Initialize WebSocket connection with display parameter
+      const wsUrl = `ws://localhost:3002/stream/${avdId}?display=${displayId}`;
+      logToConsole(`Connecting to WebSocket: ${wsUrl}`, 'info');
+      websocket = new WebSocket(wsUrl);
+      
+      websocket.onopen = function() {
+        logToConsole(`Connected to emulator ${avdId} on display ${displayId}`, 'success');
+        document.getElementById('streaming-status').textContent = 'Connected';
+        
+        // Start streaming immediately after connection
+        websocket.send(JSON.stringify({
+          type: 'start_streaming',
+          avdId: avdId
+        }));
+        
+        // Add info about display switching
+        if (displayId !== 'auto') {
+          logToConsole(`Switched to Display ${displayId}. Note: Secondary displays may show different content or be empty.`, 'info');
+        }
+      };
+      
+      websocket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        console.log(`📱 WebSocket message received:`, data.type, data);
+        handleWebSocketMessage(data);
+      };
+      
+      websocket.onclose = function() {
+        logToConsole('Streaming connection closed', 'warning');
+        document.getElementById('streaming-status').textContent = 'Disconnected';
+      };
+      
+      websocket.onerror = function(error) {
+        logToConsole(`Streaming error: ${error.message}`, 'error');
+        document.getElementById('streaming-status').textContent = 'Error';
+      };
+      
+      streamingWebSocket = websocket;
     }
     
     // Initialize the emulator control interface
@@ -1120,7 +1475,7 @@
     }
     
     // Streaming Functions
-    function startStreaming(avdId, emulatorName) {
+    async function startStreaming(avdId, emulatorName) {
       currentStreamingEmulator = avdId;
       
       // Show streaming interface
@@ -1139,10 +1494,22 @@
       
       // Simple touch/click handling - no complex swipe logic
       
-      // Connect WebSocket
-      connectWebSocket(avdId);
-      
-      logToConsole(`Starting streaming for ${emulatorName}`, 'info');
+      // Load available displays and emulator config first, then connect WebSocket
+      try {
+        await loadAvailableDisplays(avdId);
+        logToConsole(`Displays loaded successfully`, 'info');
+        
+        // Load emulator configuration for dynamic sizing
+        await loadEmulatorConfig(avdId);
+        logToConsole(`Emulator config loaded successfully`, 'info');
+        
+        connectWebSocket(avdId);
+        logToConsole(`Starting streaming for ${emulatorName}`, 'info');
+      } catch (error) {
+        logToConsole(`Error loading displays/config: ${error.message}`, 'error');
+        // Still try to connect WebSocket even if loading fails
+        connectWebSocket(avdId);
+      }
     }
     
     function stopStreaming() {
@@ -1164,7 +1531,7 @@
     }
     
     function connectWebSocket(avdId) {
-      const wsUrl = `ws://localhost:3002`;
+      const wsUrl = `ws://localhost:3002/stream/${avdId}`;
       websocket = new WebSocket(wsUrl);
       
       websocket.onopen = function() {
@@ -1202,6 +1569,12 @@
           break;
           
         case 'screenshot':
+          console.log(`📱 Received screenshot data: ${data.data ? data.data.length : 0} characters`);
+          if (!data.data || data.data.length < 100) {
+            console.error('📱 Invalid screenshot data received:', data);
+            updateStreamingStatus('Invalid Data');
+            return;
+          }
           displayScreenshot(data.data);
           updateFpsCounter();
           
@@ -1258,18 +1631,116 @@
           currentImageWidth = img.width;
           currentImageHeight = img.height;
           
-          // Get container dimensions
-          const container = streamingCanvas.parentElement;
-          const containerWidth = container.clientWidth;
-          const containerHeight = container.clientHeight || 600;
+          // Check if this is an automotive device (declare early)
+          const isAutomotiveDevice = currentStreamingEmulator && (
+            currentStreamingEmulator.includes('Automotive') ||
+            currentStreamingEmulator.includes('automotive') ||
+            currentStreamingEmulator.includes('Car') ||
+            currentStreamingEmulator.includes('car') ||
+            currentStreamingEmulator.includes('IVI') ||
+            currentStreamingEmulator.includes('MyCar') ||
+            currentStreamingEmulator.includes('Auto') ||
+            currentStreamingEmulator.includes('auto')
+          );
+          
+          // Set dynamic aspect ratio based on emulator dimensions
+          const aspectRatio = img.width / img.height;
+          console.log(`📱 Image dimensions: ${img.width}x${img.height}, aspect ratio: ${aspectRatio.toFixed(3)}`);
+          console.log(`📱 Expected automotive: 3904x1320 (ratio: 2.96), actual ratio: ${aspectRatio.toFixed(3)}`);
+          console.log(`🚗 Device detection: emulator="${currentStreamingEmulator}", isAutomotive=${isAutomotiveDevice}, aspectRatio=${aspectRatio.toFixed(3)}`);
+          
+          // Dynamically adjust container size for landscape automotive emulators
+          const container = document.querySelector('.emulator-control-section .container');
+          if (container) {
+            if (isAutomotiveDevice && aspectRatio > 1.5) {
+              // Automotive landscape - expand container to full width
+              container.classList.add('landscape-automotive');
+              container.style.maxWidth = 'none';
+              container.style.width = '100%';
+              container.style.padding = '0 1rem';
+              console.log(`🚗 Automotive landscape detected - expanding container to full width (aspectRatio=${aspectRatio.toFixed(3)})`);
+            } else {
+              // Remove landscape-automotive class for others
+              container.classList.remove('landscape-automotive');
+              container.style.maxWidth = '';
+              container.style.width = '';
+              container.style.padding = '';
+              console.log(`📱 Portrait/phone emulator - using normal container size`);
+            }
+          }
+          
+          const streamingCanvas = document.getElementById('emulator-screen');
+          if (streamingCanvas) {
+            streamingCanvas.style.aspectRatio = `${aspectRatio}`;
+            // Use contain for all displays to preserve aspect ratio
+            streamingCanvas.style.objectFit = 'contain';
+            console.log(`📱 Set canvas aspect ratio to: ${aspectRatio}`);
+          }
+          
+          // Adaptive sizing system - analyze available space and emulator content
+          const canvasContainer = streamingCanvas.parentElement;
+          const availableWidth = canvasContainer.clientWidth;
+          const availableHeight = window.innerHeight * 0.8; // Use 80% of viewport height
+          
+          // Calculate optimal dimensions based on content and available space
+          let containerWidth, containerHeight;
+          
+          // Determine emulator type and optimal sizing strategy
+          const isPortrait = aspectRatio < 1.0;
+          const isWideLandscape = aspectRatio > 2.0;
+          const isAutomotive = isAutomotiveDevice || currentStreamingEmulator.toLowerCase().includes('automotive') || 
+                              currentStreamingEmulator.toLowerCase().includes('car') || 
+                              currentStreamingEmulator.toLowerCase().includes('auto');
+          
+          console.log(`🔍 Emulator Analysis: portrait=${isPortrait}, wideLandscape=${isWideLandscape}, automotive=${isAutomotive}, aspectRatio=${aspectRatio.toFixed(3)}`);
+          
+          if (isWideLandscape && isAutomotive) {
+            // Wide automotive landscape - use full viewport width
+            containerWidth = window.innerWidth - 60;
+            containerHeight = Math.min(containerWidth / aspectRatio + 100, availableHeight);
+            console.log(`🚗 Wide automotive landscape: container=${containerWidth}x${containerHeight}`);
+          } else if (isPortrait && isAutomotive) {
+            // Automotive portrait - ULTIMATE FIX - completely ignore aspect ratio
+            containerWidth = availableWidth * 0.95;
+            containerHeight = availableHeight * 0.95;
+            console.log(`🚗 ULTIMATE FIX: container=${containerWidth}x${containerHeight} (available: ${availableWidth}x${availableHeight}) - COMPLETELY IGNORE ASPECT RATIO ${Date.now()}`);
+            console.log(`🔥 BYPASSING ALL ASPECT RATIO CALCULATIONS FOR AUTOMOTIVE PORTRAIT!`);
+          } else if (isPortrait) {
+            // Regular portrait emulators - increased height for better proportions
+            containerWidth = Math.min(availableWidth * 0.9, 700);
+            containerHeight = Math.min(containerWidth / aspectRatio + 150, availableHeight * 0.90); // Allow 90% of available height
+            console.log(`📱 Regular portrait: container=${containerWidth}x${containerHeight}`);
+          } else {
+            // Landscape or square emulators
+            containerWidth = Math.min(availableWidth * 0.85, 800);
+            containerHeight = Math.min(containerWidth / aspectRatio + 100, availableHeight);
+            console.log(`📱 Landscape/square: container=${containerWidth}x${containerHeight}`);
+          }
+          
+          console.log(`📱 Device detection: ${currentStreamingEmulator}, isAutomotive=${isAutomotiveDevice}, aspectRatio=${aspectRatio.toFixed(3)}`);
+          
+          // Set container height dynamically
+          canvasContainer.style.height = containerHeight + 'px';
+          
+          console.log(`📱 Container dimensions: ${containerWidth}x${containerHeight} (calculated for aspect ratio ${aspectRatio.toFixed(3)})`);
+          console.log(`📱 Setting container height to: ${containerHeight}px v3 ${Date.now()}`);
           
           // Calculate aspect ratios
           const imageAspectRatio = img.width / img.height;
           const containerAspectRatio = containerWidth / containerHeight;
+          console.log(`📱 Image aspect ratio: ${imageAspectRatio.toFixed(3)}, Container aspect ratio: ${containerAspectRatio.toFixed(3)}`);
           
           let displayWidth, displayHeight, offsetX = 0, offsetY = 0;
           
-          if (imageAspectRatio > containerAspectRatio) {
+          if (isPortrait && isAutomotive) {
+            // Automotive portrait - use maximum container width for best display
+            displayWidth = containerWidth * 0.98; // Use 98% of container width for maximum utilization
+            displayHeight = displayWidth / imageAspectRatio;
+            // Center the display with minimal margins
+            offsetX = (containerWidth - displayWidth) / 2;
+            offsetY = (containerHeight - displayHeight) / 2;
+            console.log(`🚗 Automotive portrait display: ${displayWidth}x${displayHeight}, offset=${offsetX},${offsetY}`);
+          } else if (imageAspectRatio > containerAspectRatio) {
             // Image is wider than container - fit to width
             displayWidth = containerWidth;
             displayHeight = containerWidth / imageAspectRatio;
@@ -1295,8 +1766,36 @@
           lastCanvasResize = now;
           
           const devicePixelRatio = window.devicePixelRatio || 1;
-          const fixedWidth = Math.min(containerWidth, 650); // Adjusted to match CSS
-          const fixedHeight = Math.min(containerHeight, 750); // Adjusted to match CSS
+          // Adaptive canvas sizing based on emulator analysis
+          let maxWidth, maxHeight;
+          
+          if (isWideLandscape && isAutomotive) {
+            // Wide automotive landscape - prevent overflow
+            maxWidth = containerWidth * 0.92;
+            maxHeight = maxWidth / aspectRatio;
+            console.log(`🚗 Wide automotive landscape canvas: maxWidth=${maxWidth}, maxHeight=${maxHeight}`);
+          } else if (isPortrait && isAutomotive) {
+            // Automotive portrait - ULTIMATE CANVAS FIX
+            maxWidth = containerWidth * 0.98;
+            maxHeight = containerHeight * 0.98;
+            console.log(`🚗 ULTIMATE CANVAS: maxWidth=${maxWidth}, maxHeight=${maxHeight} - MAXIMUM SIZE ${Date.now()}`);
+          } else if (isPortrait) {
+            // Regular portrait emulators
+            maxWidth = containerWidth * 0.90;
+            maxHeight = containerHeight * 0.85;
+            console.log(`📱 Regular portrait canvas: maxWidth=${maxWidth}, maxHeight=${maxHeight}`);
+          } else {
+            // Landscape or square emulators
+            maxWidth = containerWidth * 0.88;
+            maxHeight = containerHeight * 0.85;
+            console.log(`📱 Landscape/square canvas: maxWidth=${maxWidth}, maxHeight=${maxHeight}`);
+          }
+          const fixedWidth = Math.min(containerWidth, maxWidth);
+          // ULTIMATE FIX: For automotive portrait emulators, use maximum available height
+          const fixedHeight = (isPortrait && isAutomotive) ? containerHeight * 0.98 : Math.min(containerHeight, maxHeight);
+          
+          console.log(`📱 Final canvas dimensions: containerWidth=${containerWidth}, maxWidth=${maxWidth}, fixedWidth=${fixedWidth}`);
+          console.log(`📱 Final canvas dimensions: containerHeight=${containerHeight}, maxHeight=${maxHeight}, fixedHeight=${fixedHeight} v3 ${Date.now()}`);  
           
           // Only resize if dimensions have actually changed
           if (streamingCanvas.style.width !== fixedWidth + 'px' || streamingCanvas.style.height !== fixedHeight + 'px') {
@@ -1304,6 +1803,7 @@
             streamingCanvas.height = fixedHeight * devicePixelRatio;
             streamingCanvas.style.width = fixedWidth + 'px';
             streamingCanvas.style.height = fixedHeight + 'px';
+            console.log(`📱 Canvas resized to: ${fixedWidth}x${fixedHeight}px`);
           }
           
           // Reset transform matrix to prevent accumulation
@@ -1318,26 +1818,47 @@
           streamingContext.imageSmoothingEnabled = true;
           streamingContext.imageSmoothingQuality = 'high';
           
-          // Recalculate offsets for fixed canvas size with extra margin
-          const marginX = 10; // Extra margin to prevent cutting
-          const marginY = 15; // Extra margin to prevent cutting
-          const fixedOffsetX = Math.max(marginX, (fixedWidth - displayWidth) / 2);
-          const fixedOffsetY = Math.max(marginY, (fixedHeight - displayHeight) / 2);
+          // Recalculate offsets for fixed canvas size - different logic for landscape vs other displays
+          let marginX, marginY, fixedOffsetX, fixedOffsetY, adjustedDisplayWidth, adjustedDisplayHeight;
           
-          // Ensure image fits within bounds with margins
-          const adjustedDisplayWidth = Math.min(displayWidth, fixedWidth - (fixedOffsetX * 2));
-          const adjustedDisplayHeight = Math.min(displayHeight, fixedHeight - (fixedOffsetY * 2));
+          // Simple margins for all displays
+          marginX = 10;
+          marginY = 10;
+          fixedOffsetX = Math.max(marginX, (fixedWidth - displayWidth) / 2);
+          fixedOffsetY = Math.max(marginY, (fixedHeight - displayHeight) / 2);
+          adjustedDisplayWidth = Math.min(displayWidth, fixedWidth - (marginX * 2));
+          adjustedDisplayHeight = Math.min(displayHeight, fixedHeight - (marginY * 2));
           
-          // Draw image centered with proper aspect ratio and margins
-          streamingContext.drawImage(img, fixedOffsetX, fixedOffsetY, adjustedDisplayWidth, adjustedDisplayHeight);
+          // Clear canvas with black background
+          streamingContext.fillStyle = '#000000';
+          streamingContext.fillRect(0, 0, streamingCanvas.width, streamingCanvas.height);
+          
+          // ULTIMATE FIX: For automotive portrait emulators, completely ignore aspect ratio
+          let actualDisplayWidth, actualDisplayHeight;
+          if (isPortrait && isAutomotive) {
+            // Automotive portrait - use full container size to eliminate stretching
+            actualDisplayWidth = adjustedDisplayWidth;
+            actualDisplayHeight = adjustedDisplayHeight;
+            console.log(`🚗 ULTIMATE DRAW FIX: Using full container size ${actualDisplayWidth}x${actualDisplayHeight} - COMPLETELY IGNORE ASPECT RATIO`);
+          } else {
+            // Regular emulators - preserve aspect ratio
+            actualDisplayWidth = Math.min(adjustedDisplayWidth, adjustedDisplayHeight * (img.width / img.height));
+            actualDisplayHeight = Math.min(adjustedDisplayHeight, adjustedDisplayWidth / (img.width / img.height));
+          }
+          
+          // Center the image within the available space
+          const centeredOffsetX = fixedOffsetX + (adjustedDisplayWidth - actualDisplayWidth) / 2;
+          const centeredOffsetY = fixedOffsetY + (adjustedDisplayHeight - actualDisplayHeight) / 2;
+          
+          streamingContext.drawImage(img, centeredOffsetX, centeredOffsetY, actualDisplayWidth, actualDisplayHeight);
           
           // Update stored positioning for touch coordinates - use the actual rendered dimensions
-          currentImageOffsetX = fixedOffsetX;
-          currentImageOffsetY = fixedOffsetY;
-          currentImageDisplayWidth = adjustedDisplayWidth;
-          currentImageDisplayHeight = adjustedDisplayHeight;
+          currentImageOffsetX = centeredOffsetX;
+          currentImageOffsetY = centeredOffsetY;
+          currentImageDisplayWidth = actualDisplayWidth;
+          currentImageDisplayHeight = actualDisplayHeight;
           
-          console.log(`Image rendering: Original(${img.width}x${img.height}) -> Rendered(${adjustedDisplayWidth}x${adjustedDisplayHeight}) at offset(${fixedOffsetX}, ${fixedOffsetY})`);
+          console.log(`Image rendering: Original(${img.width}x${img.height}) -> Rendered(${actualDisplayWidth}x${actualDisplayHeight}) at offset(${centeredOffsetX}, ${centeredOffsetY}) - ${(isPortrait && isAutomotive) ? 'ULTIMATE FIX - COMPLETELY IGNORE ASPECT RATIO' : 'Aspect ratio preserved'}`);
           
           // Update streaming status to show we're receiving frames
           updateStreamingStatus('Streaming...');
@@ -1542,7 +2063,10 @@
       fpsCounter++;
       const now = Date.now();
       if (now - lastFpsTime >= 1000) {
-        document.getElementById('fps-counter').textContent = fpsCounter;
+        const fpsElement = document.getElementById('fps-counter');
+        if (fpsElement) {
+          fpsElement.textContent = fpsCounter;
+        }
         fpsCounter = 0;
         lastFpsTime = now;
       }
@@ -1556,3 +2080,4 @@
   </script>
 </body>
 </html>
+

@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // ===== SERVICE WORKER REGISTRATION =====
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js')
+      navigator.serviceWorker.register('/assets/sw.js')
         .then(function(registration) {
           console.log('ServiceWorker registration successful with scope: ', registration.scope);
         })
@@ -291,9 +291,6 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Test notification system
   console.log('Testing notification system...');
-  setTimeout(() => {
-            toast.success('Forms Ready', 'Contact and newsletter forms are now functional!');
-  }, 2000);
   
   // Add test function to global scope for debugging
   window.testEmailJS = function() {
@@ -662,5 +659,72 @@ document.addEventListener('DOMContentLoaded', function() {
     
     toast[type](title, message);
   }
+
+  // Smooth scrolling for article index links
+  function addSmoothScrolling() {
+    document.querySelectorAll('.article-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        // Only handle internal links (starting with #)
+        if (this.getAttribute('href').startsWith('#')) {
+          e.preventDefault();
+          const targetId = this.getAttribute('href').substring(1);
+          const targetElement = document.getElementById(targetId);
+          
+          if (targetElement) {
+            targetElement.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+          } else {
+            console.warn('Target element not found:', targetId);
+          }
+        }
+      });
+    });
+  }
+
+// Initialize smooth scrolling
+addSmoothScrolling();
+
+// Profile Photo Modal Functions - Global scope
+window.openProfileModal = function() {
+  console.log('openProfileModal called');
+  const modal = document.getElementById('profileModal');
+  console.log('Modal element:', modal);
+  if (modal) {
+    modal.style.display = 'block';
+    setTimeout(() => {
+      modal.style.opacity = '1';
+      const content = modal.querySelector('.profile-modal-content');
+      if (content) {
+        content.style.transform = 'scale(1)';
+      }
+    }, 10);
+  } else {
+    console.error('Profile modal not found');
+  }
+}
+
+window.closeProfileModal = function() {
+  const modal = document.getElementById('profileModal');
+  if (modal) {
+    modal.style.opacity = '0';
+    const content = modal.querySelector('.profile-modal-content');
+    if (content) {
+      content.style.transform = 'scale(0.9)';
+    }
+    setTimeout(() => {
+      modal.style.display = 'none';
+    }, 300);
+  }
+}
+
+// Close modal when clicking outside the image
+window.onclick = function(event) {
+  const modal = document.getElementById('profileModal');
+  if (event.target === modal) {
+    closeProfileModal();
+  }
+}
   
 }); 

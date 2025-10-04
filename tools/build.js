@@ -239,10 +239,22 @@ function markdownToHtml(markdown) {
     // Handle headers (H1-H6)
     if (line.match(/^#{1,6}\s/)) {
       const match = line.match(/^(#{1,6})\s(.+)$/);
-      const level = match[1].length;
+      const level = match[1].trim().length;
       const content = match[2];
       const processedContent = processInlineMarkdown(content);
-      html += `<h${level}>${processedContent}</h${level}>\n`;
+      
+      // Generate anchor ID from heading text to match index links exactly
+      const anchorId = content
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '') // Remove special characters
+        .replace(/\s+/g, '-') // Replace spaces with hyphens
+        .replace(/-+/g, '--') // Replace multiple hyphens with double hyphens to match index
+        .trim();
+      
+      // Use the exact format that matches the index links (with single hyphen prefix)
+      const finalAnchorId = '-' + anchorId;
+      
+      html += `<h${level} id="${finalAnchorId}">${processedContent}</h${level}>\n`;
       continue;
     }
     
@@ -396,10 +408,16 @@ function processInlineMarkdown(text) {
     .replace(/`([^`]+)`/g, (match, content) => `<code class="inline-code">${sanitizeHtml(content)}</code>`)
     
     // Links with titles
-    .replace(/\[([^\]]+)\]\(([^)]+)\s+"([^"]+)"\)/g, (match, text, url, title) => 
-      `<a href="${validateUrl(url)}" class="article-link" title="${sanitizeHtml(title)}" target="_blank" rel="noopener noreferrer">${sanitizeHtml(text)}</a>`)
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => 
-      `<a href="${validateUrl(url)}" class="article-link" target="_blank" rel="noopener noreferrer">${sanitizeHtml(text)}</a>`)
+    .replace(/\[([^\]]+)\]\(([^)]+)\s+"([^"]+)"\)/g, (match, text, url, title) => {
+      const isInternalLink = url.startsWith('#');
+      const targetAttr = isInternalLink ? '' : ' target="_blank" rel="noopener noreferrer"';
+      return `<a href="${validateUrl(url)}" class="article-link" title="${sanitizeHtml(title)}"${targetAttr}>${sanitizeHtml(text)}</a>`;
+    })
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+      const isInternalLink = url.startsWith('#');
+      const targetAttr = isInternalLink ? '' : ' target="_blank" rel="noopener noreferrer"';
+      return `<a href="${validateUrl(url)}" class="article-link"${targetAttr}>${sanitizeHtml(text)}</a>`;
+    })
     
     // Reference links [text][ref]
     .replace(/\[([^\]]+)\]\[([^\]]+)\]/g, (match, text, ref) => 
@@ -567,10 +585,21 @@ function updateIndexPage(articles) {
               </article>`;
     }).join('');
     
+  // Count books dynamically
+  const booksCount = countBooks();
+  console.log(`  📚 Found ${booksCount} books`);
+    
   // Update the stat number for Latest Articles
   let updatedIndex = indexTemplate.replace(
     /<span class="stat-number">\d+<\/span>/,
     `<span class="stat-number">${articles.length}</span>`
+  );
+  
+  // Update the books count dynamically
+  updatedIndex = updatedIndex.replace(
+    /<span class="stat-number">\d+<\/span>\s*<span class="stat-label">Expert Books<\/span>/,
+    `<span class="stat-number">${booksCount}</span>
+                    <span class="stat-label">Expert Books</span>`
   );
     
   // More specific regex to match the blogs-grid content
@@ -583,6 +612,17 @@ function updateIndexPage(articles) {
   
   fs.writeFileSync(path.join(__dirname, '..', 'build', 'index.html'), updatedIndex);
   console.log('  ✅ Updated index.html');
+}
+
+function countBooks() {
+  try {
+    const booksHtml = fs.readFileSync(path.join(__dirname, '..', 'books.html'), 'utf8');
+    const bookCardMatches = booksHtml.match(/class="book-card"/g);
+    return bookCardMatches ? bookCardMatches.length : 0;
+  } catch (error) {
+    console.log('  ⚠️  Could not count books, using default value');
+    return 7; // fallback to known count
+  }
 }
 
 function checkForNewArticles(articles, newsletterManager) {
@@ -652,7 +692,7 @@ function copyAssets() {
   });
   
   // Copy image files
-  const imageFiles = ['android_logo.PNG', 'android_logo.svg', 'android_internals_logo.svg'];
+  const imageFiles = ['android_logo.PNG', 'android_logo.svg', 'android_internals_logo.svg', 'hemang-profile.svg', 'MyPhotofinal.png'];
   imageFiles.forEach(file => {
     const source = path.join(rootDir, 'assets', 'images', file);
     const dest = path.join(buildImagesDir, file);
@@ -690,6 +730,7 @@ function copyAssets() {
     'framework.html',
     'adb.html',
     'emulator.html',
+    'emulator-control.html',
     'os-internals.html',
     'android-app.html',
     'system-app.html',

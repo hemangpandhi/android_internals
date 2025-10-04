@@ -433,8 +433,60 @@ class EmulatorManager {
           }
         }
         
+        // Check if emulator is offline (still booting)
+        for (const line of lines) {
+          if (line.includes('emulator') && line.includes('offline')) {
+            reject(new Error('Emulator is still booting, please wait'));
+            return;
+          }
+        }
+        
         reject(new Error('No running emulator found'));
       });
+    });
+  }
+
+  // Get emulator display configuration (resolution and density)
+  async getEmulatorConfig(avdId) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const serial = await this.getDeviceSerial(avdId);
+        
+        // Get display size and density using ADB shell commands
+        const wmSizeCommand = `${this.adbPath} -s ${serial} shell wm size`;
+        const wmDensityCommand = `${this.adbPath} -s ${serial} shell wm density`;
+        
+        exec(wmSizeCommand, (error, stdout, stderr) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          
+          // Parse size output (format: "Physical size: 800x1280" or "Override size: 800x1280")
+          const sizeMatch = stdout.match(/(?:Physical size|Override size):\s*(\d+x\d+)/);
+          const resolution = sizeMatch ? sizeMatch[1] : null;
+          
+          exec(wmDensityCommand, (error, stdout, stderr) => {
+            if (error) {
+              reject(error);
+              return;
+            }
+            
+            // Parse density output (format: "Physical density: 120" or "Override density: 120")
+            const densityMatch = stdout.match(/(?:Physical density|Override density):\s*(\d+)/);
+            const density = densityMatch ? parseInt(densityMatch[1]) : null;
+            
+            resolve({
+              resolution: resolution,
+              density: density,
+              width: resolution ? parseInt(resolution.split('x')[0]) : null,
+              height: resolution ? parseInt(resolution.split('x')[1]) : null
+            });
+          });
+        });
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
@@ -443,48 +495,105 @@ class EmulatorManager {
     return new Promise(async (resolve, reject) => {
       try {
         const serial = await this.getDeviceSerial(avdId);
+        const { displayId } = options;
         
-        // Use direct streaming with optimized settings
-        const child = spawn(this.adbPath, ['-s', serial, 'exec-out', 'screencap', '-p'], {
-          stdio: ['ignore', 'pipe', 'pipe'],
-          timeout: 2000 // Reduced timeout for faster failure detection
-        });
-        
-        let data = Buffer.alloc(0);
-        let hasData = false;
-        
-        child.stdout.on('data', (chunk) => {
-          data = Buffer.concat([data, chunk]);
-          hasData = true;
-        });
-        
-        child.on('close', (code) => {
-          if (code === 0 && hasData && data.length > 1000) { // Ensure we have actual image data
-            resolve(data);
+        if (displayId && displayId !== 'auto') {
+          // Use specific display
+          const screenshot = await this.takeScreenshotForDisplay(serial, displayId);
+          if (screenshot && screenshot.length > 1000) {
+            resolve(screenshot);
           } else {
-            reject(new Error(`Screenshot failed with code ${code}, data length: ${data.length}`));
+            reject(new Error(`No valid screenshot found on display ${displayId}`));
           }
-        });
-        
-        child.on('error', (error) => {
-          reject(new Error(`Screenshot process error: ${error.message}`));
-        });
-        
-        // Set timeout to prevent hanging - reduced from 5000ms to 2000ms
-        const timeout = setTimeout(() => {
-          if (!child.killed) {
-            child.kill('SIGTERM');
+        } else {
+          // Auto-detect: try each display until we get a valid screenshot
+          const displays = await this.getAvailableDisplays(serial);
+          
+          for (const displayId of displays) {
+            try {
+              const screenshot = await this.takeScreenshotForDisplay(serial, displayId);
+              if (screenshot && screenshot.length > 1000) {
+                resolve(screenshot);
+                return;
+              }
+            } catch (error) {
+              console.log(`Display ${displayId} failed, trying next...`);
+              continue;
+            }
           }
-          reject(new Error('Screenshot timeout - emulator may not be ready'));
-        }, 2000);
-        
-        child.on('close', () => {
-          clearTimeout(timeout);
-        });
-        
+          
+          // Fallback to default screenshot without display ID
+          const screenshot = await this.takeScreenshotForDisplay(serial, null);
+          if (screenshot && screenshot.length > 1000) {
+            resolve(screenshot);
+          } else {
+            reject(new Error('No valid screenshot found on any display'));
+          }
+        }
       } catch (error) {
-        reject(new Error(`Screenshot error: ${error.message}`));
+        reject(error);
       }
+    });
+  }
+
+  // Get available displays for the device
+  async getAvailableDisplays(serial) {
+    return new Promise((resolve) => {
+      const child = spawn(this.adbPath, ['-s', serial, 'shell', 'dumpsys', 'SurfaceFlinger', '--display-id'], {
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
+      
+      let output = '';
+      child.stdout.on('data', (chunk) => {
+        output += chunk.toString();
+      });
+      
+      child.on('close', () => {
+        const displays = [];
+        const lines = output.split('\n');
+        for (const line of lines) {
+          const match = line.match(/Display (\d+)/);
+          if (match) {
+            displays.push(match[1]);
+          }
+        }
+        resolve(displays.length > 0 ? displays : [null]); // Return null if no displays found
+      });
+    });
+  }
+
+  // Take screenshot for a specific display
+  async takeScreenshotForDisplay(serial, displayId) {
+    return new Promise((resolve, reject) => {
+      const args = ['-s', serial, 'exec-out', 'screencap', '-p'];
+      if (displayId && displayId !== 'auto') {
+        args.push('-d', displayId);
+      }
+      
+      const child = spawn(this.adbPath, args, {
+        stdio: ['ignore', 'pipe', 'pipe'],
+        timeout: 2000
+      });
+      
+      let data = Buffer.alloc(0);
+      let hasData = false;
+      
+      child.stdout.on('data', (chunk) => {
+        data = Buffer.concat([data, chunk]);
+        hasData = true;
+      });
+      
+      child.on('close', (code) => {
+        if (code === 0 && hasData && data.length > 1000) {
+          resolve(data);
+        } else {
+          reject(new Error(`Screenshot failed with code ${code}, data length: ${data.length}`));
+        }
+      });
+      
+      child.on('error', (error) => {
+        reject(error);
+      });
     });
   }
 
@@ -668,6 +777,8 @@ class EmulatorAPIServer {
     
     // Streaming routes
     this.app.get('/api/emulators/:avdId/screenshot', this.handleScreenshot.bind(this));
+    this.app.get('/api/emulators/:avdId/displays', this.handleGetDisplays.bind(this));
+    this.app.get('/api/emulators/:avdId/config', this.handleGetEmulatorConfig.bind(this));
     this.app.post('/api/emulators/:avdId/touch', this.handleTouchInput.bind(this));
     this.app.post('/api/emulators/:avdId/key', this.handleKeyInput.bind(this));
     this.app.post('/api/emulators/:avdId/text', this.handleTextInput.bind(this));
@@ -678,6 +789,23 @@ class EmulatorAPIServer {
   setupWebSocket() {
     this.wss.on('connection', (ws, req) => {
       console.log('📱 New WebSocket connection established');
+      
+      // Parse URL to extract avdId and display
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const pathParts = url.pathname.split('/');
+      console.log(`📱 WebSocket URL: ${req.url}`);
+      console.log(`📱 Path parts: ${JSON.stringify(pathParts)}`);
+      
+      // Find the avdId in the path (should be after /stream/)
+      const streamIndex = pathParts.indexOf('stream');
+      const avdId = streamIndex !== -1 && pathParts[streamIndex + 1] ? pathParts[streamIndex + 1] : null;
+      const displayId = url.searchParams.get('display');
+      
+      // Store connection info
+      ws.avdId = avdId;
+      ws.displayId = displayId;
+      
+      console.log(`📱 WebSocket connected for emulator: ${avdId}, display: ${displayId || 'auto'}`);
       
       ws.on('message', async (message) => {
         try {
@@ -777,6 +905,38 @@ class EmulatorAPIServer {
       res.send(screenshotData);
     } catch (error) {
       console.error('Error taking screenshot:', error);
+      this.sendResponse(res, 500, { error: error.message });
+    }
+  }
+
+  async handleGetDisplays(req, res) {
+    try {
+      const { avdId } = req.params;
+      const serial = await this.emulatorManager.getDeviceSerial(avdId);
+      const displays = await this.emulatorManager.getAvailableDisplays(serial);
+      
+      // Format displays for frontend
+      const formattedDisplays = displays.map((displayId, index) => ({
+        id: displayId,
+        name: `Display ${index + 1}`,
+        index: index
+      }));
+      
+      this.sendResponse(res, 200, formattedDisplays);
+    } catch (error) {
+      console.error('Error getting displays:', error);
+      this.sendResponse(res, 500, { error: error.message });
+    }
+  }
+
+  async handleGetEmulatorConfig(req, res) {
+    try {
+      const { avdId } = req.params;
+      const config = await this.emulatorManager.getEmulatorConfig(avdId);
+      console.log(`📱 Emulator config for ${avdId}:`, config);
+      this.sendResponse(res, 200, config);
+    } catch (error) {
+      console.error('Error getting emulator config:', error);
       this.sendResponse(res, 500, { error: error.message });
     }
   }
@@ -939,12 +1099,18 @@ class EmulatorAPIServer {
     let lastFpsTime = Date.now();
     let consecutiveErrors = 0;
     let lastFrameTime = 0;
+    let emulatorReady = false;
+    let retryCount = 0;
+    const maxRetries = 30; // Wait up to 30 seconds for emulator to be ready
+    const displayId = ws.displayId; // Get display ID from WebSocket connection
+    
+    console.log(`🎬 Starting screenshot stream for ${avdId} with display ${displayId || 'auto'}`);
     
     // Optimized streaming configuration for better performance and quality
     const defaultConfig = {
       targetFps: 20, // Optimized for stability while maintaining good quality
-      maxWidth: 1080,  // Higher resolution for better quality
-      maxHeight: 1920,
+      maxWidth: 1920,  // Support automotive emulators (1920x720)
+      maxHeight: 1920, // Support both phone and automotive resolutions
       quality: 0.8,   // Higher quality for better visual experience
       compression: true
     };
@@ -955,9 +1121,36 @@ class EmulatorAPIServer {
         return;
       }
       
+      // Wait for emulator to be ready
+      if (!emulatorReady) {
+        retryCount++;
+        if (retryCount > maxRetries) {
+          console.log(`⏰ Emulator ${avdId} not ready after ${maxRetries} seconds, stopping stream`);
+          isStreaming = false;
+          return;
+        }
+        
+        try {
+          // Test if emulator is ready by trying to get device serial
+          await this.emulatorManager.getDeviceSerial(avdId);
+          emulatorReady = true;
+          console.log(`✅ Emulator ${avdId} is now ready after ${retryCount} seconds`);
+        } catch (error) {
+          if (error.message.includes('still booting')) {
+            console.log(`⏳ Emulator ${avdId} still booting, waiting... (${retryCount}/${maxRetries})`);
+            setTimeout(streamFrame, 1000); // Wait 1 second and try again
+            return;
+          } else {
+            console.log(`❌ Error checking emulator ${avdId}: ${error.message}`);
+            setTimeout(streamFrame, 1000);
+            return;
+          }
+        }
+      }
+      
       try {
         const startTime = Date.now();
-        const screenshotData = await this.emulatorManager.takeScreenshot(avdId);
+        const screenshotData = await this.emulatorManager.takeScreenshot(avdId, { displayId });
         const captureTime = Date.now() - startTime;
         
         // Reset error counter on successful capture
@@ -1008,6 +1201,23 @@ class EmulatorAPIServer {
       } catch (error) {
         consecutiveErrors++;
         console.error(`Error streaming screenshot (attempt ${consecutiveErrors}):`, error.message);
+        
+        // Handle "still booting" errors specially
+        if (error.message.includes('still booting')) {
+          console.log(`⏳ Emulator ${avdId} still booting, waiting... (${consecutiveErrors}/${maxRetries})`);
+          if (consecutiveErrors < maxRetries) {
+            setTimeout(streamFrame, 1000); // Wait 1 second and try again
+            return;
+          } else {
+            console.log(`⏰ Emulator ${avdId} not ready after ${maxRetries} seconds, stopping stream`);
+            isStreaming = false;
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: 'Emulator took too long to boot'
+            }));
+            return;
+          }
+        }
         
         // If too many consecutive errors, stop streaming
         if (consecutiveErrors >= 5) {

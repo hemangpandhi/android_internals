@@ -5,10 +5,23 @@ import os
 
 class CacheBustingHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
-        # Add cache-busting headers
-        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
-        self.send_header('Pragma', 'no-cache')
-        self.send_header('Expires', '0')
+        # Add performance and cache headers
+        if self.path.endswith(('.css', '.js', '.png', '.jpg', '.jpeg', '.svg', '.ico')):
+            # Static assets - cache for 1 year
+            self.send_header('Cache-Control', 'public, max-age=31536000, immutable')
+        elif self.path.endswith(('.html', '.htm')):
+            # HTML files - short cache
+            self.send_header('Cache-Control', 'public, max-age=3600')
+        else:
+            # Default cache-busting for development
+            self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            self.send_header('Pragma', 'no-cache')
+            self.send_header('Expires', '0')
+        
+        # Performance headers
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.send_header('X-Frame-Options', 'DENY')
+        self.send_header('X-XSS-Protection', '1; mode=block')
         super().end_headers()
 
 if __name__ == "__main__":

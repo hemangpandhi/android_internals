@@ -835,6 +835,7 @@ function build() {
   generateArticlePages(articles);
   updateIndexPage(articles);
   copyAssets();
+  copyConfigFiles();
   generateSitemap(articles);
   
   console.log('\n🎉 Build completed successfully!');
@@ -858,6 +859,29 @@ function build() {
 // Run build if called directly
 if (require.main === module) {
   build();
+}
+
+function copyConfigFiles() {
+  console.log('📄 Copying config files...');
+  
+  const rootDir = path.join(__dirname, '..');
+  const buildDir = path.join(__dirname, '..', 'build');
+  
+  // Copy config.js
+  const configSource = path.join(rootDir, 'config.js');
+  const configDest = path.join(buildDir, 'config.js');
+  if (fs.existsSync(configSource)) {
+    fs.copyFileSync(configSource, configDest);
+    console.log('  ✅ Copied: config.js');
+  }
+  
+  // Copy sw.js
+  const swSource = path.join(rootDir, 'sw.js');
+  const swDest = path.join(buildDir, 'sw.js');
+  if (fs.existsSync(swSource)) {
+    fs.copyFileSync(swSource, swDest);
+    console.log('  ✅ Copied: sw.js');
+  }
 }
 
 module.exports = { build, buildArticles }; 

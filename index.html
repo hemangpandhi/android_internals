@@ -38,8 +38,10 @@
   <link rel="apple-touch-icon" href="assets/images/android_logo.PNG">
   
   <!-- Preload critical resources -->
-  <link rel="preload" href="assets/css/styles.css" as="style">
+  <link rel="preload" href="assets/css/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="preload" href="assets/images/android_logo.PNG" as="image">
+  <link rel="preload" href="assets/images/MyPhotofinal.png" as="image">
+  <link rel="preload" href="assets/js/scripts.js" as="script">
   
   <!-- PWA Manifest -->
   <link rel="manifest" href="assets/manifest.json">
@@ -47,6 +49,7 @@
   
   <!-- Styles -->
   <link rel="stylesheet" href="assets/css/styles.css?v=5">
+  <noscript><link rel="stylesheet" href="assets/css/styles.css?v=5"></noscript>
   
   <title>Android Internals - Complete Guide to Android OS Architecture</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -405,6 +408,21 @@
       </div>
     </div>
 
-    <script src="assets/js/scripts.js"></script>
+    <script src="assets/js/scripts.js" defer></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('SW registered: ', registration);
+            })
+            .catch(registrationError => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
   </body>
 </html>

@@ -1513,7 +1513,7 @@ main {
 
 .newsletter-submit {
   padding: var(--space-md) var(--space-xl);
-  background: var(--gradient-primary);
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
   color: white;
   border: none;
   border-radius: var(--radius-lg);
@@ -1703,7 +1703,7 @@ main {
   z-index: 2;
 }
 
-.footer-section h4 {
+.footer-section h3 {
   color: var(--primary-500);
   font-size: var(--font-size-lg);
   font-weight: 700;

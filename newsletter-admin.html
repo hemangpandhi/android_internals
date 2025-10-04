@@ -167,6 +167,20 @@
             <p>Send newsletter emails to subscribers</p>
         </div>
 
+        <!-- Subscriber Management Section -->
+        <div class="card">
+            <h3>👥 Subscriber Management</h3>
+            <div id="subscriber-stats" class="status pending">
+                📊 Loading subscriber data...
+            </div>
+            <div id="subscriber-list" class="email-list" style="display: none;">
+                <!-- Subscribers will be populated here -->
+            </div>
+            <button class="btn" onclick="refreshSubscribers()" style="margin-top: 1rem;">
+                🔄 Refresh Subscribers
+            </button>
+        </div>
+
         <div class="card">
             <div id="status" class="status pending">
                 📧 Loading newsletter queue...
@@ -407,12 +421,121 @@
             logElement.scrollTop = logElement.scrollHeight;
         }
 
+        // Subscriber Management Functions
+        function loadSubscribers() {
+            const statsElement = document.getElementById('subscriber-stats');
+            const listElement = document.getElementById('subscriber-list');
+            
+            // Check if we're in production or local development
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const apiUrl = isLocal ? 'http://localhost:3001/api/subscribers' : '/api/subscribers';
+            
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('API not available');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const subscribers = data.subscribers;
+                        statsElement.innerHTML = `📊 ${subscribers.length} active subscribers`;
+                        statsElement.className = 'status completed';
+                        
+                        if (subscribers.length > 0) {
+                            listElement.innerHTML = subscribers.map(sub => `
+                                <div class="email-item">
+                                    <span class="email">${sub.email}</span>
+                                    <span class="name">${sub.name || 'No name'}</span>
+                                    <span class="date">${new Date(sub.subscribedAt).toLocaleDateString()}</span>
+                                    <button class="btn" onclick="removeSubscriber('${sub.email}')" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                        🗑️ Remove
+                                    </button>
+                                </div>
+                            `).join('');
+                            listElement.style.display = 'block';
+                        } else {
+                            listElement.innerHTML = '<p style="color: #8b949e; text-align: center; padding: 1rem;">No subscribers found</p>';
+                            listElement.style.display = 'block';
+                        }
+                    } else {
+                        statsElement.innerHTML = '❌ Error loading subscribers';
+                        statsElement.className = 'status error';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading subscribers:', error);
+                    // Show production message when API is not available
+                    if (isLocal) {
+                        statsElement.innerHTML = '❌ Error loading subscribers';
+                        statsElement.className = 'status error';
+                    } else {
+                        statsElement.innerHTML = '📊 Production Mode - Subscriber management via EmailJS';
+                        statsElement.className = 'status pending';
+                        listElement.innerHTML = `
+                            <div style="padding: 1rem; text-align: center; color: #8b949e;">
+                                <p>In production mode, subscribers are managed through EmailJS.</p>
+                                <p>New subscribers are automatically added when they subscribe via the website.</p>
+                                <p>You can view subscriber emails in your EmailJS dashboard.</p>
+                            </div>
+                        `;
+                        listElement.style.display = 'block';
+                    }
+                });
+        }
+
+        function refreshSubscribers() {
+            loadSubscribers();
+        }
+
+        function removeSubscriber(email) {
+            if (confirm(`Are you sure you want to remove ${email} from the subscriber list?`)) {
+                // Check if we're in production or local development
+                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocal ? 'http://localhost:3001/api/unsubscribe' : '/api/unsubscribe';
+                
+                fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('API not available');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('Subscriber removed successfully!');
+                        loadSubscribers(); // Refresh the list
+                    } else {
+                        alert('Error removing subscriber: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error removing subscriber:', error);
+                    if (isLocal) {
+                        alert('Error removing subscriber');
+                    } else {
+                        alert('Subscriber management is handled through EmailJS in production mode.');
+                    }
+                });
+            }
+        }
+
         // Event listeners
         document.getElementById('test-btn').addEventListener('click', testEmailJS);
         document.getElementById('send-btn').addEventListener('click', sendNewsletters);
 
-        // Load newsletter queue on page load
-        window.addEventListener('load', loadNewsletterQueue);
+        // Load newsletter queue and subscribers on page load
+        window.addEventListener('load', function() {
+            loadNewsletterQueue();
+            loadSubscribers();
+        });
     </script>
 </body>
 </html>

@@ -10,7 +10,7 @@ dist/
 
 # Dependencies
 node_modules/
-package-lock.json
+# package-lock.json - Keep this for reproducible builds
 
 # Data Files (contain sensitive information)
 data/subscribers.json

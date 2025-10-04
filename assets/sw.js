@@ -3,14 +3,13 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/books.html',
-  '/styles.css',
-  '/scripts.js',
-  '/android_logo.PNG',
+  '/assets/css/styles.css',
+  '/assets/js/scripts.js',
+  '/assets/images/android_logo.PNG',
   '/hal.html',
   '/framework.html',
   '/adb.html',
-  '/articles/adb-complete-guide.html',
-  '/articles/android-hal-deep-dive.html'
+  '/emulator-control.html'
 ];
 
 // Install event

@@ -1,0 +1,2083 @@
+<!DOCTYPE html>
+<!-- 
+  EMULATOR CONTROL FEATURE FLAG
+  To enable the emulator control feature, change ENABLE_EMULATOR_CONTROL to true in the script section below.
+  Currently disabled for initial rollout.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Android Emulator Control - Android Internals - BYPASS CACHE FIX</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="icon" href="assets/images/android_logo.PNG" type="image/png">
+  <link rel="manifest" href="assets/manifest.json">
+  <meta name="theme-color" content="#3ddc84">
+  <style>
+    .emulator-control-section {
+      margin: 2rem 0;
+      padding: 2rem;
+      background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+      border-radius: 16px;
+      color: white;
+    }
+    
+    .emulator-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+    
+    .emulator-card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+    }
+    
+    .emulator-card h3 {
+      color: #3ddc84;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .emulator-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ef4444;
+    }
+    
+    .status-indicator.running {
+      background: #10b981;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .emulator-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    
+    .btn-emulator {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+    }
+    
+    .btn-launch {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+    }
+    
+    .btn-launch:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      transform: translateY(-2px);
+    }
+    
+    .btn-stop {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+    }
+    
+    .btn-stop:hover {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      transform: translateY(-2px);
+    }
+    
+    .btn-config {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white;
+    }
+    
+    .btn-config:hover {
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      transform: translateY(-2px);
+    }
+    
+    .avd-selector {
+      margin: 1rem 0;
+    }
+    
+    .avd-selector select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 1rem;
+    }
+    
+    .avd-selector select option {
+      background: #1f2937;
+      color: white;
+    }
+    
+    .emulator-specs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+    }
+    
+    .spec-item {
+      text-align: center;
+    }
+    
+    .spec-label {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-bottom: 0.25rem;
+    }
+    
+    .spec-value {
+      font-weight: 600;
+      color: #3ddc84;
+    }
+    
+    .emulator-console {
+      background: #000;
+      color: #00ff00;
+      padding: 1rem;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 1rem;
+    }
+    
+    .console-line {
+      margin-bottom: 0.25rem;
+    }
+    
+    .console-error {
+      color: #ff4444;
+    }
+    
+    .console-success {
+      color: #44ff44;
+    }
+    
+    .console-info {
+      color: #4444ff;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #3ddc84;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .no-emulators {
+      text-align: center;
+      padding: 3rem;
+      color: #9ca3af;
+    }
+    
+    .refresh-btn {
+      background: linear-gradient(135deg, #3ddc84, #2bb673);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      margin: 1rem 0;
+      transition: all 0.3s ease;
+    }
+    
+    .refresh-btn:hover {
+      background: linear-gradient(135deg, #2bb673, #1ea863);
+      transform: translateY(-2px);
+    }
+    
+    /* Streaming Interface Styles */
+    .streaming-interface {
+      margin-top: 2rem;
+      background: rgba(0, 0, 0, 0.9);
+      border-radius: 16px;
+      padding: 2rem;
+      color: white;
+    }
+    
+    .streaming-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .streaming-header h3 {
+      color: #3ddc84;
+      margin: 0;
+    }
+    
+    .streaming-controls-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .display-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .display-selector label {
+      color: #fff;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .display-selector select {
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 14px;
+      min-width: 150px;
+    }
+    
+    .display-selector select:focus {
+      outline: none;
+      border-color: #3ddc84;
+      box-shadow: 0 0 0 2px rgba(61, 220, 132, 0.2);
+    }
+    
+    /* Override container max-width for emulator control section - conditional based on emulator type */
+    .emulator-control-section .container {
+      max-width: 2000px; /* Further increased constraint for portrait/phone emulators */
+      width: 100%;
+      padding: 0 2rem;
+      margin: 0 auto;
+      transition: max-width 0.3s ease; /* Smooth transition when changing size */
+    }
+    
+    /* Landscape automotive emulator - expand container */
+    .emulator-control-section .container.landscape-automotive {
+      max-width: none !important; /* Remove 1200px constraint for landscape automotive */
+      width: 100% !important;
+      padding: 0 1rem !important; /* Minimal padding for landscape automotive */
+    }
+    
+    .streaming-container {
+      display: grid;
+      grid-template-columns: 8fr 1fr; /* Maximum possible emulator space for portrait displays */
+      gap: 1rem;
+      width: 100%;
+      max-width: none; /* Remove all width constraints */
+      min-height: 1600px; /* Ensure much larger minimum height for portrait emulators */
+      overflow: hidden; /* Prevent overflow */
+      transition: grid-template-columns 0.3s ease;
+    }
+    
+    /* Expand width for portrait emulators to reduce right-side black area - moved to portrait section below */
+    
+    /* Landscape automotive layout: controls on top */
+    .emulator-control-section .container.landscape-automotive .streaming-container {
+      grid-template-columns: 1fr; /* Single column for full width */
+      grid-template-rows: auto 1fr; /* Controls on top, emulator below */
+      gap: 1rem;
+    }
+    
+    /* Controls section for landscape automotive - horizontal layout */
+    .emulator-control-section .container.landscape-automotive .controls-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr; /* Text Input | Quick Actions | Streaming Info */
+      gap: 1.5rem;
+      align-items: stretch; /* Make all sections same height */
+      padding: 1.2rem;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 8px;
+      border: 1px solid #3ddc84;
+      margin-bottom: 1rem;
+    }
+    
+    /* Make input-panel horizontal for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .input-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* Adjust input-section for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .input-section {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 1rem;
+      border-radius: 6px;
+      border: 1px solid rgba(61, 220, 132, 0.3);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: center;
+    }
+    
+    /* Center align headings for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .input-section h4 {
+      text-align: center;
+      margin-bottom: 0.8rem;
+      color: #3ddc84;
+      font-size: 1rem;
+    }
+    
+    /* Center align input field for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .input-section input {
+      width: 100%;
+      margin-bottom: 0.8rem;
+      text-align: center;
+      padding: 0.6rem;
+      border-radius: 4px;
+      border: 1px solid #3ddc84;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+    }
+    
+    /* Center align buttons for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .input-section button {
+      width: 100%;
+      padding: 0.6rem;
+      border-radius: 4px;
+      border: 1px solid #3ddc84;
+      background: linear-gradient(135deg, #3ddc84, #2bc16c);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .emulator-control-section .container.landscape-automotive .input-section button:hover {
+      background: linear-gradient(135deg, #2bc16c, #1ea854);
+      transform: translateY(-1px);
+    }
+    
+    /* Make quick-actions horizontal for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+    
+    /* Style quick action buttons for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .quick-actions button {
+      padding: 0.8rem;
+      border-radius: 6px;
+      border: 1px solid #3ddc84;
+      background: linear-gradient(135deg, #3ddc84, #2bc16c);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+    
+    .emulator-control-section .container.landscape-automotive .quick-actions button:hover {
+      background: linear-gradient(135deg, #2bc16c, #1ea854);
+      transform: translateY(-1px);
+    }
+    
+    /* Make streaming-performance horizontal for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .streaming-performance {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+    
+    /* Style performance metrics for landscape automotive */
+    .emulator-control-section .container.landscape-automotive .performance-metric {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 0.6rem;
+      border-radius: 4px;
+      border: 1px solid rgba(61, 220, 132, 0.3);
+      text-align: center;
+    }
+    
+    .emulator-control-section .container.landscape-automotive .performance-metric .label {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-bottom: 0.3rem;
+    }
+    
+    .emulator-control-section .container.landscape-automotive .performance-metric .value {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #3ddc84;
+    }
+    
+    .emulator-screen-container {
+      position: relative;
+      background: transparent; /* Remove black background */
+      border-radius: 20px;
+      padding: 10px; /* Minimal padding */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      /* Dynamic width - will be set by JavaScript based on emulator aspect ratio */
+      width: auto; /* Dynamic width */
+      height: auto; /* Dynamic height */
+      /* Dynamic height - will be set by JavaScript based on emulator aspect ratio */
+      overflow: hidden; /* Prevent content overflow */
+    }
+    
+    /* Ensure automotive landscape emulator doesn't overflow */
+    .emulator-control-section .container.landscape-automotive .emulator-screen-container {
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    
+    /* Portrait emulator layout - remove problematic constraints */
+    
+    /* Automotive portrait emulator - ULTRA expand to use maximum width */
+    .emulator-control-section .container:not(.landscape-automotive) .streaming-container {
+      max-width: 2200px; /* Further increased width for portrait emulators */
+    }
+    
+    .emulator-control-section .container:not(.landscape-automotive) .emulator-screen-container {
+      max-width: none; /* Remove width constraint for portrait emulator container */
+      width: 100%;
+      min-width: 1200px; /* Ensure larger minimum width for portrait displays */
+      min-height: 1800px; /* Ensure much larger minimum height for portrait displays */
+    }
+    
+    .emulator-control-section .container:not(.landscape-automotive) .device-frame {
+      max-width: none; /* Remove width constraint for portrait emulator frame */
+      width: 100%;
+      min-width: 1100px; /* Ensure larger minimum width */
+      min-height: 1700px; /* Ensure much larger minimum height */
+    }
+    
+    .emulator-control-section .container:not(.landscape-automotive) .emulator-screen {
+      max-width: none; /* Remove width constraint for portrait emulator screen */
+      width: 100%;
+      min-width: 1000px; /* Ensure larger minimum width */
+      min-height: 1600px; /* Ensure much larger minimum height */
+    }
+    
+    .device-frame {
+      background: transparent; /* Remove black background */
+      border-radius: 15px;
+      padding: 5px; /* Minimal padding */
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden; /* Prevent overflow */
+      /* Dynamic sizing will be handled by JavaScript based on aspect ratio */
+    }
+    
+    /* Removed decorative pseudo-elements to eliminate nested frame effect */
+    
+    .emulator-screen {
+      width: 100%;
+      height: auto;
+      background: #000;
+      cursor: crosshair;
+      display: block;
+      object-fit: contain;
+      /* Dynamic aspect ratio and sizing - will be set by JavaScript based on emulator type */
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      border: 2px solid #333;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      overflow: hidden; /* Prevent content overflow */
+    }
+    
+    .emulator-screen.swipe-active {
+      border-color: #4CAF50;
+      box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+    }
+    
+    .streaming-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      display: none; /* Hide overlay completely */
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .streaming-status {
+      background: rgba(0, 0, 0, 0.8);
+      color: #3ddc84;
+      padding: 0.5rem 1rem;
+      border-radius: 0 0 8px 0;
+      font-weight: 600;
+      pointer-events: auto;
+    }
+    
+    .streaming-controls {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 8px 0 0 0;
+      pointer-events: auto;
+    }
+    
+    .control-btn {
+      background: rgba(61, 220, 132, 0.2);
+      border: 1px solid #3ddc84;
+      color: #3ddc84;
+      padding: 0.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: all 0.3s ease;
+    }
+    
+    .control-btn:hover {
+      background: rgba(61, 220, 132, 0.4);
+      transform: scale(1.1);
+    }
+    
+    .input-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    
+    .input-section {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .input-section h4 {
+      color: #3ddc84;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+    
+    .input-section input[type="text"] {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .input-section input[type="text"]::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    
+    .quick-actions .btn-emulator {
+      font-size: 0.9rem;
+      padding: 0.5rem 0.75rem;
+    }
+    
+    .streaming-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+    
+    .streaming-info span {
+      color: #3ddc84;
+      font-weight: 600;
+    }
+    
+    .fps-good {
+      color: #3ddc84 !important;
+      font-weight: 700 !important;
+    }
+    
+    .fps-poor {
+      color: #ff6b6b !important;
+      font-weight: 700 !important;
+    }
+    
+    .streaming-performance {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+    }
+    
+    .performance-metric {
+      text-align: center;
+    }
+    
+    .performance-metric .label {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-bottom: 0.25rem;
+    }
+    
+    .performance-metric .value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #3ddc84;
+    }
+    
+    @media (max-width: 768px) {
+      .streaming-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .emulator-screen-container {
+        min-height: 600px;
+        max-height: 1000px;
+        max-width: 100%;
+      }
+      
+      .emulator-screen {
+        max-height: 800px;
+        max-width: 100%;
+      }
+      
+      .quick-actions {
+        grid-template-columns: 1fr;
+      }
+      
+      .streaming-performance {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <nav class="main-nav">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo-link">
+          <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+        </a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="index.html#topics" class="nav-link">Topics</a>
+          <a href="index.html#blogs" class="nav-link">Blogs</a>
+          <a href="emulator.html" class="nav-link">Emulator</a>
+          <a href="emulator-control.html" class="nav-link active">Control</a>
+          <a href="books.html" class="nav-link">Books</a>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="hero-content">
+      <h1 class="hero-title animate-fadein">Android Emulator Control</h1>
+      <p class="hero-subtitle animate-slidein">Manage and launch Android emulators from your browser</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="emulator-control-section">
+      <div class="container">
+        <h2>🚀 Emulator Management</h2>
+        <p>Control your Android Virtual Devices (AVDs) directly from this interface. Launch, stop, and monitor emulators with ease.</p>
+        
+        <div style="text-align: center; margin: 2rem 0;">
+          <button class="refresh-btn" onclick="refreshEmulators()">
+            🔄 Refresh Emulators
+          </button>
+          <button class="refresh-btn" onclick="testAPIConnection()" style="margin-left: 1rem;">
+            🧪 Test API
+          </button>
+        </div>
+        
+        <div id="emulator-list" class="emulator-grid">
+          <!-- Emulator cards will be populated here -->
+        </div>
+        
+        <!-- Emulator Streaming Interface -->
+        <div id="streaming-interface" class="streaming-interface" style="display: none;">
+          <div class="streaming-header">
+            <h3 id="streaming-title">📱 Emulator Streaming</h3>
+            <div class="streaming-controls-header">
+              <div class="display-selector">
+                <label for="display-select">Display:</label>
+                <select id="display-select" onchange="changeDisplay()">
+                  <option value="auto">Auto-detect</option>
+                </select>
+              </div>
+              <button class="btn-emulator btn-stop" onclick="stopStreaming()">⏹️ Stop Stream</button>
+            </div>
+          </div>
+          
+          <div class="streaming-container">
+            <div class="emulator-screen-container">
+              <div class="device-frame">
+                <canvas id="emulator-screen" class="emulator-screen"></canvas>
+              </div>
+              <div class="streaming-overlay">
+                <div class="streaming-status" id="streaming-status">Connecting...</div>
+                <div class="streaming-controls">
+                  <button class="control-btn" onclick="sendKeyInput('home')" title="Home">🏠</button>
+                  <button class="control-btn" onclick="sendKeyInput('back')" title="Back">⬅️</button>
+                  <button class="control-btn" onclick="sendKeyInput('menu')" title="Menu">📋</button>
+                  <button class="control-btn" onclick="sendKeyInput('power')" title="Power">🔌</button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="controls-section">
+              <div class="input-panel">
+                <div class="input-section">
+                  <h4>Text Input</h4>
+                  <input type="text" id="text-input" placeholder="Type text to send to emulator" />
+                  <button class="btn-emulator btn-config" onclick="sendTextToEmulator()">Send Text</button>
+                </div>
+                
+                <div class="input-section">
+                  <h4>Quick Actions</h4>
+                  <div class="quick-actions">
+                    <button class="btn-emulator btn-launch" onclick="sendKeyInput('volume_up')">🔊 Vol Up</button>
+                    <button class="btn-emulator btn-launch" onclick="sendKeyInput('volume_down')">🔉 Vol Down</button>
+                    <button class="btn-emulator btn-launch" onclick="sendKeyInput('enter')">↵ Enter</button>
+                    <button class="btn-emulator btn-launch" onclick="sendKeyInput('escape')">⎋ Escape</button>
+                  </div>
+                </div>
+                
+                <div class="input-section">
+                  <h4>Streaming Info</h4>
+                  <div class="streaming-info">
+                    <div>Status: <span id="connection-status">Disconnected</span></div>
+                  </div>
+                  
+                  <div class="streaming-performance">
+                    <div class="performance-metric">
+                      <div class="label">FPS</div>
+                      <div class="value" id="streaming-fps">0</div>
+                    </div>
+                    <div class="performance-metric">
+                      <div class="label">Latency</div>
+                      <div class="value" id="streaming-latency">0ms</div>
+                    </div>
+                    <div class="performance-metric">
+                      <div class="label">Frame Size</div>
+                      <div class="value" id="streaming-size">0KB</div>
+                    </div>
+          <div class="performance-metric">
+            <div class="label">Target</div>
+            <div class="value">20 FPS</div>
+          </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="no-emulators" class="no-emulators" style="display: none;">
+          <h3>📱 No Emulators Found</h3>
+          <p>No Android Virtual Devices (AVDs) are currently available.</p>
+          <p>Create an AVD using Android Studio's AVD Manager or the command line.</p>
+          <div style="margin-top: 1rem;">
+            <a href="https://developer.android.com/studio/run/managing-avds" target="_blank" class="cta-button">
+              📖 Learn How to Create AVDs
+            </a>
+          </div>
+        </div>
+        
+        <div class="emulator-console" id="emulator-console">
+          <div class="console-line console-info">Android Emulator Control Console</div>
+          <div class="console-line">Ready to manage your emulators...</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section">
+      <div class="container">
+        <div class="content-card">
+          <h2>🔧 Emulator Features</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>📱 AVD Management</h3>
+              <p>List, select, and manage your Android Virtual Devices with detailed specifications and status monitoring.</p>
+            </div>
+            <div class="module-card">
+              <h3>🚀 Quick Launch</h3>
+              <p>Launch emulators with one click, including cold boot and snapshot restore options for faster startup.</p>
+            </div>
+            <div class="module-card">
+              <h3>📊 Real-time Monitoring</h3>
+              <p>Monitor emulator status, performance metrics, and console output in real-time.</p>
+            </div>
+            <div class="module-card">
+              <h3>⚙️ Configuration</h3>
+              <p>Configure emulator settings, hardware profiles, and launch parameters through the web interface.</p>
+            </div>
+          </div>
+          
+          <h2>🎯 Supported Operations</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>Launch Emulator</h3>
+              <p>Start selected AVD with configurable launch parameters and hardware acceleration.</p>
+            </div>
+            <div class="module-card">
+              <h3>Stop Emulator</h3>
+              <p>Gracefully shut down running emulators and clean up resources.</p>
+            </div>
+            <div class="module-card">
+              <h3>View Logs</h3>
+              <p>Access emulator console output and debug information in real-time.</p>
+            </div>
+            <div class="module-card">
+              <h3>Status Monitoring</h3>
+              <p>Track emulator state, performance metrics, and resource usage.</p>
+            </div>
+          </div>
+          
+          <h2>📋 Prerequisites</h2>
+          <div class="architecture-stack">
+            <div class="stack-item">Android SDK Installed</div>
+            <div class="stack-item">AVD Manager Access</div>
+            <div class="stack-item">Emulator Binary</div>
+            <div class="stack-item highlight">Virtual Device Images</div>
+            <div class="stack-item">Hardware Acceleration</div>
+            <div class="stack-item">Network Access</div>
+          </div>
+          
+          <div class="cta-content">
+            <h3>Need Help?</h3>
+            <p>Check the Android Emulator documentation for detailed setup instructions and troubleshooting guides.</p>
+            <a href="https://developer.android.com/studio/run/emulator" target="_blank" class="cta-button">📚 Emulator Documentation</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <a href="index.html" class="footer-logo-link">
+            <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
+          </a>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="hal.html">HAL</a></li>
+            <li><a href="framework.html">Framework</a></li>
+            <li><a href="adb.html">ADB</a></li>
+            <li><a href="emulator.html">Emulator</a></li>
+            <li><a href="books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/scripts.js?v=BYPASS_CACHE_1735372800000"></script>
+  <script>
+    // Feature Flags
+    const ENABLE_EMULATOR_CONTROL = false; // Set to true to enable emulator control feature
+    
+    // Emulator Control JavaScript - AGGRESSIVE FIX v1735372800000
+    console.log('🚀 BYPASS CACHE FIX SCRIPT STARTING... v1735372800000');
+    console.log('🔥 BYPASS CACHE FIX APPLIED - COMPLETELY IGNORE ASPECT RATIO FOR AUTOMOTIVE PORTRAIT');
+    
+    if (!ENABLE_EMULATOR_CONTROL) {
+      console.log('🚫 EMULATOR CONTROL FEATURE DISABLED - Feature flag is set to false');
+      document.body.innerHTML = `
+        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: #1a1a1a; color: white; font-family: Arial, sans-serif;">
+          <div style="text-align: center; padding: 2rem; background: #2a2a2a; border-radius: 8px; max-width: 600px;">
+            <h1 style="color: #ff6b6b; margin-bottom: 1rem;">🚫 Emulator Control Disabled</h1>
+            <p style="margin-bottom: 1rem;">The emulator control feature is currently disabled for the initial rollout.</p>
+            <p style="color: #888; font-size: 0.9rem;">This feature will be enabled in a future update.</p>
+            <div style="margin-top: 2rem;">
+              <a href="/" style="color: #4CAF50; text-decoration: none; padding: 0.5rem 1rem; border: 1px solid #4CAF50; border-radius: 4px; display: inline-block;">← Back to Home</a>
+            </div>
+          </div>
+        </div>
+      `;
+      // Stop execution here
+      throw new Error('Emulator control feature disabled');
+    }
+    
+    let emulators = [];
+    let runningEmulators = new Set();
+    let currentStreamingEmulator = null;
+    let websocket = null;
+    let streamingCanvas = null;
+    let streamingContext = null;
+    let fpsCounter = 0;
+    let lastFpsTime = Date.now();
+    
+    // Store actual image dimensions for accurate touch coordinate calculation
+    let currentImageWidth = 1080;  // Default fallback
+    let currentImageHeight = 1920; // Default fallback
+    let currentImageOffsetX = 0;
+    let currentImageOffsetY = 0;
+    let currentImageDisplayWidth = 0;
+    let currentImageDisplayHeight = 0;
+    
+    // Swipe gesture tracking
+    // Swipe variables removed - using simple touch/click handling only
+    
+    // Canvas resize throttling
+    let lastCanvasResize = 0;
+    const CANVAS_RESIZE_THROTTLE = 100; // ms
+    
+    console.log('📊 Variables initialized');
+    
+    // Log messages to the console (defined early for other functions)
+    function logToConsole(message, type = 'info') {
+      const consoleElement = document.getElementById('emulator-console');
+      const timestamp = new Date().toLocaleTimeString();
+      
+      if (consoleElement) {
+        const messageElement = document.createElement('div');
+        messageElement.className = `console-message ${type}`;
+        messageElement.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+        consoleElement.appendChild(messageElement);
+        consoleElement.scrollTop = consoleElement.scrollHeight;
+      }
+      
+      // Also log to browser console
+      const logMethod = type === 'error' ? 'error' : type === 'warning' ? 'warn' : 'log';
+      console[logMethod](`[${type.toUpperCase()}] ${message}`);
+    }
+    
+    // Test API connection function (defined early for button onclick)
+    async function testAPIConnection() {
+      logToConsole('Testing API connection to http://localhost:3002...', 'info');
+      
+      try {
+        const response = await fetch('http://localhost:3002/api/emulators');
+        logToConsole(`API Response Status: ${response.status}`, 'info');
+        
+        if (response.ok) {
+          const data = await response.json();
+          logToConsole(`✅ API connection successful! Received ${data.length} emulators`, 'success');
+          
+          // Update emulators with real data
+          emulators = data;
+          displayEmulators();
+        } else {
+          logToConsole(`❌ API returned error: ${response.status} ${response.statusText}`, 'error');
+        }
+      } catch (error) {
+        logToConsole(`❌ API connection failed: ${error.message}`, 'error');
+        logToConsole('Make sure the emulator server is running on port 3002', 'info');
+      }
+    }
+    
+    // Refresh the list of available emulators (defined early for button onclick)
+    async function refreshEmulators() {
+      console.log('🔄 refreshEmulators called');
+      logToConsole('Refreshing emulator list...', 'info');
+      
+      try {
+        // Show loading state
+        const emulatorList = document.getElementById('emulator-list');
+        console.log('📱 emulatorList element:', emulatorList);
+        
+        if (!emulatorList) {
+          console.error('❌ emulator-list element not found!');
+          return;
+        }
+        
+        emulatorList.innerHTML = '<div style="text-align: center; padding: 2rem;"><div class="loading-spinner"></div><p style="margin-top: 1rem;">Loading emulators...</p></div>';
+        console.log('⏳ Loading state set');
+        
+        // Try to fetch real emulator data first
+        try {
+          console.log('🌐 Fetching from API: http://localhost:3002/api/emulators');
+          const response = await fetch('http://localhost:3002/api/emulators');
+          console.log('📡 API Response:', response.status, response.statusText);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log('📊 API Data received:', data);
+            
+            if (data && data.length > 0) {
+              emulators = data;
+              logToConsole(`Loaded ${emulators.length} real emulators from system`, 'success');
+              console.log('✅ Real emulators loaded:', emulators);
+            } else {
+              throw new Error('No emulators found');
+            }
+          } else {
+            throw new Error(`API returned ${response.status}`);
+          }
+        } catch (apiError) {
+          console.warn('⚠️ API call failed:', apiError);
+          logToConsole(`API call failed: ${apiError.message}`, 'warning');
+          logToConsole('Using mock data for demonstration', 'info');
+          emulators = getMockEmulators();
+          console.log('🎭 Using mock data:', emulators);
+        }
+        
+        console.log('🎨 Calling displayEmulators with:', emulators);
+        displayEmulators();
+        updateRunningEmulators();
+        
+      } catch (error) {
+        console.error('💥 Error in refreshEmulators:', error);
+        logToConsole(`Error refreshing emulators: ${error.message}`, 'error');
+        // Use mock data as fallback
+        emulators = getMockEmulators();
+        displayEmulators();
+      }
+    }
+    
+    // Display Selection Functions
+    async function loadAvailableDisplays(avdId) {
+      try {
+        logToConsole(`Loading displays for emulator: ${avdId}`, 'info');
+        const response = await fetch(`http://localhost:3002/api/emulators/${avdId}/displays`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const displays = await response.json();
+        logToConsole(`API returned: ${JSON.stringify(displays)}`, 'info');
+        
+        const select = document.getElementById('display-select');
+        if (!select) {
+          logToConsole('Display select element not found', 'error');
+          return;
+        }
+        
+        select.innerHTML = '<option value="auto">Auto-detect</option>';
+        
+        displays.forEach((display, index) => {
+          const option = document.createElement('option');
+          option.value = display.id;
+          option.textContent = `Display ${index + 1} (${display.name})`;
+          select.appendChild(option);
+        });
+        
+        // Add info about display types
+        if (displays.length > 1) {
+          logToConsole(`Found ${displays.length} displays. Display 1 is typically the main automotive interface. Display 2 might be a secondary screen or cluster display.`, 'info');
+        }
+        
+        logToConsole(`Found ${displays.length} displays`, 'info');
+      } catch (error) {
+        logToConsole(`Failed to load displays: ${error.message}`, 'error');
+        console.error('Display loading error:', error);
+      }
+    }
+
+    // Load emulator configuration (resolution and density)
+    async function loadEmulatorConfig(avdId) {
+      try {
+        logToConsole(`Loading emulator configuration for: ${avdId}`, 'info');
+        const response = await fetch(`http://localhost:3002/api/emulators/${avdId}/config`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const config = await response.json();
+        logToConsole(`Emulator config: ${JSON.stringify(config)}`, 'info');
+        
+        // Store config globally for use in displayScreenshot
+        window.currentEmulatorConfig = config;
+        
+        return config;
+      } catch (error) {
+        logToConsole(`Error loading emulator config: ${error.message}`, 'error');
+        return null;
+      }
+    }
+    
+    function changeDisplay() {
+      const select = document.getElementById('display-select');
+      const displayId = select.value;
+      
+      logToConsole(`changeDisplay called - currentStreamingEmulator: ${currentStreamingEmulator}, displayId: ${displayId}`, 'info');
+      
+      if (currentStreamingEmulator && displayId !== 'auto') {
+        logToConsole(`Switching to display: ${displayId}`, 'info');
+        // Store the avdId before stopping streaming
+        const avdId = currentStreamingEmulator;
+        
+        // Stop current WebSocket but don't clear currentStreamingEmulator
+        if (websocket) {
+          websocket.close();
+          websocket = null;
+        }
+        
+        setTimeout(() => {
+          logToConsole(`Starting streaming with display - avdId: ${avdId}, displayId: ${displayId}`, 'info');
+          startStreamingWithDisplay(avdId, displayId);
+        }, 1000);
+      }
+    }
+    
+    function startStreamingWithDisplay(avdId, displayId) {
+      logToConsole(`startStreamingWithDisplay called - avdId: ${avdId}, displayId: ${displayId}`, 'info');
+      currentStreamingEmulator = avdId;
+      currentDisplayId = displayId;
+      
+      // Initialize WebSocket connection with display parameter
+      const wsUrl = `ws://localhost:3002/stream/${avdId}?display=${displayId}`;
+      logToConsole(`Connecting to WebSocket: ${wsUrl}`, 'info');
+      websocket = new WebSocket(wsUrl);
+      
+      websocket.onopen = function() {
+        logToConsole(`Connected to emulator ${avdId} on display ${displayId}`, 'success');
+        document.getElementById('streaming-status').textContent = 'Connected';
+        
+        // Start streaming immediately after connection
+        websocket.send(JSON.stringify({
+          type: 'start_streaming',
+          avdId: avdId
+        }));
+        
+        // Add info about display switching
+        if (displayId !== 'auto') {
+          logToConsole(`Switched to Display ${displayId}. Note: Secondary displays may show different content or be empty.`, 'info');
+        }
+      };
+      
+      websocket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        console.log(`📱 WebSocket message received:`, data.type, data);
+        handleWebSocketMessage(data);
+      };
+      
+      websocket.onclose = function() {
+        logToConsole('Streaming connection closed', 'warning');
+        document.getElementById('streaming-status').textContent = 'Disconnected';
+      };
+      
+      websocket.onerror = function(error) {
+        logToConsole(`Streaming error: ${error.message}`, 'error');
+        document.getElementById('streaming-status').textContent = 'Error';
+      };
+      
+      streamingWebSocket = websocket;
+    }
+    
+    // Initialize the emulator control interface
+    document.addEventListener('DOMContentLoaded', function() {
+      logToConsole('Initializing emulator control interface...', 'info');
+      logToConsole('Loading emulator list...', 'info');
+      
+      // Load emulators directly
+      refreshEmulators();
+      
+      // Set up periodic refresh for running emulators
+      setInterval(updateRunningEmulators, 5000);
+    });
+    
+    
+    // Display emulators in the grid
+    function displayEmulators() {
+      console.log('🎨 displayEmulators called with emulators:', emulators);
+      
+      const emulatorList = document.getElementById('emulator-list');
+      const noEmulators = document.getElementById('no-emulators');
+      
+      console.log('📱 emulatorList element:', emulatorList);
+      console.log('📝 noEmulators element:', noEmulators);
+      
+      if (emulators.length === 0) {
+        console.log('❌ No emulators to display');
+        emulatorList.style.display = 'none';
+        noEmulators.style.display = 'block';
+        return;
+      }
+      
+      console.log(`✅ Displaying ${emulators.length} emulators`);
+      
+      emulatorList.style.display = 'grid';
+      noEmulators.style.display = 'none';
+      
+      emulatorList.innerHTML = emulators.map(emulator => `
+        <div class="emulator-card">
+          <h3>📱 ${emulator.name}</h3>
+          <div class="emulator-status">
+            <div class="status-indicator ${runningEmulators.has(emulator.id) ? 'running' : ''}"></div>
+            <span>${runningEmulators.has(emulator.id) ? 'Running' : 'Stopped'}</span>
+          </div>
+          
+          <div class="emulator-specs">
+            <div class="spec-item">
+              <div class="spec-label">API Level</div>
+              <div class="spec-value">${emulator.apiLevel}</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Resolution</div>
+              <div class="spec-value">${emulator.resolution}</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">RAM</div>
+              <div class="spec-value">${emulator.ram}</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Storage</div>
+              <div class="spec-value">${emulator.storage}</div>
+            </div>
+          </div>
+          
+          <div class="emulator-actions">
+            ${!runningEmulators.has(emulator.id) ? 
+              `<button class="btn-emulator btn-launch" onclick="launchEmulator('${emulator.id}', event)">
+                🚀 Launch
+              </button>` : 
+              `<button class="btn-emulator btn-stop" onclick="stopEmulator('${emulator.id}', event)">
+                ⏹️ Stop
+              </button>`
+            }
+            ${runningEmulators.has(emulator.id) ? 
+              `<button class="btn-emulator btn-config" onclick="startStreaming('${emulator.id}', '${emulator.name}')">
+                📺 Stream
+              </button>` : 
+              `<button class="btn-emulator btn-config" onclick="configureEmulator('${emulator.id}')">
+                ⚙️ Config
+              </button>`
+            }
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // Launch an emulator
+    async function launchEmulator(emulatorId, event) {
+      const emulator = emulators.find(e => e.id === emulatorId);
+      if (!emulator) return;
+      
+      logToConsole(`Launching emulator: ${emulator.name}`, 'info');
+      
+      let button = null;
+      let originalText = '';
+      
+      try {
+        // Show loading state
+        if (event && event.target) {
+          button = event.target;
+          originalText = button.textContent;
+          button.innerHTML = '<div class="loading-spinner"></div> Starting...';
+          button.disabled = true;
+        }
+        
+        // Call emulator API to launch emulator with options to show window
+        const launchOptions = {
+          noWindow: false,  // Show the emulator window
+          noAudio: false,   // Enable audio
+          noBootAnim: false // Show boot animation
+        };
+        
+        const response = await fetch(`http://localhost:3002/api/emulators/${emulatorId}/launch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(launchOptions)
+        });
+        
+        if (response.ok) {
+          runningEmulators.add(emulatorId);
+          logToConsole(`Emulator ${emulator.name} launched successfully`, 'success');
+          displayEmulators(); // Refresh the display
+        } else {
+          throw new Error('Failed to launch emulator');
+        }
+        
+      } catch (error) {
+        logToConsole(`Failed to launch ${emulator.name}: ${error.message}`, 'error');
+        
+        // Reset button state
+        if (button) {
+          button.textContent = '🚀 Launch';
+          button.disabled = false;
+        }
+      }
+    }
+    
+    // Stop an emulator
+    async function stopEmulator(emulatorId, event) {
+      const emulator = emulators.find(e => e.id === emulatorId);
+      if (!emulator) return;
+      
+      logToConsole(`Stopping emulator: ${emulator.name}`, 'info');
+      
+      let button = null;
+      let originalText = '';
+      
+      try {
+        // Show loading state
+        if (event && event.target) {
+          button = event.target;
+          originalText = button.textContent;
+          button.innerHTML = '<div class="loading-spinner"></div> Stopping...';
+          button.disabled = true;
+        }
+        
+        // Call emulator API to stop emulator
+        const response = await fetch(`http://localhost:3002/api/emulators/${emulatorId}/stop`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+          runningEmulators.delete(emulatorId);
+          logToConsole(`Emulator ${emulator.name} stopped successfully`, 'success');
+          displayEmulators(); // Refresh the display
+        } else {
+          throw new Error('Failed to stop emulator');
+        }
+        
+      } catch (error) {
+        logToConsole(`Failed to stop ${emulator.name}: ${error.message}`, 'error');
+        
+        // Reset button state
+        if (button) {
+          button.textContent = '⏹️ Stop';
+          button.disabled = false;
+        }
+      }
+    }
+    
+    // Configure emulator settings
+    function configureEmulator(emulatorId) {
+      const emulator = emulators.find(e => e.id === emulatorId);
+      if (!emulator) return;
+      
+      logToConsole(`Opening configuration for: ${emulator.name}`, 'info');
+      
+      // In a real implementation, this would open a configuration modal
+      alert(`Configuration for ${emulator.name}\n\nThis would open a configuration panel with:\n• Hardware settings\n• Network configuration\n• Performance options\n• Launch parameters`);
+    }
+    
+    // Update running emulators status
+    async function updateRunningEmulators() {
+      if (runningEmulators.size === 0) return;
+      
+      try {
+        // Call emulator API to check running emulators
+        try {
+          const response = await fetch('http://localhost:3002/api/emulators/running');
+          if (response.ok) {
+            const runningIds = await response.json();
+            runningEmulators = new Set(runningIds);
+            displayEmulators(); // Update the display
+          }
+        } catch (error) {
+          // Silently handle errors for background updates
+        }
+      } catch (error) {
+        // Silently handle errors for background updates
+      }
+    }
+    
+    
+    // Mock emulator data for demonstration
+    function getMockEmulators() {
+      return [
+        {
+          id: 'pixel_7_api_34',
+          name: 'Pixel 7 API 34',
+          apiLevel: '34',
+          resolution: '1080x2400',
+          ram: '4GB',
+          storage: '32GB',
+          androidVersion: 'Android 14',
+          architecture: 'x86_64'
+        },
+        {
+          id: 'pixel_6_api_33',
+          name: 'Pixel 6 API 33',
+          apiLevel: '33',
+          resolution: '1080x2400',
+          ram: '8GB',
+          storage: '64GB',
+          androidVersion: 'Android 13',
+          architecture: 'x86_64'
+        },
+        {
+          id: 'nexus_5_api_30',
+          name: 'Nexus 5 API 30',
+          apiLevel: '30',
+          resolution: '1080x1920',
+          ram: '2GB',
+          storage: '16GB',
+          androidVersion: 'Android 11',
+          architecture: 'x86'
+        },
+        {
+          id: 'tablet_api_31',
+          name: '10.1" Tablet API 31',
+          apiLevel: '31',
+          resolution: '1200x1920',
+          ram: '6GB',
+          storage: '32GB',
+          androidVersion: 'Android 12',
+          architecture: 'x86_64'
+        }
+      ];
+    }
+    
+    // Streaming Functions
+    async function startStreaming(avdId, emulatorName) {
+      currentStreamingEmulator = avdId;
+      
+      // Show streaming interface
+      document.getElementById('streaming-interface').style.display = 'block';
+      document.getElementById('streaming-title').textContent = `📱 ${emulatorName} - Streaming`;
+      
+      // Initialize canvas
+      streamingCanvas = document.getElementById('emulator-screen');
+      streamingContext = streamingCanvas.getContext('2d');
+      
+      // Set up canvas for simple touch/click events only (swipe disabled)
+      streamingCanvas.addEventListener('touchstart', handleSimpleTouch, { passive: false });
+      streamingCanvas.addEventListener('touchend', handleSimpleTouchEnd, { passive: false });
+      streamingCanvas.addEventListener('mousedown', handleSimpleClick);
+      streamingCanvas.addEventListener('mouseup', handleSimpleClickEnd);
+      
+      // Simple touch/click handling - no complex swipe logic
+      
+      // Load available displays and emulator config first, then connect WebSocket
+      try {
+        await loadAvailableDisplays(avdId);
+        logToConsole(`Displays loaded successfully`, 'info');
+        
+        // Load emulator configuration for dynamic sizing
+        await loadEmulatorConfig(avdId);
+        logToConsole(`Emulator config loaded successfully`, 'info');
+        
+        connectWebSocket(avdId);
+        logToConsole(`Starting streaming for ${emulatorName}`, 'info');
+      } catch (error) {
+        logToConsole(`Error loading displays/config: ${error.message}`, 'error');
+        // Still try to connect WebSocket even if loading fails
+        connectWebSocket(avdId);
+      }
+    }
+    
+    function stopStreaming() {
+      if (websocket) {
+        websocket.close();
+        websocket = null;
+      }
+      
+      // Hide streaming interface
+      document.getElementById('streaming-interface').style.display = 'none';
+      currentStreamingEmulator = null;
+      
+      // Clear canvas
+      if (streamingContext) {
+        streamingContext.clearRect(0, 0, streamingCanvas.width, streamingCanvas.height);
+      }
+      
+      logToConsole('Streaming stopped', 'info');
+    }
+    
+    function connectWebSocket(avdId) {
+      const wsUrl = `ws://localhost:3002/stream/${avdId}`;
+      websocket = new WebSocket(wsUrl);
+      
+      websocket.onopen = function() {
+        logToConsole('WebSocket connected', 'success');
+        updateConnectionStatus('Connected');
+        
+        // Start streaming
+        websocket.send(JSON.stringify({
+          type: 'start_streaming',
+          avdId: avdId
+        }));
+      };
+      
+      websocket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        handleWebSocketMessage(data);
+      };
+      
+      websocket.onclose = function() {
+        logToConsole('WebSocket disconnected', 'error');
+        updateConnectionStatus('Disconnected');
+      };
+      
+      websocket.onerror = function(error) {
+        logToConsole(`WebSocket error: ${error}`, 'error');
+        updateConnectionStatus('Error');
+      };
+    }
+    
+    function handleWebSocketMessage(data) {
+      switch (data.type) {
+        case 'streaming_started':
+          updateStreamingStatus('Streaming...');
+          logToConsole(`Streaming started for ${data.avdId}`, 'success');
+          break;
+          
+        case 'screenshot':
+          console.log(`📱 Received screenshot data: ${data.data ? data.data.length : 0} characters`);
+          if (!data.data || data.data.length < 100) {
+            console.error('📱 Invalid screenshot data received:', data);
+            updateStreamingStatus('Invalid Data');
+            return;
+          }
+          displayScreenshot(data.data);
+          updateFpsCounter();
+          
+          // Update performance info if available
+          if (data.captureTime) {
+            document.getElementById('streaming-latency').textContent = `${data.captureTime}ms`;
+          }
+          if (data.size) {
+            const sizeKB = Math.round(data.size / 1024);
+            document.getElementById('streaming-size').textContent = `${sizeKB}KB`;
+          }
+          break;
+          
+        case 'fps_update':
+          // Update FPS display with real-time data
+          if (data.fps !== undefined) {
+            document.getElementById('streaming-fps').textContent = `${data.fps} FPS`;
+            document.getElementById('streaming-fps').className = data.fps >= 15 ? 'fps-good' : 'fps-poor';
+          }
+          break;
+          
+        case 'touch_result':
+          logToConsole(`Touch input sent: ${data.result.action} at (${data.result.x}, ${data.result.y})`, 'info');
+          break;
+          
+        case 'swipe_result':
+          logToConsole(`Swipe gesture sent: ${data.result.type} ${data.result.direction} from (${data.result.startX}, ${data.result.startY}) to (${data.result.endX}, ${data.result.endY})`, 'info');
+          break;
+          
+        case 'key_result':
+          logToConsole(`Key input sent: ${data.result.key}`, 'info');
+          break;
+          
+        case 'text_result':
+          logToConsole(`Text input sent: "${data.result.text}"`, 'info');
+          break;
+          
+        case 'error':
+          logToConsole(`Error: ${data.message}`, 'error');
+          break;
+          
+        default:
+          console.log('Unknown message type:', data.type);
+      }
+    }
+    
+    function displayScreenshot(base64Data) {
+      if (!streamingContext) return;
+      
+      const img = new Image();
+      img.onload = function() {
+        try {
+          // Store actual image dimensions for touch coordinate calculation
+          currentImageWidth = img.width;
+          currentImageHeight = img.height;
+          
+          // Check if this is an automotive device (declare early)
+          const isAutomotiveDevice = currentStreamingEmulator && (
+            currentStreamingEmulator.includes('Automotive') ||
+            currentStreamingEmulator.includes('automotive') ||
+            currentStreamingEmulator.includes('Car') ||
+            currentStreamingEmulator.includes('car') ||
+            currentStreamingEmulator.includes('IVI') ||
+            currentStreamingEmulator.includes('MyCar') ||
+            currentStreamingEmulator.includes('Auto') ||
+            currentStreamingEmulator.includes('auto')
+          );
+          
+          // Set dynamic aspect ratio based on emulator dimensions
+          const aspectRatio = img.width / img.height;
+          console.log(`📱 Image dimensions: ${img.width}x${img.height}, aspect ratio: ${aspectRatio.toFixed(3)}`);
+          console.log(`📱 Expected automotive: 3904x1320 (ratio: 2.96), actual ratio: ${aspectRatio.toFixed(3)}`);
+          console.log(`🚗 Device detection: emulator="${currentStreamingEmulator}", isAutomotive=${isAutomotiveDevice}, aspectRatio=${aspectRatio.toFixed(3)}`);
+          
+          // Dynamically adjust container size for landscape automotive emulators
+          const container = document.querySelector('.emulator-control-section .container');
+          if (container) {
+            if (isAutomotiveDevice && aspectRatio > 1.5) {
+              // Automotive landscape - expand container to full width
+              container.classList.add('landscape-automotive');
+              container.style.maxWidth = 'none';
+              container.style.width = '100%';
+              container.style.padding = '0 1rem';
+              console.log(`🚗 Automotive landscape detected - expanding container to full width (aspectRatio=${aspectRatio.toFixed(3)})`);
+            } else {
+              // Remove landscape-automotive class for others
+              container.classList.remove('landscape-automotive');
+              container.style.maxWidth = '';
+              container.style.width = '';
+              container.style.padding = '';
+              console.log(`📱 Portrait/phone emulator - using normal container size`);
+            }
+          }
+          
+          const streamingCanvas = document.getElementById('emulator-screen');
+          if (streamingCanvas) {
+            streamingCanvas.style.aspectRatio = `${aspectRatio}`;
+            // Use contain for all displays to preserve aspect ratio
+            streamingCanvas.style.objectFit = 'contain';
+            console.log(`📱 Set canvas aspect ratio to: ${aspectRatio}`);
+          }
+          
+          // Adaptive sizing system - analyze available space and emulator content
+          const canvasContainer = streamingCanvas.parentElement;
+          const availableWidth = canvasContainer.clientWidth;
+          const availableHeight = window.innerHeight * 0.8; // Use 80% of viewport height
+          
+          // Calculate optimal dimensions based on content and available space
+          let containerWidth, containerHeight;
+          
+          // Determine emulator type and optimal sizing strategy
+          const isPortrait = aspectRatio < 1.0;
+          const isWideLandscape = aspectRatio > 2.0;
+          const isAutomotive = isAutomotiveDevice || currentStreamingEmulator.toLowerCase().includes('automotive') || 
+                              currentStreamingEmulator.toLowerCase().includes('car') || 
+                              currentStreamingEmulator.toLowerCase().includes('auto');
+          
+          console.log(`🔍 Emulator Analysis: portrait=${isPortrait}, wideLandscape=${isWideLandscape}, automotive=${isAutomotive}, aspectRatio=${aspectRatio.toFixed(3)}`);
+          
+          if (isWideLandscape && isAutomotive) {
+            // Wide automotive landscape - use full viewport width
+            containerWidth = window.innerWidth - 60;
+            containerHeight = Math.min(containerWidth / aspectRatio + 100, availableHeight);
+            console.log(`🚗 Wide automotive landscape: container=${containerWidth}x${containerHeight}`);
+          } else if (isPortrait && isAutomotive) {
+            // Automotive portrait - ULTIMATE FIX - completely ignore aspect ratio
+            containerWidth = availableWidth * 0.95;
+            containerHeight = availableHeight * 0.95;
+            console.log(`🚗 ULTIMATE FIX: container=${containerWidth}x${containerHeight} (available: ${availableWidth}x${availableHeight}) - COMPLETELY IGNORE ASPECT RATIO ${Date.now()}`);
+            console.log(`🔥 BYPASSING ALL ASPECT RATIO CALCULATIONS FOR AUTOMOTIVE PORTRAIT!`);
+          } else if (isPortrait) {
+            // Regular portrait emulators - increased height for better proportions
+            containerWidth = Math.min(availableWidth * 0.9, 700);
+            containerHeight = Math.min(containerWidth / aspectRatio + 150, availableHeight * 0.90); // Allow 90% of available height
+            console.log(`📱 Regular portrait: container=${containerWidth}x${containerHeight}`);
+          } else {
+            // Landscape or square emulators
+            containerWidth = Math.min(availableWidth * 0.85, 800);
+            containerHeight = Math.min(containerWidth / aspectRatio + 100, availableHeight);
+            console.log(`📱 Landscape/square: container=${containerWidth}x${containerHeight}`);
+          }
+          
+          console.log(`📱 Device detection: ${currentStreamingEmulator}, isAutomotive=${isAutomotiveDevice}, aspectRatio=${aspectRatio.toFixed(3)}`);
+          
+          // Set container height dynamically
+          canvasContainer.style.height = containerHeight + 'px';
+          
+          console.log(`📱 Container dimensions: ${containerWidth}x${containerHeight} (calculated for aspect ratio ${aspectRatio.toFixed(3)})`);
+          console.log(`📱 Setting container height to: ${containerHeight}px v3 ${Date.now()}`);
+          
+          // Calculate aspect ratios
+          const imageAspectRatio = img.width / img.height;
+          const containerAspectRatio = containerWidth / containerHeight;
+          console.log(`📱 Image aspect ratio: ${imageAspectRatio.toFixed(3)}, Container aspect ratio: ${containerAspectRatio.toFixed(3)}`);
+          
+          let displayWidth, displayHeight, offsetX = 0, offsetY = 0;
+          
+          if (isPortrait && isAutomotive) {
+            // Automotive portrait - use maximum container width for best display
+            displayWidth = containerWidth * 0.98; // Use 98% of container width for maximum utilization
+            displayHeight = displayWidth / imageAspectRatio;
+            // Center the display with minimal margins
+            offsetX = (containerWidth - displayWidth) / 2;
+            offsetY = (containerHeight - displayHeight) / 2;
+            console.log(`🚗 Automotive portrait display: ${displayWidth}x${displayHeight}, offset=${offsetX},${offsetY}`);
+          } else if (imageAspectRatio > containerAspectRatio) {
+            // Image is wider than container - fit to width
+            displayWidth = containerWidth;
+            displayHeight = containerWidth / imageAspectRatio;
+            offsetY = (containerHeight - displayHeight) / 2;
+          } else {
+            // Image is taller than container - fit to height
+            displayHeight = containerHeight;
+            displayWidth = containerHeight * imageAspectRatio;
+            offsetX = (containerWidth - displayWidth) / 2;
+          }
+          
+          // Store positioning information for touch coordinate calculation
+          currentImageOffsetX = offsetX;
+          currentImageOffsetY = offsetY;
+          currentImageDisplayWidth = displayWidth;
+          currentImageDisplayHeight = displayHeight;
+          
+          // Set fixed canvas size to prevent continuous expansion (with throttling)
+          const now = Date.now();
+          if (now - lastCanvasResize < CANVAS_RESIZE_THROTTLE) {
+            return; // Skip this resize to prevent rapid expansion
+          }
+          lastCanvasResize = now;
+          
+          const devicePixelRatio = window.devicePixelRatio || 1;
+          // Adaptive canvas sizing based on emulator analysis
+          let maxWidth, maxHeight;
+          
+          if (isWideLandscape && isAutomotive) {
+            // Wide automotive landscape - prevent overflow
+            maxWidth = containerWidth * 0.92;
+            maxHeight = maxWidth / aspectRatio;
+            console.log(`🚗 Wide automotive landscape canvas: maxWidth=${maxWidth}, maxHeight=${maxHeight}`);
+          } else if (isPortrait && isAutomotive) {
+            // Automotive portrait - ULTIMATE CANVAS FIX
+            maxWidth = containerWidth * 0.98;
+            maxHeight = containerHeight * 0.98;
+            console.log(`🚗 ULTIMATE CANVAS: maxWidth=${maxWidth}, maxHeight=${maxHeight} - MAXIMUM SIZE ${Date.now()}`);
+          } else if (isPortrait) {
+            // Regular portrait emulators
+            maxWidth = containerWidth * 0.90;
+            maxHeight = containerHeight * 0.85;
+            console.log(`📱 Regular portrait canvas: maxWidth=${maxWidth}, maxHeight=${maxHeight}`);
+          } else {
+            // Landscape or square emulators
+            maxWidth = containerWidth * 0.88;
+            maxHeight = containerHeight * 0.85;
+            console.log(`📱 Landscape/square canvas: maxWidth=${maxWidth}, maxHeight=${maxHeight}`);
+          }
+          const fixedWidth = Math.min(containerWidth, maxWidth);
+          // ULTIMATE FIX: For automotive portrait emulators, use maximum available height
+          const fixedHeight = (isPortrait && isAutomotive) ? containerHeight * 0.98 : Math.min(containerHeight, maxHeight);
+          
+          console.log(`📱 Final canvas dimensions: containerWidth=${containerWidth}, maxWidth=${maxWidth}, fixedWidth=${fixedWidth}`);
+          console.log(`📱 Final canvas dimensions: containerHeight=${containerHeight}, maxHeight=${maxHeight}, fixedHeight=${fixedHeight} v3 ${Date.now()}`);  
+          
+          // Only resize if dimensions have actually changed
+          if (streamingCanvas.style.width !== fixedWidth + 'px' || streamingCanvas.style.height !== fixedHeight + 'px') {
+            streamingCanvas.width = fixedWidth * devicePixelRatio;
+            streamingCanvas.height = fixedHeight * devicePixelRatio;
+            streamingCanvas.style.width = fixedWidth + 'px';
+            streamingCanvas.style.height = fixedHeight + 'px';
+            console.log(`📱 Canvas resized to: ${fixedWidth}x${fixedHeight}px`);
+          }
+          
+          // Reset transform matrix to prevent accumulation
+          streamingContext.setTransform(1, 0, 0, 1, 0, 0);
+          streamingContext.scale(devicePixelRatio, devicePixelRatio);
+          
+          // Clear canvas with black background using fixed dimensions
+          streamingContext.fillStyle = '#000000';
+          streamingContext.fillRect(0, 0, fixedWidth, fixedHeight);
+          
+          // Enable image smoothing for better quality
+          streamingContext.imageSmoothingEnabled = true;
+          streamingContext.imageSmoothingQuality = 'high';
+          
+          // Recalculate offsets for fixed canvas size - different logic for landscape vs other displays
+          let marginX, marginY, fixedOffsetX, fixedOffsetY, adjustedDisplayWidth, adjustedDisplayHeight;
+          
+          // Simple margins for all displays
+          marginX = 10;
+          marginY = 10;
+          fixedOffsetX = Math.max(marginX, (fixedWidth - displayWidth) / 2);
+          fixedOffsetY = Math.max(marginY, (fixedHeight - displayHeight) / 2);
+          adjustedDisplayWidth = Math.min(displayWidth, fixedWidth - (marginX * 2));
+          adjustedDisplayHeight = Math.min(displayHeight, fixedHeight - (marginY * 2));
+          
+          // Clear canvas with black background
+          streamingContext.fillStyle = '#000000';
+          streamingContext.fillRect(0, 0, streamingCanvas.width, streamingCanvas.height);
+          
+          // ULTIMATE FIX: For automotive portrait emulators, completely ignore aspect ratio
+          let actualDisplayWidth, actualDisplayHeight;
+          if (isPortrait && isAutomotive) {
+            // Automotive portrait - use full container size to eliminate stretching
+            actualDisplayWidth = adjustedDisplayWidth;
+            actualDisplayHeight = adjustedDisplayHeight;
+            console.log(`🚗 ULTIMATE DRAW FIX: Using full container size ${actualDisplayWidth}x${actualDisplayHeight} - COMPLETELY IGNORE ASPECT RATIO`);
+          } else {
+            // Regular emulators - preserve aspect ratio
+            actualDisplayWidth = Math.min(adjustedDisplayWidth, adjustedDisplayHeight * (img.width / img.height));
+            actualDisplayHeight = Math.min(adjustedDisplayHeight, adjustedDisplayWidth / (img.width / img.height));
+          }
+          
+          // Center the image within the available space
+          const centeredOffsetX = fixedOffsetX + (adjustedDisplayWidth - actualDisplayWidth) / 2;
+          const centeredOffsetY = fixedOffsetY + (adjustedDisplayHeight - actualDisplayHeight) / 2;
+          
+          streamingContext.drawImage(img, centeredOffsetX, centeredOffsetY, actualDisplayWidth, actualDisplayHeight);
+          
+          // Update stored positioning for touch coordinates - use the actual rendered dimensions
+          currentImageOffsetX = centeredOffsetX;
+          currentImageOffsetY = centeredOffsetY;
+          currentImageDisplayWidth = actualDisplayWidth;
+          currentImageDisplayHeight = actualDisplayHeight;
+          
+          console.log(`Image rendering: Original(${img.width}x${img.height}) -> Rendered(${actualDisplayWidth}x${actualDisplayHeight}) at offset(${centeredOffsetX}, ${centeredOffsetY}) - ${(isPortrait && isAutomotive) ? 'ULTIMATE FIX - COMPLETELY IGNORE ASPECT RATIO' : 'Aspect ratio preserved'}`);
+          
+          // Update streaming status to show we're receiving frames
+          updateStreamingStatus('Streaming...');
+          
+        } catch (error) {
+          console.error('Error displaying screenshot:', error);
+          updateStreamingStatus('Display Error');
+        }
+      };
+      
+      img.onerror = function() {
+        console.error('Error loading screenshot image');
+        updateStreamingStatus('Image Error');
+      };
+      
+      img.src = `data:image/png;base64,${base64Data}`;
+    }
+    
+    // Simple touch and click handlers (swipe functionality disabled)
+    let touchStartTime = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    
+    function handleSimpleTouch(event) {
+      if (!currentStreamingEmulator || !websocket) return;
+      
+      event.preventDefault();
+      
+      // Get touch position
+      const touch = event.touches[0];
+      const rect = streamingCanvas.getBoundingClientRect();
+      const clientX = touch.clientX - rect.left;
+      const clientY = touch.clientY - rect.top;
+      
+      // Store touch start info
+      touchStartTime = Date.now();
+      touchStartX = clientX;
+      touchStartY = clientY;
+      
+      console.log(`Touch start: (${clientX}, ${clientY})`);
+    }
+    
+    function handleSimpleTouchEnd(event) {
+      if (!currentStreamingEmulator || !websocket) return;
+      
+      event.preventDefault();
+      
+      // Get touch end position
+      const touch = event.changedTouches[0];
+      const rect = streamingCanvas.getBoundingClientRect();
+      const clientX = touch.clientX - rect.left;
+      const clientY = touch.clientY - rect.top;
+      
+      // Check if within image bounds
+      if (clientX < currentImageOffsetX || 
+          clientX > currentImageOffsetX + currentImageDisplayWidth ||
+          clientY < currentImageOffsetY || 
+          clientY > currentImageOffsetY + currentImageDisplayHeight) {
+        return;
+      }
+      
+      // Convert to emulator coordinates
+      const emulatorCoords = convertToEmulatorCoordinates(clientX, clientY);
+      
+      // Send tap input to emulator
+      websocket.send(JSON.stringify({
+        type: 'touch_input',
+        avdId: currentStreamingEmulator,
+        x: Math.round(emulatorCoords.x),
+        y: Math.round(emulatorCoords.y),
+        action: 'tap'
+      }));
+      
+      // Add visual feedback
+      streamingCanvas.style.border = '2px solid #4CAF50';
+      setTimeout(() => {
+        streamingCanvas.style.border = '2px solid #444';
+      }, 200);
+      
+      console.log(`Touch end: canvas(${clientX}, ${clientY}) -> emulator(${Math.round(emulatorCoords.x)}, ${Math.round(emulatorCoords.y)})`);
+    }
+    
+    function handleSimpleClick(event) {
+      if (!currentStreamingEmulator || !websocket) return;
+      
+      event.preventDefault();
+      
+      // Get click position
+      const rect = streamingCanvas.getBoundingClientRect();
+      const clientX = event.clientX - rect.left;
+      const clientY = event.clientY - rect.top;
+      
+      // Store click start info
+      touchStartTime = Date.now();
+      touchStartX = clientX;
+      touchStartY = clientY;
+      
+      console.log(`Click start: (${clientX}, ${clientY})`);
+    }
+    
+    function handleSimpleClickEnd(event) {
+      if (!currentStreamingEmulator || !websocket) return;
+      
+      event.preventDefault();
+      
+      // Get click end position
+      const rect = streamingCanvas.getBoundingClientRect();
+      const clientX = event.clientX - rect.left;
+      const clientY = event.clientY - rect.top;
+      
+      // Check if within image bounds
+      if (clientX < currentImageOffsetX || 
+          clientX > currentImageOffsetX + currentImageDisplayWidth ||
+          clientY < currentImageOffsetY || 
+          clientY > currentImageOffsetY + currentImageDisplayHeight) {
+        return;
+      }
+      
+      // Convert to emulator coordinates
+      const emulatorCoords = convertToEmulatorCoordinates(clientX, clientY);
+      
+      // Send tap input to emulator
+      websocket.send(JSON.stringify({
+        type: 'touch_input',
+        avdId: currentStreamingEmulator,
+        x: Math.round(emulatorCoords.x),
+        y: Math.round(emulatorCoords.y),
+        action: 'tap'
+      }));
+      
+      // Add visual feedback
+      streamingCanvas.style.border = '2px solid #4CAF50';
+      setTimeout(() => {
+        streamingCanvas.style.border = '2px solid #444';
+      }, 200);
+      
+      console.log(`Click end: canvas(${clientX}, ${clientY}) -> emulator(${Math.round(emulatorCoords.x)}, ${Math.round(emulatorCoords.y)})`);
+    }
+    
+    // Swipe functions removed - using simple touch/click handling only
+    
+    function convertToEmulatorCoordinates(canvasX, canvasY) {
+      // Convert from canvas coordinates to image display coordinates
+      const imageX = canvasX - currentImageOffsetX;
+      const imageY = canvasY - currentImageOffsetY;
+      
+      // Calculate scale factors from display size to actual image size
+      const scaleX = currentImageWidth / currentImageDisplayWidth;
+      const scaleY = currentImageHeight / currentImageDisplayHeight;
+      
+      // Convert to actual emulator coordinates
+      let x = imageX * scaleX;
+      let y = imageY * scaleY;
+      
+      // Ensure coordinates are within bounds
+      x = Math.max(0, Math.min(currentImageWidth, x));
+      y = Math.max(0, Math.min(currentImageHeight, y));
+      
+      console.log(`Swipe conversion: canvas(${canvasX}, ${canvasY}) -> image(${imageX}, ${imageY}) -> emulator(${Math.round(x)}, ${Math.round(y)})`);
+      
+      return { x, y };
+    }
+    
+    // Swipe helper functions removed - using simple touch/click handling only
+    
+    function sendKeyInput(key) {
+      if (!currentStreamingEmulator || !websocket) return;
+      
+      websocket.send(JSON.stringify({
+        type: 'key_input',
+        avdId: currentStreamingEmulator,
+        key: key
+      }));
+    }
+    
+    function sendTextToEmulator() {
+      if (!currentStreamingEmulator || !websocket) return;
+      
+      const textInput = document.getElementById('text-input');
+      const text = textInput.value.trim();
+      
+      if (text) {
+        websocket.send(JSON.stringify({
+          type: 'text_input',
+          avdId: currentStreamingEmulator,
+          text: text
+        }));
+        
+        textInput.value = '';
+      }
+    }
+    
+    function updateStreamingStatus(status) {
+      document.getElementById('streaming-status').textContent = status;
+    }
+    
+    function updateConnectionStatus(status) {
+      document.getElementById('connection-status').textContent = status;
+    }
+    
+    function updateFpsCounter() {
+      fpsCounter++;
+      const now = Date.now();
+      if (now - lastFpsTime >= 1000) {
+        const fpsElement = document.getElementById('fps-counter');
+        if (fpsElement) {
+          fpsElement.textContent = fpsCounter;
+        }
+        fpsCounter = 0;
+        lastFpsTime = now;
+      }
+    }
+    
+    // Test that functions are defined
+    console.log('✅ Script loaded completely');
+    console.log('🔍 refreshEmulators defined:', typeof refreshEmulators);
+    console.log('🔍 testAPIConnection defined:', typeof testAPIConnection);
+    console.log('🔍 displayEmulators defined:', typeof displayEmulators);
+  </script>
+</body>
+</html>
+

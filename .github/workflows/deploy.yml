@@ -1,10 +1,10 @@
-name: Deploy to GitHub Pages
+name: Deploy Website and Admin Panel to GitHub Pages
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, main, login_test ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, main ]
 
 permissions:
   contents: read
@@ -48,6 +48,151 @@ jobs:
     - name: Build website
       run: node tools/build.js
       
+    - name: Build admin interface
+      run: |
+        # Create admin subdirectory in build
+        mkdir -p build/admin
+        
+        # Copy admin HTML files from build directory
+        cp build/newsletter-admin.html build/admin/index.html
+        # Also copy to root admin directory for direct access
+        cp build/newsletter-admin.html build/admin.html
+        
+        # Create proper login page (not copy of newsletter admin)
+        cat > build/admin/login.html << 'EOF'
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Admin Login - Android Internals</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0d1117; color: #f0f6fc; line-height: 1.6; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+                .login-container { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 2rem; width: 100%; max-width: 400px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+                .header { text-align: center; margin-bottom: 2rem; }
+                .header h1 { color: #3ddc84; margin-bottom: 0.5rem; }
+                .header p { color: #8b949e; font-size: 0.9rem; }
+                .form-group { margin-bottom: 1.5rem; }
+                .form-group label { display: block; margin-bottom: 0.5rem; color: #f0f6fc; font-weight: 500; }
+                .form-group input { width: 100%; padding: 0.75rem; border: 1px solid #30363d; border-radius: 4px; background: #0d1117; color: #f0f6fc; font-size: 1rem; }
+                .form-group input:focus { outline: none; border-color: #3ddc84; box-shadow: 0 0 0 2px rgba(61, 220, 132, 0.2); }
+                .btn { width: 100%; background: #3ddc84; color: #0d1117; border: none; padding: 0.75rem; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: background 0.2s; }
+                .btn:hover { background: #2bc470; }
+                .btn:disabled { background: #6c757d; cursor: not-allowed; }
+                .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; display: none; }
+                .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; display: none; }
+                .loading { text-align: center; padding: 1rem; display: none; }
+                .spinner { border: 2px solid #30363d; border-top: 2px solid #3ddc84; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin: 0 auto 0.5rem; }
+                @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                .footer { text-align: center; margin-top: 2rem; color: #8b949e; font-size: 0.8rem; }
+            </style>
+        </head>
+        <body>
+            <div class="login-container">
+                <div class="header">
+                    <h1>🔐 Admin Login</h1>
+                    <p>Android Internals Newsletter Management</p>
+                </div>
+                <div id="error" class="error"></div>
+                <div id="success" class="success"></div>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn" id="loginBtn">Login</button>
+                </form>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Logging in...</p>
+                </div>
+                <div class="footer">
+                    <p>🔒 Secure access only</p>
+                    <p>Contact administrator for credentials</p>
+                </div>
+            </div>
+            <script>
+                const loginForm = document.getElementById('loginForm');
+                const loginBtn = document.getElementById('loginBtn');
+                const loading = document.getElementById('loading');
+                const error = document.getElementById('error');
+                const success = document.getElementById('success');
+                function showError(message) { error.textContent = message; error.style.display = 'block'; success.style.display = 'none'; }
+                function showSuccess(message) { success.textContent = message; success.style.display = 'block'; error.style.display = 'none'; }
+                function setLoading(isLoading) { if (isLoading) { loginBtn.disabled = true; loading.style.display = 'block'; error.style.display = 'none'; success.style.display = 'none'; } else { loginBtn.disabled = false; loading.style.display = 'none'; } }
+                loginForm.addEventListener('submit', async (e) => { e.preventDefault(); const username = document.getElementById('username').value; const password = document.getElementById('password').value; setLoading(true); try { const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ username, password }) }); const data = await response.json(); if (response.ok) { showSuccess('Login successful! Redirecting...'); setTimeout(() => { window.location.href = '/admin'; }, 1000); } else { showError(data.error || 'Login failed'); } } catch (error) { showError('Network error. Please try again.'); } finally { setLoading(false); } }); window.addEventListener('load', async () => { try { const response = await fetch('/api/auth/status', { credentials: 'include' }); const data = await response.json(); if (data.authenticated) { window.location.href = '/admin'; } } catch (error) { } }); });
+            </script>
+        </body>
+        </html>
+        EOF
+        
+        # Copy assets to admin subdirectory
+        cp -r build/assets build/admin/
+        
+        # Create admin configuration
+        cat > build/admin/config.js << 'EOF'
+        window.ADMIN_CONFIG = {
+          // Note: This is a static-only deployment
+          // For full functionality, you'll need to deploy the admin server separately
+          // or use a serverless function service
+          apiBase: '/api',
+          loginUrl: '/admin/login.html',
+          adminUrl: '/admin/index.html',
+          siteName: 'Android Internals Admin',
+          staticMode: true
+        };
+        
+        // Note: Using newsletter-admin.html for both login and admin panel
+        // This provides a unified admin interface
+        
+        // Mock API responses for static demo
+        window.mockAPI = {
+          login: function(username, password) {
+            if (username === 'admin' && password === 'demo123') {
+              return Promise.resolve({
+                success: true,
+                message: 'Login successful (Demo Mode)',
+                user: { username: 'admin' }
+              });
+            } else {
+              return Promise.reject({ error: 'Invalid credentials' });
+            }
+          },
+          
+          getSubscribers: function() {
+            return Promise.resolve([
+              {
+                email: 'demo@example.com',
+                name: 'Demo User',
+                date: '2025-01-01',
+                status: 'active',
+                source: 'demo'
+              }
+            ]);
+          },
+          
+          getStats: function() {
+            return Promise.resolve({
+              totalSubscribers: 1,
+              activeSubscribers: 1,
+              newslettersSent: 0
+            });
+          }
+        };
+        EOF
+        
+        # Update admin HTML files to use mock API in static mode
+        sed -i 's|fetch.*\/api\/|mockAPI\.|g' build/admin/*.html
+        sed -i 's|window\.location\.href = .\/admin.;|window\.location\.href = \"./index.html\";|g' build/admin/*.html
+        
+        echo "✅ Admin interface built successfully"
+        echo "📁 Admin files created in build/admin/"
+      
     - name: Setup Pages
       uses: actions/configure-pages@v4
       
@@ -59,3 +204,13 @@ jobs:
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
+      
+    - name: Show deployment info
+      run: |
+        echo "🚀 Website and Admin Panel deployment completed!"
+        echo "📁 Admin files created in build/admin/"
+        echo "🌐 Access URLs:"
+        echo "   - Main site: ${{ steps.deployment.outputs.page_url }}"
+        echo "   - Admin panel: ${{ steps.deployment.outputs.page_url }}/admin"
+        echo "   - Admin login: ${{ steps.deployment.outputs.page_url }}/admin/login.html"
+        echo "🔐 Demo credentials: admin / demo123"

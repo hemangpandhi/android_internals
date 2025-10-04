@@ -9,15 +9,17 @@
   <meta name="robots" content="index, follow">
   
       <!-- EmailJS Integration -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" integrity="sha384-8X4b8l4K2lI8v5vp3S2Q7zXWf+7F1oYFv4QyU8j8fwpdkO5GFvQq0s1hqTqA1hQy" crossorigin="anonymous"></script>
     <script type="text/javascript" src="config.js"></script>
   
   <!-- Security Headers -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://api.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.emailjs.com https://cdn.jsdelivr.net; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; media-src 'self'; worker-src 'self' blob:; manifest-src 'self';">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
-      <!-- X-Frame-Options should be set via HTTP headers, not meta tags -->
+  <meta http-equiv="X-Frame-Options" content="DENY">
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
   <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
   <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains; preload">
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
@@ -61,6 +63,7 @@
           <a href="#about" class="nav-link">About</a>
           <a href="#topics" class="nav-link">Topics</a>
           <a href="#blogs" class="nav-link">Blogs</a>
+          <a href="#discussions" class="nav-link">Discussions</a>
           <a href="#about-me" class="nav-link">About Me</a>
           <a href="books.html" class="nav-link">Books</a>
         </div>
@@ -91,7 +94,7 @@
                 </a>
                 <a href="books.html" class="stat-link">
                   <div class="stat">
-                    <span class="stat-number">7</span>
+                    <span class="stat-number">0</span>
                     <span class="stat-label">Expert Books</span>
                   </div>
                 </a>
@@ -228,21 +231,83 @@
       </div>
     </section>
 
+    <!-- Discussion Forums & Q&A Section -->
+    <section id="discussions" class="discussions-section">
+      <div class="container">
+        <h2 class="section-title">Discussion Forums & Q&A</h2>
+        <p class="section-description">
+          Join the Android Internals community! Ask questions, share knowledge, and discuss 
+          everything related to Android system development, AOSP, HAL, and more.
+        </p>
+        
+        <div class="discussions-grid">
+          <div class="discussion-card">
+            <div class="discussion-icon">💬</div>
+            <h3>General Discussion</h3>
+            <p>Share ideas, ask questions, and discuss Android internals topics with the community.</p>
+            <div class="discussion-stats">
+              <span class="stat">🚀 Coming Soon</span>
+            </div>
+          </div>
+          
+          <div class="discussion-card">
+            <div class="discussion-icon">❓</div>
+            <h3>Q&A Forum</h3>
+            <p>Get help with specific Android development challenges. Ask questions and get expert answers.</p>
+            <div class="discussion-stats">
+              <span class="stat">🚀 Coming Soon</span>
+            </div>
+          </div>
+          
+          <div class="discussion-card">
+            <div class="discussion-icon">🔧</div>
+            <h3>Technical Deep Dives</h3>
+            <p>Advanced discussions about HAL, Framework, AOSP, and system-level programming.</p>
+            <div class="discussion-stats">
+              <span class="stat">🚀 Coming Soon</span>
+            </div>
+          </div>
+          
+          <div class="discussion-card">
+            <div class="discussion-icon">📱</div>
+            <h3>Project Showcase</h3>
+            <p>Share your Android internals projects, custom ROMs, and system modifications.</p>
+            <div class="discussion-stats">
+              <span class="stat">🚀 Coming Soon</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="discussions-cta">
+          <h3>Community Features Coming Soon</h3>
+          <p>We're building an amazing community platform for Android developers. Stay tuned for updates!</p>
+          <div class="cta-buttons">
+            <span class="btn-primary coming-soon-btn">🚀 Coming Soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="about-me" class="about-me-section">
       <div class="container">
         <h2 class="section-title">About Me</h2>
         <div class="about-me-content">
+          <div class="about-me-image">
+            <img src="../assets/images/MyPhotofinal.png" alt="Hemang Pandhi - Android System Architect" class="profile-image" id="profileImage" onclick="openProfileModal()">
+          </div>
           <div class="about-me-text">
-            <h3>Android System Developer & Enthusiast</h3>
+            <h2 class="about-me-name">Hemang Pandhi</h2>
+            <h3>Android System Architect & Enthusiast</h3>
             <p>
-              I'm passionate about Android internals and system-level programming. With years of experience 
-              in Android development, I've worked on various aspects of the Android ecosystem including HAL 
-              development, system optimization, and custom ROM development.
+              I'm passionate about Android internals and system-level development. With years of experience 
+              in Android development, I've worked on various aspects of the Android ecosystem including HMI 
+              customization, Framework customization, System Overlays, Performance optimization, System 
+              integration and custom ROM development.
             </p>
             <p>
               This website is my contribution to the Android developer community, providing comprehensive 
               resources for anyone interested in understanding Android's inner workings. From beginners 
-              to advanced developers, I aim to make Android internals accessible and understandable.
+              to advanced developers, I aim to make Android internals accessible and understandable to everyone.
             </p>
             <div class="about-me-skills">
               <h4>Areas of Expertise:</h4>
@@ -262,7 +327,7 @@
             </div>
           </div>
           <div class="about-me-image">
-            <div class="profile-placeholder">👨‍💻</div>
+            <img src="../assets/images/MyPhotofinal.png" alt="Hemang Pandhi - Android System Architect" class="profile-image" id="profileImage" onclick="openProfileModal()">
           </div>
         </div>
       </div>
@@ -348,6 +413,14 @@
       </div>
     </div>
   </footer>
+
+  <!-- Profile Photo Modal -->
+  <div id="profileModal" class="profile-modal">
+    <div class="profile-modal-content">
+      <span class="profile-modal-close" onclick="closeProfileModal()">&times;</span>
+      <img id="modalProfileImage" src="assets/images/MyPhotofinal.png" alt="Hemang Pandhi - Android System Architect">
+    </div>
+  </div>
 
   <script src="assets/js/scripts.js"></script>
 </body>

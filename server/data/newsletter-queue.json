@@ -1,0 +1,31 @@
+{
+  "id": "32f2e13b-0ddb-4d57-a829-f2f1e3b267ea",
+  "article": {
+    "title": "Complete ADB Commands Guide",
+    "description": "Master Android Debug Bridge with comprehensive commands and examples",
+    "url": "/adb.html",
+    "date": "2025-09-14"
+  },
+  "emails": [
+    {
+      "to_email": "hemang.pandhi@gmail.com",
+      "to_name": "Hemang Pandhi",
+      "from_name": "Android Internals Team",
+      "from_email": "noreply@hemangpandhi.com",
+      "subject": "New Article: Complete ADB Commands Guide",
+      "message": "Hello Hemang Pandhi,\n\nWe've just published a new article: \"Complete ADB Commands Guide\"\n\nMaster Android Debug Bridge with comprehensive commands and examples\n\nRead the full article here: /adb.html\n\nBest regards,\nThe Android Internals Team\n\n---\nYou're receiving this because you subscribed to Android Internals newsletter.\nUnsubscribe: https://hemangpandhi.com/unsubscribe?email=hemang.pandhi@gmail.com",
+      "reply_to": "noreply@hemangpandhi.com",
+      "subscriber_id": "a52dc31b-25b8-4ae3-873f-98894e58c606"
+    }
+  ],
+  "status": "completed",
+  "createdAt": "2025-09-14T14:15:15.566Z",
+  "updatedAt": "2025-09-14T14:19:37.558Z",
+  "metadata": {
+    "totalRecipients": 1,
+    "articleId": null,
+    "campaignId": "18bb0809-e893-49cd-82b4-4445bb32764a",
+    "sent": 1,
+    "failed": 0
+  }
+}

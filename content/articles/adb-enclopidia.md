@@ -674,7 +674,6 @@ adb shell top -m 10
 - [Android System Service Dumps](https://source.android.com/docs/core/graphics/winscope/capture/adb)
 - [Android Automotive Documentation](https://source.android.com/docs/devices/automotive)
 - [Android Performance Tracing](https://perfetto.dev/docs/)
-- [Android HAL Documentation](https://source.android.com/docs/core/hal)
 
 ---
 

@@ -9,13 +9,13 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "android_logo.PNG",
+      "src": "assets/images/android_logo.PNG",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "android_logo.PNG",
+      "src": "assets/images/android_logo.PNG",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

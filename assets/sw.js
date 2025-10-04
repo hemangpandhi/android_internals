@@ -1,4 +1,4 @@
-const CACHE_NAME = 'android-internals-v1.0';
+const CACHE_NAME = 'android-internals-v3.0';
 const urlsToCache = [
   '/',
   '/index.html',

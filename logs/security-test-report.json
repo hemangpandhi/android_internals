@@ -1,0 +1,45 @@
+{
+  "timestamp": "2025-10-04T03:36:13.020Z",
+  "baseUrl": "http://localhost:8080",
+  "results": [
+    {
+      "category": "SECURITY_HEADERS",
+      "results": {
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "x-xss-protection": "1; mode=block",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://api.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.emailjs.com https://cdn.jsdelivr.net; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; media-src 'self'; worker-src 'self' blob:; manifest-src 'self'",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "cross-origin-embedder-policy": "require-corp",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin"
+      }
+    },
+    {
+      "category": "VULNERABILITIES",
+      "results": []
+    },
+    {
+      "category": "RATE_LIMITING",
+      "results": [
+        {
+          "test": "GENERAL_RATE_LIMITING",
+          "status": "ERROR",
+          "message": ""
+        }
+      ]
+    },
+    {
+      "category": "AUTHENTICATION",
+      "results": [
+        {
+          "test": "BRUTE_FORCE_PROTECTION",
+          "status": "FAIL",
+          "message": "Brute force protection not working"
+        }
+      ]
+    }
+  ]
+}

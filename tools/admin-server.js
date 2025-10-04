@@ -9,6 +9,9 @@ const path = require('path');
 const cors = require('cors');
 const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
+const rateLimiter = require('./advanced-rate-limiter');
+const csrfProtection = require('./csrf-protection');
+const InputValidator = require('./input-validator');
 
 const app = express();
 const PORT = 3001;
@@ -44,9 +47,46 @@ function requireAuth(req, res, next) {
     next();
 }
 
-// Login endpoint
+// CSRF token endpoint
+app.get('/api/csrf-token', (req, res) => {
+    const token = csrfProtection.generateToken();
+    res.json({ csrfToken: token });
+});
+
+// Login endpoint with enhanced security
 app.post('/api/login', (req, res) => {
-    const { username, password } = req.body;
+    const { username, password, csrfToken } = req.body;
+    const clientIP = req.ip || req.connection.remoteAddress;
+    
+    // Check if IP is blocked
+    if (rateLimiter.isBlocked(clientIP)) {
+        return res.status(429).json({ error: 'IP address is temporarily blocked' });
+    }
+    
+    // Check rate limit
+    const rateLimitResult = rateLimiter.loginRateLimit(clientIP);
+    if (!rateLimitResult.allowed) {
+        return res.status(429).json({ 
+            error: 'Too many login attempts. Please try again later.',
+            retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
+        });
+    }
+    
+    // Validate CSRF token
+    if (!csrfProtection.validateToken(csrfToken)) {
+        return res.status(403).json({ error: 'Invalid CSRF token' });
+    }
+    
+    // Validate input
+    const usernameValidation = InputValidator.validateUsername(username);
+    if (!usernameValidation.valid) {
+        return res.status(400).json({ error: usernameValidation.error });
+    }
+    
+    const passwordValidation = InputValidator.validatePassword(password);
+    if (!passwordValidation.valid) {
+        return res.status(400).json({ error: passwordValidation.error });
+    }
     
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
         const sessionId = crypto.randomBytes(32).toString('hex');
@@ -56,8 +96,6 @@ app.post('/api/login', (req, res) => {
             user: { username },
             expires
         });
-        
-
         
         res.cookie('sessionId', sessionId, {
             httpOnly: true,
@@ -73,6 +111,8 @@ app.post('/api/login', (req, res) => {
             sessionId
         });
     } else {
+        // Record failed attempt
+        rateLimiter.recordFailedAttempt(clientIP);
         res.status(401).json({ error: 'Invalid credentials' });
     }
 });

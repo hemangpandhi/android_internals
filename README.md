@@ -165,7 +165,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Contact
 
 - **Website**: [Android Internals](https://www.hemangpandhi.com)
-- **Email**: Contact via the website's contact form
+- **Email**: Contact via the website's contact form 
 - **GitHub**: [Repository](https://github.com/your-username/android-internals)
 
 ---

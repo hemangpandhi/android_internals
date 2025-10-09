@@ -1,17 +1,29 @@
 {
   "articles": [
     {
+      "title": "New Android Internals Article",
+      "description": "Add a compelling description for this article here.",
+      "author": "Android Internals Team",
+      "date": "2025-09-07",
+      "category": "System Architecture",
+      "tags": "[\"android\", \"internals\", \"development\"]",
+      "image": "",
+      "featured": "false",
+      "slug": "2025-09-07-new-android-internals-article",
+      "filename": "2025-09-07-new-android-internals-article.md"
+    },
+    {
       "title": "The Ultimate Encyclopedia of ADB, Dumpsys & Android Internals",
-      "description": "Comprehensive guide covering ADB fundamentals, device management, debugging techniques, advanced internals, and Android Automotive commands.",
+      "description": "Master Android Debug Bridge (ADB) with a complete guide covering everything from basic commands to expert-level, time-saving techniques for AOSP and native debugging.",
       "author": "Android Internals Team",
       "date": "2025-08-28",
       "category": "Development Tools",
-      "tags": "[\"adb\", \"dumpsys\", \"android\", \"debugging\", \"internals\"]",
-      "image": "",
+      "tags": "[\"android\", \"adb\", \"debugging\", \"development\", \"tools\", \"dumpsys\", \"system\", \"fastboot\", \"automotive\", \"settings\", \"native\", \"perfetto\", \"binder\", \"vhal\"]",
+      "image": "adb-commands-ultimate.jpg",
       "featured": "true",
       "slug": "adb-enclopidia",
       "filename": "adb-enclopidia.md"
     }
   ],
-  "lastUpdated": "2025-08-28T02:54:00.000Z"
+  "lastUpdated": "2025-09-07T06:23:37.840Z"
 }

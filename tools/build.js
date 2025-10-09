@@ -759,6 +759,37 @@ function copyAssets() {
     console.log(`  ✅ Copied: newsletter-admin.html`);
   }
   
+  // Also expose admin dashboard under /admin/index.html for GitHub Pages
+  const adminIndexDestDir = path.join(buildDir, 'admin');
+  if (!fs.existsSync(adminIndexDestDir)) {
+    fs.mkdirSync(adminIndexDestDir, { recursive: true });
+  }
+  if (fs.existsSync(newsletterAdmin)) {
+    const adminIndexDest = path.join(adminIndexDestDir, 'index.html');
+    fs.copyFileSync(newsletterAdmin, adminIndexDest);
+    console.log(`  ✅ Copied: admin/index.html`);
+  }
+  
+  // Copy admin directory (e.g., login page)
+  const adminSrcDir = path.join(rootDir, 'admin');
+  const adminDestDir = path.join(buildDir, 'admin');
+  if (fs.existsSync(adminSrcDir)) {
+    if (!fs.existsSync(adminDestDir)) {
+      fs.mkdirSync(adminDestDir, { recursive: true });
+    }
+    const adminFiles = fs.readdirSync(adminSrcDir);
+    adminFiles.forEach(file => {
+      const source = path.join(adminSrcDir, file);
+      const dest = path.join(adminDestDir, file);
+      const stat = fs.statSync(source);
+      if (stat.isFile()) {
+        fs.copyFileSync(source, dest);
+        console.log(`  ✅ Copied: admin/${file}`);
+      }
+      // If needed, extend to handle subdirectories in admin/
+    });
+  }
+  
   // Copy data directory for newsletter system
   const dataDir = path.join(rootDir, 'data');
   const dataDirDest = path.join(buildDir, 'data');

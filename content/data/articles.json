@@ -11,7 +11,31 @@
       "featured": "true",
       "slug": "adb-enclopidia",
       "filename": "adb-enclopidia.md"
+    },
+    {
+      "title": "Android System Server Deep Dive: Architecture, Communication, and Advanced Debugging",
+      "description": "Comprehensive guide to the Android System Server covering monolithic architecture, Binder IPC, service management, debugging techniques, and failure analysis for platform developers.",
+      "author": "Android Internals Team",
+      "date": "2025-10-04",
+      "category": "System Architecture",
+      "tags": "[\"system_server\", \"binder\", \"android\", \"architecture\", \"debugging\", \"platform\"]",
+      "image": "",
+      "featured": "true",
+      "slug": "android-system-server-deep-dive",
+      "filename": "android-system-server-deep-dive.md"
+    },
+    {
+      "title": "Android System Server: Comprehensive Q&A for Platform Developers",
+      "description": "Extensive Q&A covering 40+ questions about Android System Server architecture, communication mechanisms, debugging techniques, and practical implementation details.",
+      "author": "Android Internals Team",
+      "date": "2025-10-04",
+      "category": "System Architecture",
+      "tags": "[\"system_server\", \"qa\", \"android\", \"platform\", \"development\", \"troubleshooting\"]",
+      "image": "",
+      "featured": "false",
+      "slug": "android-system-server-qa",
+      "filename": "android-system-server-qa.md"
     }
   ],
-  "lastUpdated": "2025-08-28T02:54:00.000Z"
+  "lastUpdated": "2025-10-04T13:15:00.000Z"
 }

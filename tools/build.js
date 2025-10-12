@@ -91,14 +91,30 @@ function markdownToHtml(markdown) {
         continue;
       } else {
         inFencedCodeBlock = false;
-        const highlightedCode = highlightSyntax(fencedCodeContent.trim(), fencedCodeLang);
-        html += `<div class="code-example">
-          <div class="code-header">
-            <span class="code-language">${fencedCodeLang.toUpperCase()}</span>
-            <span class="code-copy" onclick="copyCode(this)">Copy</span>
-          </div>
-          <pre><code class="language-${fencedCodeLang}">${highlightedCode}</code></pre>
-        </div>\n`;
+        
+        // Handle Mermaid diagrams
+        if (fencedCodeLang.toLowerCase() === 'mermaid') {
+          const mermaidId = 'mermaid-' + Math.random().toString(36).substr(2, 9);
+          html += `<div class="mermaid-diagram" id="diagram-${mermaidId}">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('${mermaidId}', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('${mermaidId}')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('${mermaidId}', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('${mermaidId}')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="${mermaidId}">${fencedCodeContent.trim()}</div>
+            <div class="zoom-indicator" id="zoom-${mermaidId}">100%</div>
+          </div>\n`;
+        } else {
+          const highlightedCode = highlightSyntax(fencedCodeContent.trim(), fencedCodeLang);
+          html += `<div class="code-example">
+            <div class="code-header">
+              <span class="code-language">${fencedCodeLang.toUpperCase()}</span>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-${fencedCodeLang}">${highlightedCode}</code></pre>
+          </div>\n`;
+        }
         continue;
       }
     }
@@ -597,9 +613,9 @@ function updateIndexPage(articles) {
   
   // Update the books count dynamically
   updatedIndex = updatedIndex.replace(
-    /<span class="stat-number">\d+<\/span>\s*<span class="stat-label">Expert Books<\/span>/,
+    /<span class="stat-number">\d+<\/span>\s*<span class="stat-label">Reference Books<\/span>/,
     `<span class="stat-number">${booksCount}</span>
-                    <span class="stat-label">Expert Books</span>`
+                    <span class="stat-label">Reference Books</span>`
   );
     
   // More specific regex to match the blogs-grid content

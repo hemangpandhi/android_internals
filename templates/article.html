@@ -156,6 +156,83 @@
     .fullscreen-hidden {
       display: none !important;
     }
+    
+    /* Mobile responsive styles for Mermaid diagrams */
+    @media (max-width: 768px) {
+      .mermaid-diagram {
+        margin: 1rem 0;
+        padding: 0.5rem;
+        max-height: 500px;
+      }
+      
+      .mermaid-zoom-controls {
+        top: 5px;
+        right: 5px;
+        gap: 3px;
+      }
+      
+      .zoom-btn {
+        padding: 4px 6px;
+        font-size: 10px;
+        min-width: 28px;
+        height: 24px;
+      }
+      
+      .zoom-indicator {
+        bottom: 5px;
+        left: 5px;
+        padding: 2px 6px;
+        font-size: 10px;
+      }
+      
+      /* Fullscreen mobile adjustments */
+      .mermaid-diagram.fullscreen {
+        padding: 10px !important;
+      }
+      
+      .mermaid-diagram.fullscreen .mermaid {
+        max-width: 95vw !important;
+        max-height: 95vh !important;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .mermaid-diagram {
+        margin: 0.5rem 0;
+        padding: 0.25rem;
+        max-height: 400px;
+      }
+      
+      .mermaid-zoom-controls {
+        top: 3px;
+        right: 3px;
+        gap: 2px;
+      }
+      
+      .zoom-btn {
+        padding: 3px 5px;
+        font-size: 9px;
+        min-width: 24px;
+        height: 20px;
+      }
+      
+      .zoom-indicator {
+        bottom: 3px;
+        left: 3px;
+        padding: 1px 4px;
+        font-size: 9px;
+      }
+      
+      /* Fullscreen mobile adjustments for very small screens */
+      .mermaid-diagram.fullscreen {
+        padding: 5px !important;
+      }
+      
+      .mermaid-diagram.fullscreen .mermaid {
+        max-width: 98vw !important;
+        max-height: 98vh !important;
+      }
+    }
   </style>
   
   <!-- Security Headers -->

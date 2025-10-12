@@ -644,6 +644,46 @@
           fontFamily: 'Arial, sans-serif'
         });
         console.log('Mermaid initialized successfully');
+        
+        // Wait for Mermaid to render all diagrams, then reset them to 100% zoom
+        setTimeout(function() {
+          console.log('Resetting all diagrams to 100% zoom on page load');
+          
+          // Find all Mermaid diagrams and reset them to 100% zoom
+          const mermaidContainers = document.querySelectorAll('.mermaid-diagram');
+          mermaidContainers.forEach(function(container) {
+            const diagramId = container.id.replace('diagram-', '');
+            const diagram = document.getElementById(diagramId);
+            const zoomIndicator = document.getElementById('zoom-' + diagramId);
+            
+            if (diagram && container) {
+              // Initialize zoom level to 100%
+              window.zoomLevels[diagramId] = 1;
+              
+              // Reset diagram to 100% scale
+              diagram.style.transform = 'scale(1)';
+              diagram.style.transformOrigin = 'top left';
+              
+              // Set container to normal mode styling
+              container.style.overflow = 'auto';
+              container.style.width = '100%';
+              container.style.height = '400px';
+              container.style.minHeight = '400px';
+              container.style.maxHeight = '600px';
+              container.style.display = 'flex';
+              container.style.alignItems = 'center';
+              container.style.justifyContent = 'center';
+              
+              // Update zoom indicator
+              if (zoomIndicator) {
+                zoomIndicator.textContent = '100%';
+              }
+              
+              console.log('Reset diagram', diagramId, 'to 100% zoom');
+            }
+          });
+        }, 1000); // Wait 1 second for Mermaid to finish rendering
+        
       } catch (error) {
         console.error('Mermaid initialization failed:', error);
       }

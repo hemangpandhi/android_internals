@@ -457,39 +457,21 @@
       
       // Apply zoom to the diagram element only
       diagram.style.transform = `scale(${newZoom})`;
-      diagram.style.transformOrigin = 'top left'; // Change to top-left for better scrolling
-      
-      // Keep container size fixed and enable scrolling
-      diagramContainer.style.overflow = 'auto';
-      diagramContainer.style.width = '100%';
+      diagram.style.transformOrigin = 'top left';
       
       // Check if we're in fullscreen mode
       const isFullscreen = diagramContainer.style.position === 'fixed';
       if (isFullscreen) {
-        // In fullscreen, preserve full height
+        // In fullscreen, preserve full height and enable scrolling
         diagramContainer.style.height = '100vh';
         diagramContainer.style.minHeight = '100vh';
         diagramContainer.style.maxHeight = 'none';
+        diagramContainer.style.overflow = 'auto';
       } else {
-        // Normal mode - use fixed height
-        diagramContainer.style.height = '400px';
-        diagramContainer.style.minHeight = '400px';
-        diagramContainer.style.maxHeight = '600px';
-      }
-      
-      diagramContainer.style.display = 'block'; // Change from flex to block for better scrolling
-      
-      // When zoomed, ensure the diagram can be scrolled to see all parts
-      if (newZoom > 1) {
-        // Add padding to ensure all content is accessible
-        diagramContainer.style.padding = '20px';
-        diagramContainer.style.boxSizing = 'border-box';
-      } else {
-        // At 100%, center the diagram with flex
-        diagramContainer.style.display = 'flex';
-        diagramContainer.style.alignItems = 'center';
-        diagramContainer.style.justifyContent = 'center';
-        diagramContainer.style.padding = '0';
+        // Normal mode - clear all container styles to let it use natural dimensions
+        // This prevents cropping when zoomed
+        diagramContainer.style.cssText = '';
+        diagramContainer.style.overflow = 'auto';
       }
       
       if (zoomIndicator) {
@@ -513,10 +495,6 @@
       diagram.style.transform = 'scale(1)';
       diagram.style.transformOrigin = 'top left'; // Keep consistent with zoom function
       
-      // Keep container with fixed size and scrolling
-      diagramContainer.style.overflow = 'auto';
-      diagramContainer.style.width = '100%';
-      
       // Check if we're in fullscreen mode
       const isFullscreen = diagramContainer.style.position === 'fixed';
       if (isFullscreen) {
@@ -524,16 +502,19 @@
         diagramContainer.style.height = '100vh';
         diagramContainer.style.minHeight = '100vh';
         diagramContainer.style.maxHeight = 'none';
-        diagramContainer.style.display = 'block';
+        diagramContainer.style.overflow = 'auto';
       } else {
-        // Normal mode - use fixed height
-        diagramContainer.style.height = '400px';
-        diagramContainer.style.minHeight = '400px';
-        diagramContainer.style.maxHeight = '600px';
-        diagramContainer.style.display = 'flex';
-        // At 100% zoom, center the diagram
-        diagramContainer.style.alignItems = 'center';
-        diagramContainer.style.justifyContent = 'center';
+        // Normal mode - clear all styles exactly like fullscreen exit
+        // This ensures the same behavior as exiting fullscreen mode
+        diagramContainer.style.cssText = '';
+        const mermaidEl = diagramContainer.querySelector('.mermaid');
+        if (mermaidEl) {
+          mermaidEl.style.cssText = '';
+        }
+        const svgEl = mermaidEl?.querySelector('svg');
+        if (svgEl) {
+          svgEl.style.cssText = '';
+        }
       }
       
       if (zoomIndicator) {

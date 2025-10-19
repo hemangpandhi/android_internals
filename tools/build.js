@@ -145,16 +145,12 @@ function generateVideosHTML(videos) {
   <link rel="manifest" href="assets/manifest.json">
 </head>
 <body>
-  <header class="main-header">
-    <nav class="main-nav">
-      <div class="nav-container">
-        <div class="nav-brand">
-          <a href="index.html" class="brand-link">
-            <img src="assets/images/android_logo.PNG" alt="Android Internals" class="nav-logo">
-            <span class="brand-text">Android Internals</span>
-          </a>
-        </div>
-        <div class="nav-links" id="navLinks">
+  <nav class="main-nav">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo-link">
+        <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+      </a>
+        <div class="nav-links">
           <a href="index.html" class="nav-link">Home</a>
           <a href="index.html#topics" class="nav-link">Topics</a>
           <a href="index.html#blogs" class="nav-link">Blogs</a>
@@ -162,33 +158,30 @@ function generateVideosHTML(videos) {
           <div class="nav-dropdown">
             <a href="#" class="nav-link dropdown-toggle">Resources</a>
             <div class="dropdown-menu">
-              <a href="books.html" class="dropdown-link">Reference Books</a>
-              <a href="videos.html" class="dropdown-link">Reference Videos</a>
+              <a href="books.html" class="dropdown-link">Books</a>
+              <a href="videos.html" class="dropdown-link">Videos</a>
             </div>
           </div>
         </div>
-        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle mobile menu">
-          <span class="hamburger-line"></span>
-          <span class="hamburger-line"></span>
-          <span class="hamburger-line"></span>
-        </button>
-      </div>
-    </nav>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-content">
+              <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="hero-logo animate-pop" />
+      <h1 class="hero-title animate-fadein">Android Internals Reference Videos</h1>
+      <p class="hero-subtitle animate-slidein">Curated collection of essential Android internals videos from conferences and expert sources</p>
+    </div>
   </header>
 
-  <main class="main-content">
-    <!-- Hero Section -->
-        <section class="hero">
-          <div class="hero-content">
-            <h1 class="hero-title">Reference Videos</h1>
-            <p class="hero-subtitle">Curated collection of essential Android internals videos from conferences and expert sources</p>
-          </div>
-        </section>
-
-    <!-- Videos Section -->
+  <main>
     <section class="content-section">
       <div class="container">
-        <div class="videos-grid">
+        <div class="content-card">
+          <h2>Essential Android Internals Video Collection</h2>
+          <p>Curated collection of essential Android internals videos from conferences and expert sources. Learn from industry experts about Android system architecture, performance optimization, and security.</p>
+          
+          <div class="videos-grid">
 ${videoCards}
         </div>
         
@@ -206,6 +199,7 @@ ${videoCards}
           <ul>
         ${sourceList}
           </ul>
+        </div>
         </div>
       </div>
     </section>

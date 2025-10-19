@@ -150,7 +150,7 @@ function generateVideosHTML(videos) {
       <div class="nav-container">
         <div class="nav-brand">
           <a href="index.html" class="brand-link">
-            <img src="assets/images/android_logo.PNG" alt="Android Internals" class="brand-logo">
+            <img src="assets/images/android_logo.PNG" alt="Android Internals" class="nav-logo">
             <span class="brand-text">Android Internals</span>
           </a>
         </div>
@@ -178,12 +178,12 @@ function generateVideosHTML(videos) {
 
   <main class="main-content">
     <!-- Hero Section -->
-    <section class="hero-section">
-      <div class="hero-content">
-        <h1 class="hero-title">Reference Videos</h1>
-        <p class="hero-subtitle">Curated collection of essential Android internals videos from conferences and expert sources</p>
-      </div>
-    </section>
+        <section class="hero">
+          <div class="hero-content">
+            <h1 class="hero-title">Reference Videos</h1>
+            <p class="hero-subtitle">Curated collection of essential Android internals videos from conferences and expert sources</p>
+          </div>
+        </section>
 
     <!-- Videos Section -->
     <section class="content-section">

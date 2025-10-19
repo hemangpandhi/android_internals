@@ -754,7 +754,8 @@ function copyAssets() {
     'system-performance.html',
     'android-commands.html',
     'other-internals.html',
-    'books.html'
+    'books.html',
+    'videos.html'
   ];
   
   subpages.forEach(file => {
@@ -811,6 +812,12 @@ function generateSitemap(articles) {
   </url>
   <url>
     <loc>${baseUrl}/books.html</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/videos.html</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

@@ -17,6 +17,12 @@ function parseVideosFromMarkdown(markdownContent) {
     
     // Check if we're starting a new section (## but not ## Categories or ## Sources)
     if (line.startsWith('## ') && !line.includes('Categories') && !line.includes('Sources')) {
+      // Add current video to previous section before starting new section
+      if (currentVideo && currentSection) {
+        currentSection.videos.push(currentVideo);
+        currentVideo = null;
+      }
+      
       // Save previous section if it exists
       if (currentSection && currentSection.videos.length > 0) {
         sections.push(currentSection);
@@ -41,9 +47,12 @@ function parseVideosFromMarkdown(markdownContent) {
     
     // Parse video title (starts with ###)
     if (line.startsWith('### ')) {
-      if (currentVideo) {
+      // Add previous video to current section if it exists
+      if (currentVideo && currentSection) {
         currentSection.videos.push(currentVideo);
       }
+      
+      // Start new video
       currentVideo = {
         title: line.replace('### ', ''),
         channel: '',
@@ -86,7 +95,7 @@ function parseVideosFromMarkdown(markdownContent) {
   }
   
   // Add the last video and section
-  if (currentVideo) {
+  if (currentVideo && currentSection) {
     currentSection.videos.push(currentVideo);
   }
   if (currentSection && currentSection.videos.length > 0) {

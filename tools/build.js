@@ -4,6 +4,224 @@ const fs = require('fs');
 const path = require('path');
 const NewsletterManager = require('./newsletter-manager');
 
+// Parse videos from Markdown file
+function parseVideosFromMarkdown(markdownContent) {
+  const videos = [];
+  const lines = markdownContent.split('\n');
+  let currentVideo = null;
+  let inVideoSection = false;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Check if we're in the video collection section
+    if (line === '## Video Collection') {
+      inVideoSection = true;
+      continue;
+    }
+    
+    // Check if we've moved to another section
+    if (inVideoSection && line.startsWith('## ') && line !== '## Video Collection') {
+      inVideoSection = false;
+      continue;
+    }
+    
+    if (!inVideoSection) continue;
+    
+    // Parse video title (starts with ###)
+    if (line.startsWith('### ')) {
+      if (currentVideo) {
+        videos.push(currentVideo);
+      }
+      currentVideo = {
+        title: line.replace('### ', ''),
+        channel: '',
+        description: '',
+        youtubeId: '',
+        startTime: '0s',
+        category: ''
+      };
+    }
+    
+    // Parse video properties using string manipulation
+    if (currentVideo && line.startsWith('- **')) {
+      // Remove the leading "- **" and find the key
+      const withoutPrefix = line.substring(4); // Remove "- **"
+      const colonIndex = withoutPrefix.indexOf(':**');
+      
+      if (colonIndex > 0) {
+        const key = withoutPrefix.substring(0, colonIndex);
+        const value = withoutPrefix.substring(colonIndex + 3).replace(/\*\*/g, '').trim();
+        
+        switch (key.toLowerCase()) {
+          case 'channel':
+            currentVideo.channel = value;
+            break;
+          case 'description':
+            currentVideo.description = value;
+            break;
+          case 'youtube id':
+            currentVideo.youtubeId = value;
+            break;
+          case 'start time':
+            currentVideo.startTime = value;
+            break;
+          case 'category':
+            currentVideo.category = value;
+            break;
+        }
+      }
+    }
+  }
+  
+  // Add the last video
+  if (currentVideo) {
+    videos.push(currentVideo);
+  }
+  
+  return videos;
+}
+
+// Generate videos.html from Markdown
+function generateVideosHTML(videos) {
+  const videoCards = videos.map(video => {
+    const startTimeParam = video.startTime === '0s' ? '' : `&t=${video.startTime}`;
+    const youtubeUrl = `https://www.youtube.com/watch?v=${video.youtubeId}${startTimeParam}`;
+    const thumbnailUrl = `https://img.youtube.com/vi/${video.youtubeId}/maxresdefault.jpg`;
+    
+    return `
+            <!-- ${video.title} -->
+            <div class="video-card">
+              <div class="video-thumbnail">
+                <img src="${thumbnailUrl}" alt="${video.title}" class="video-thumbnail-img" />
+                <div class="video-play-overlay">
+                  <span class="play-icon">▶</span>
+                </div>
+              </div>
+              <div class="video-info">
+                <h3>${video.title}</h3>
+                <p class="video-channel">${video.channel}</p>
+                <p class="video-description">${video.description}</p>
+                <div class="video-links">
+                  <a href="${youtubeUrl}" target="_blank" class="video-link">Watch on YouTube</a>
+                </div>
+              </div>
+            </div>`;
+  }).join('\n');
+  
+  // Extract unique categories and sources
+  const categories = [...new Set(videos.map(v => v.category))];
+  const sources = [...new Set(videos.map(v => v.channel))];
+  
+  const categoryTags = categories.map(cat => `<span class="category-tag">${cat}</span>`).join('\n              ');
+  const sourceList = sources.map(source => `<li>${source}</li>`).join('\n        ');
+  
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reference Videos - Android Internals</title>
+  <meta name="description" content="Curated collection of essential Android internals videos from conferences and expert sources. Learn from industry experts about Android system architecture, performance optimization, and security.">
+  <meta name="keywords" content="Android internals, Android videos, system architecture, performance optimization, Android development, mobile development">
+  <meta name="author" content="Hemang Pandhi">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.hemangpandhi.com/videos.html">
+  <meta property="og:title" content="Reference Videos - Android Internals">
+  <meta property="og:description" content="Curated collection of essential Android internals videos from conferences and expert sources.">
+  <meta property="og:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://www.hemangpandhi.com/videos.html">
+  <meta property="twitter:title" content="Reference Videos - Android Internals">
+  <meta property="twitter:description" content="Curated collection of essential Android internals videos from conferences and expert sources.">
+  <meta property="twitter:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+  
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="icon" type="image/png" href="assets/images/android_logo.PNG">
+  <link rel="manifest" href="assets/manifest.json">
+</head>
+<body>
+  <header class="main-header">
+    <nav class="main-nav">
+      <div class="nav-container">
+        <div class="nav-brand">
+          <a href="index.html" class="brand-link">
+            <img src="assets/images/android_logo.PNG" alt="Android Internals" class="brand-logo">
+            <span class="brand-text">Android Internals</span>
+          </a>
+        </div>
+        <div class="nav-links" id="navLinks">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="index.html#topics" class="nav-link">Topics</a>
+          <a href="index.html#blogs" class="nav-link">Blogs</a>
+          <a href="index.html#about" class="nav-link">About</a>
+          <div class="nav-dropdown">
+            <a href="#" class="nav-link dropdown-toggle">Resources</a>
+            <div class="dropdown-menu">
+              <a href="books.html" class="dropdown-link">Reference Books</a>
+              <a href="videos.html" class="dropdown-link">Reference Videos</a>
+            </div>
+          </div>
+        </div>
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle mobile menu">
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="main-content">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-content">
+        <h1 class="hero-title">Reference Videos</h1>
+        <p class="hero-subtitle">Curated collection of essential Android internals videos from conferences and expert sources</p>
+      </div>
+    </section>
+
+    <!-- Videos Section -->
+    <section class="content-section">
+      <div class="container">
+        <div class="videos-grid">
+${videoCards}
+        </div>
+        
+        <!-- Video Categories -->
+        <div class="video-categories">
+          <h3>Video Categories</h3>
+          <div class="category-tags">
+              ${categoryTags}
+          </div>
+        </div>
+        
+        <!-- Video Sources -->
+        <div class="video-sources">
+          <h3>Video Sources</h3>
+          <ul>
+        ${sourceList}
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="main-footer">
+    <div class="container">
+      <p>&copy; 2024 Android Internals. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/scripts.js"></script>
+</body>
+</html>`;
+}
+
 // Simple markdown to HTML converter
 function highlightSyntax(code, language) {
   // First, escape HTML entities to prevent XSS and malformed HTML
@@ -604,6 +822,10 @@ function updateIndexPage(articles) {
   // Count books dynamically
   const booksCount = countBooks();
   console.log(`  📚 Found ${booksCount} books`);
+  
+  // Count videos dynamically
+  const videosCount = countVideos();
+  console.log(`  📹 Found ${videosCount} videos`);
     
   // Update the stat number for Latest Articles
   let updatedIndex = indexTemplate.replace(
@@ -616,6 +838,13 @@ function updateIndexPage(articles) {
     /<span class="stat-number">\d+<\/span>\s*<span class="stat-label">Reference Books<\/span>/,
     `<span class="stat-number">${booksCount}</span>
                     <span class="stat-label">Reference Books</span>`
+  );
+  
+  // Update the videos count dynamically
+  updatedIndex = updatedIndex.replace(
+    /<span class="stat-number">\d+<\/span>\s*<span class="stat-label">Reference Videos<\/span>/,
+    `<span class="stat-number">${videosCount}</span>
+                    <span class="stat-label">Reference Videos</span>`
   );
     
   // More specific regex to match the blogs-grid content
@@ -638,6 +867,18 @@ function countBooks() {
   } catch (error) {
     console.log('  ⚠️  Could not count books, using default value');
     return 7; // fallback to known count
+  }
+}
+
+function countVideos() {
+  try {
+    const videosMarkdownPath = path.join(__dirname, '..', 'content', 'videos.md');
+    const markdownContent = fs.readFileSync(videosMarkdownPath, 'utf8');
+    const videos = parseVideosFromMarkdown(markdownContent);
+    return videos.length;
+  } catch (error) {
+    console.log('  ⚠️  Could not count videos, using default value');
+    return 6; // fallback to known count
   }
 }
 
@@ -754,8 +995,7 @@ function copyAssets() {
     'system-performance.html',
     'android-commands.html',
     'other-internals.html',
-    'books.html',
-    'videos.html'
+    'books.html'
   ];
   
   subpages.forEach(file => {
@@ -857,6 +1097,7 @@ function build() {
   const articles = buildArticles();
   generateArticlePages(articles);
   updateIndexPage(articles);
+  generateVideosPage();
   copyAssets();
   copyConfigFiles();
   generateSitemap(articles);
@@ -882,6 +1123,32 @@ function build() {
 // Run build if called directly
 if (require.main === module) {
   build();
+}
+
+function generateVideosPage() {
+  console.log('📹 Generating videos page...');
+  
+  const videosMarkdownPath = path.join(__dirname, '..', 'content', 'videos.md');
+  const buildDir = path.join(__dirname, '..', 'build');
+  
+  try {
+    // Read the videos markdown file
+    const markdownContent = fs.readFileSync(videosMarkdownPath, 'utf8');
+    
+    // Parse videos from markdown
+    const videos = parseVideosFromMarkdown(markdownContent);
+    
+    // Generate HTML page
+    const htmlContent = generateVideosHTML(videos);
+    
+    // Write to build directory
+    const outputPath = path.join(buildDir, 'videos.html');
+    fs.writeFileSync(outputPath, htmlContent);
+    
+    console.log(`  ✅ Generated videos.html with ${videos.length} videos`);
+  } catch (error) {
+    console.error('  ❌ Error generating videos page:', error.message);
+  }
 }
 
 function copyConfigFiles() {

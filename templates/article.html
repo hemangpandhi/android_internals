@@ -664,22 +664,24 @@
               diagram.style.transform = 'scale(1)';
               diagram.style.transformOrigin = 'top left';
               
-              // Set container to normal mode styling
-              container.style.overflow = 'auto';
-              container.style.width = '100%';
-              container.style.height = '400px';
-              container.style.minHeight = '400px';
-              container.style.maxHeight = '600px';
-              container.style.display = 'flex';
-              container.style.alignItems = 'center';
-              container.style.justifyContent = 'center';
+              // Clear all inline styles to let the diagram use its natural dimensions
+              // This mimics what happens when exiting fullscreen mode
+              container.style.cssText = '';
+              const mermaidEl = container.querySelector('.mermaid');
+              if (mermaidEl) {
+                mermaidEl.style.cssText = '';
+              }
+              const svgEl = mermaidEl?.querySelector('svg');
+              if (svgEl) {
+                svgEl.style.cssText = '';
+              }
               
               // Update zoom indicator
               if (zoomIndicator) {
                 zoomIndicator.textContent = '100%';
               }
               
-              console.log('Reset diagram', diagramId, 'to 100% zoom');
+              console.log('Reset diagram', diagramId, 'to 100% zoom with natural dimensions');
             }
           });
         }, 1000); // Wait 1 second for Mermaid to finish rendering

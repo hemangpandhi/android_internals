@@ -2524,6 +2524,35 @@ button:focus {
 
 /* ===== VIDEO STYLES ===== */
 
+/* Video Sections */
+.video-section {
+  margin: 3rem 0;
+}
+
+.section-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid #3ddc84;
+  display: inline-block;
+}
+
+/* Clickable Video Cards */
+.video-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.video-card-link:hover .video-card {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border-color: rgba(61, 220, 132, 0.3);
+}
+
 /* Videos Grid */
 .videos-grid {
   display: grid;
@@ -2543,12 +2572,7 @@ button:focus {
   gap: 1rem;
 }
 
-.video-card:hover {
-  background: rgba(255, 255, 255, 0.08);
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  border-color: rgba(61, 220, 132, 0.3);
-}
+/* Hover effect now handled by .video-card-link:hover .video-card */
 
 .video-thumbnail {
   position: relative;

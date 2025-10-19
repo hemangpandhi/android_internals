@@ -6,32 +6,43 @@ const NewsletterManager = require('./newsletter-manager');
 
 // Parse videos from Markdown file
 function parseVideosFromMarkdown(markdownContent) {
-  const videos = [];
+  const sections = [];
   const lines = markdownContent.split('\n');
+  let currentSection = null;
   let currentVideo = null;
   let inVideoSection = false;
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     
-    // Check if we're in the video collection section
-    if (line === '## Video Collection') {
+    // Check if we're starting a new section (## but not ## Categories or ## Sources)
+    if (line.startsWith('## ') && !line.includes('Categories') && !line.includes('Sources')) {
+      // Save previous section if it exists
+      if (currentSection && currentSection.videos.length > 0) {
+        sections.push(currentSection);
+      }
+      
+      // Start new section
+      currentSection = {
+        title: line.replace('## ', ''),
+        videos: []
+      };
       inVideoSection = true;
       continue;
     }
     
-    // Check if we've moved to another section
-    if (inVideoSection && line.startsWith('## ') && line !== '## Video Collection') {
+    // Check if we've moved to non-video sections
+    if (line.includes('Categories') || line.includes('Sources')) {
       inVideoSection = false;
       continue;
     }
     
-    if (!inVideoSection) continue;
+    if (!inVideoSection || !currentSection) continue;
     
     // Parse video title (starts with ###)
     if (line.startsWith('### ')) {
       if (currentVideo) {
-        videos.push(currentVideo);
+        currentSection.videos.push(currentVideo);
       }
       currentVideo = {
         title: line.replace('### ', ''),
@@ -74,44 +85,61 @@ function parseVideosFromMarkdown(markdownContent) {
     }
   }
   
-  // Add the last video
+  // Add the last video and section
   if (currentVideo) {
-    videos.push(currentVideo);
+    currentSection.videos.push(currentVideo);
+  }
+  if (currentSection && currentSection.videos.length > 0) {
+    sections.push(currentSection);
   }
   
-  return videos;
+  return sections;
 }
 
 // Generate videos.html from Markdown
-function generateVideosHTML(videos) {
-  const videoCards = videos.map(video => {
-    const startTimeParam = video.startTime === '0s' ? '' : `&t=${video.startTime}`;
-    const youtubeUrl = `https://www.youtube.com/watch?v=${video.youtubeId}${startTimeParam}`;
-    const thumbnailUrl = `https://img.youtube.com/vi/${video.youtubeId}/maxresdefault.jpg`;
+function generateVideosHTML(sections) {
+  // Generate sections HTML
+  const sectionsHTML = sections.map(section => {
+    const videoCards = section.videos.map(video => {
+      const startTimeParam = video.startTime === '0s' ? '' : `&t=${video.startTime}`;
+      const youtubeUrl = `https://www.youtube.com/watch?v=${video.youtubeId}${startTimeParam}`;
+      const thumbnailUrl = `https://img.youtube.com/vi/${video.youtubeId}/maxresdefault.jpg`;
+      
+      return `
+            <!-- ${video.title} -->
+            <a href="${youtubeUrl}" target="_blank" class="video-card-link">
+              <div class="video-card">
+                <div class="video-thumbnail">
+                  <img src="${thumbnailUrl}" alt="${video.title}" class="video-thumbnail-img" />
+                  <div class="video-play-overlay">
+                    <span class="play-icon">▶</span>
+                  </div>
+                </div>
+                <div class="video-info">
+                  <h3>${video.title}</h3>
+                  <p class="video-channel">${video.channel}</p>
+                  <p class="video-description">${video.description}</p>
+                  <div class="video-links">
+                    <span class="video-link">Watch on YouTube</span>
+                  </div>
+                </div>
+              </div>
+            </a>`;
+    }).join('\n');
     
     return `
-            <!-- ${video.title} -->
-            <div class="video-card">
-              <div class="video-thumbnail">
-                <img src="${thumbnailUrl}" alt="${video.title}" class="video-thumbnail-img" />
-                <div class="video-play-overlay">
-                  <span class="play-icon">▶</span>
-                </div>
-              </div>
-              <div class="video-info">
-                <h3>${video.title}</h3>
-                <p class="video-channel">${video.channel}</p>
-                <p class="video-description">${video.description}</p>
-                <div class="video-links">
-                  <a href="${youtubeUrl}" target="_blank" class="video-link">Watch on YouTube</a>
-                </div>
-              </div>
-            </div>`;
+          <div class="video-section">
+            <h2 class="section-title">${section.title}</h2>
+            <div class="videos-grid">
+              ${videoCards}
+            </div>
+          </div>`;
   }).join('\n');
   
-  // Extract unique categories and sources
-  const categories = [...new Set(videos.map(v => v.category))];
-  const sources = [...new Set(videos.map(v => v.channel))];
+  // Extract unique categories and sources from all videos
+  const allVideos = sections.flatMap(section => section.videos);
+  const categories = [...new Set(allVideos.map(v => v.category))];
+  const sources = [...new Set(allVideos.map(v => v.channel))];
   
   const categoryTags = categories.map(cat => `<span class="category-tag">${cat}</span>`).join('\n              ');
   const sourceList = sources.map(source => `<li>${source}</li>`).join('\n        ');
@@ -181,9 +209,7 @@ function generateVideosHTML(videos) {
           <h2>Essential Android Internals Video Collection</h2>
           <p>Curated collection of essential Android internals videos from conferences and expert sources. Learn from industry experts about Android system architecture, performance optimization, and security.</p>
           
-          <div class="videos-grid">
-${videoCards}
-        </div>
+          ${sectionsHTML}
         
         <!-- Video Categories -->
         <div class="video-categories">
@@ -868,8 +894,9 @@ function countVideos() {
   try {
     const videosMarkdownPath = path.join(__dirname, '..', 'content', 'videos.md');
     const markdownContent = fs.readFileSync(videosMarkdownPath, 'utf8');
-    const videos = parseVideosFromMarkdown(markdownContent);
-    return videos.length;
+    const sections = parseVideosFromMarkdown(markdownContent);
+    const totalVideos = sections.reduce((total, section) => total + section.videos.length, 0);
+    return totalVideos;
   } catch (error) {
     console.log('  ⚠️  Could not count videos, using default value');
     return 6; // fallback to known count
@@ -1130,16 +1157,17 @@ function generateVideosPage() {
     const markdownContent = fs.readFileSync(videosMarkdownPath, 'utf8');
     
     // Parse videos from markdown
-    const videos = parseVideosFromMarkdown(markdownContent);
+    const sections = parseVideosFromMarkdown(markdownContent);
     
     // Generate HTML page
-    const htmlContent = generateVideosHTML(videos);
+    const htmlContent = generateVideosHTML(sections);
     
     // Write to build directory
     const outputPath = path.join(buildDir, 'videos.html');
     fs.writeFileSync(outputPath, htmlContent);
     
-    console.log(`  ✅ Generated videos.html with ${videos.length} videos`);
+    const totalVideos = sections.reduce((total, section) => total + section.videos.length, 0);
+    console.log(`  ✅ Generated videos.html with ${totalVideos} videos in ${sections.length} sections`);
   } catch (error) {
     console.error('  ❌ Error generating videos page:', error.message);
   }

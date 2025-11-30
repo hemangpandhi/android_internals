@@ -1,6 +1,6 @@
 ---
 title: "The Ultimate Encyclopedia of ADB, Dumpsys & Android Internals"
-description: "Master Android Debug Bridge (ADB) with a complete guide covering everything from basic commands to expert-level, time-saving techniques for AOSP and native debugging."
+description: "Master Android Debug Bridge (ADB) with a complete guide covering basic commands to expert-level techniques for AOSP and native debugging."
 author: "Android Internals Team"
 date: "2025-08-28"
 category: "Development Tools"

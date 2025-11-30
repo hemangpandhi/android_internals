@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - Page Not Found | Android Internals</title>
+  <meta name="description" content="The page you are looking for could not be found.">
+  <meta name="robots" content="noindex, follow">
+  
+  <!-- Security Headers -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://api.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.emailjs.com https://cdn.jsdelivr.net; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; media-src 'self'; worker-src 'self' blob:; manifest-src 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  
+  <link rel="stylesheet" href="assets/css/styles.css?v=16">
+  <link rel="icon" type="image/png" href="assets/images/android_logo.PNG">
+  <style>
+    .error-container {
+      min-height: 70vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+    .error-content {
+      max-width: 600px;
+    }
+    .error-code {
+      font-size: 8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #3ddc84 0%, #1e7e34 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 1rem;
+    }
+    .error-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 1rem;
+    }
+    .error-message {
+      font-size: 1.2rem;
+      color: #94a3b8;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+    .error-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .error-btn {
+      display: inline-block;
+      padding: 0.75rem 2rem;
+      background: #3ddc84;
+      color: #0a0a0a;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .error-btn:hover {
+      background: #2bc470;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(61, 220, 132, 0.3);
+    }
+    .error-btn-secondary {
+      background: transparent;
+      border: 2px solid #3ddc84;
+      color: #3ddc84;
+    }
+    .error-btn-secondary:hover {
+      background: rgba(61, 220, 132, 0.1);
+    }
+    @media (max-width: 768px) {
+      .error-code {
+        font-size: 5rem;
+      }
+      .error-title {
+        font-size: 2rem;
+      }
+      .error-message {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="main-nav">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo-link">
+        <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+      </a>
+      <div class="nav-links">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="index.html#topics" class="nav-link">Topics</a>
+        <a href="index.html#blogs" class="nav-link">Blogs</a>
+        <a href="index.html#about" class="nav-link">About</a>
+        <div class="nav-dropdown">
+          <a href="#" class="nav-link dropdown-toggle">Resources</a>
+          <div class="dropdown-menu">
+            <a href="books.html" class="dropdown-link">Books</a>
+            <a href="videos.html" class="dropdown-link">Videos</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="error-container">
+    <div class="error-content">
+      <div class="error-code">404</div>
+      <h1 class="error-title">Page Not Found</h1>
+      <p class="error-message">
+        The page you're looking for doesn't exist or has been moved. 
+        It might have been deleted, renamed, or the URL might be incorrect.
+      </p>
+      <div class="error-actions">
+        <a href="index.html" class="error-btn">Go to Homepage</a>
+        <a href="index.html#blogs" class="error-btn error-btn-secondary">Browse Articles</a>
+      </div>
+      <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
+        <p style="color: #64748b; margin-bottom: 1rem;">Popular Pages:</p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+          <a href="books.html" style="color: #3ddc84; text-decoration: none;">Books</a>
+          <a href="videos.html" style="color: #3ddc84; text-decoration: none;">Videos</a>
+          <a href="index.html#topics" style="color: #3ddc84; text-decoration: none;">Topics</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="main-footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>Android Internals</h3>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="books.html">Books</a></li>
+            <li><a href="videos.html">Videos</a></li>
+            <li><a href="index.html#contact">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Legal</h3>
+          <ul>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/scripts.js"></script>
+</body>
+</html>
+
+

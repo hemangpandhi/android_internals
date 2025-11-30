@@ -6,29 +6,80 @@
   <title>{{title}} - Android Internals</title>
   <meta name="description" content="{{description}}">
   <meta name="keywords" content="Android, Internals, {{category}}, development, programming">
-  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css?v=17">
   <link rel="icon" href="../assets/images/android_logo.PNG" type="image/png">
   <link rel="manifest" href="../assets/manifest.json">
   <meta name="theme-color" content="#3ddc84">
   
   <!-- Mermaid.js for diagram rendering -->
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@8.14.0/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
   <style>
     .mermaid-diagram {
-      margin: 2rem 0;
-      padding: 1rem;
+      margin: 1rem 0;
+      padding: 0.75rem 1rem;
       background: #f8f9fa;
       border-radius: 8px;
       border: 1px solid #e9ecef;
       position: relative;
-      overflow: visible;
-      /* Remove max-height constraint to allow natural dimensions */
+      overflow: visible !important;
+      z-index: 1;
+      /* Scroll margin to account for fixed navigation bar (80px height) */
+      scroll-margin-top: 100px;
+      /* Ensure container can expand to show full diagram - no height constraints */
+      min-height: auto !important;
+      height: auto !important;
+      max-height: none !important;
+      /* Ensure content is not clipped */
+      overflow-x: visible;
+      overflow-y: visible;
+    }
+    
+    .mermaid-diagram.zoomed {
+      /* Ensure zoomed diagrams can scroll horizontally and vertically */
+      overflow-x: auto !important;
+      overflow-y: auto !important;
+      max-width: 100%;
+      z-index: 1040 !important;
+      position: relative;
     }
     
     .mermaid {
       text-align: center;
+      display: block;
+      width: 100%;
+      min-height: auto;
+      height: auto;
       transition: transform 0.3s ease;
       cursor: grab;
+      margin: 0;
+      padding: 0;
+      display: block;
+    }
+    
+    .mermaid svg {
+      display: block !important;
+      margin: 0 auto !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: auto !important;
+      max-height: none !important;
+      /* Ensure SVG can expand to show full content - critical for Mermaid 10.7.0 */
+      overflow: visible !important;
+      /* Remove any height constraints that might clip content */
+      box-sizing: border-box;
+    }
+    
+    /* Specific styling for sequence diagrams to reduce vertical spacing */
+    .mermaid-diagram.sequence-diagram-container {
+      padding: 0.4rem 1rem !important;
+    }
+    
+    /* Alternative CSS selector for sequence diagrams */
+    .mermaid-diagram:has(svg g.actor),
+    .mermaid-diagram:has(svg g.note),
+    .mermaid-diagram:has(svg g.activation) {
+      padding: 0.4rem 1rem;
     }
     
     .mermaid:active {
@@ -42,7 +93,7 @@
       right: 10px;
       display: flex;
       gap: 5px;
-      z-index: 10;
+      z-index: 1050;
     }
     
     .zoom-btn {
@@ -160,8 +211,10 @@
     /* Mobile responsive styles for Mermaid diagrams */
     @media (max-width: 768px) {
       .mermaid-diagram {
-        margin: 1rem 0;
-        padding: 0.5rem;
+        margin: 0.75rem 0;
+        padding: 0.5rem 0.75rem;
+        /* Scroll margin to account for fixed navigation bar */
+        scroll-margin-top: 100px;
         /* Remove max-height constraint to allow natural dimensions */
       }
       
@@ -199,7 +252,9 @@
     @media (max-width: 480px) {
       .mermaid-diagram {
         margin: 0.5rem 0;
-        padding: 0.25rem;
+        padding: 0.4rem 0.6rem;
+        /* Scroll margin to account for fixed navigation bar */
+        scroll-margin-top: 100px;
         /* Remove max-height constraint to allow natural dimensions */
       }
       
@@ -267,7 +322,13 @@
         <a href="../index.html#topics" class="nav-link">Topics</a>
         <a href="../index.html#blogs" class="nav-link">Blogs</a>
         <a href="../index.html#about" class="nav-link">About</a>
-        <a href="../books.html" class="nav-link">Books</a>
+        <div class="nav-dropdown">
+          <a href="#" class="nav-link dropdown-toggle">Resources</a>
+          <div class="dropdown-menu">
+            <a href="../books.html" class="dropdown-link">Reference Books</a>
+            <a href="../videos.html" class="dropdown-link">Reference Videos</a>
+          </div>
+        </div>
       </div>
       <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle mobile menu">
         <span class="hamburger-line"></span>
@@ -430,14 +491,47 @@
           </ul>
         </div>
       </div>
+        <div class="footer-section">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="../privacy.html">Privacy Policy</a></li>
+            <li><a href="../terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
       <div class="footer-bottom">
-        <p>&copy; 2024 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+        <p>&copy; 2025 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
       </div>
     </div>
   </footer>
 
   <script src="../assets/js/scripts.js"></script>
+  
+  <!-- Cookie Consent Banner -->
+  <div id="cookieConsentBanner" class="cookie-consent-banner">
+    <div class="cookie-consent-content">
+      <div class="cookie-consent-text">
+        <p>We use cookies and service workers to enhance your browsing experience, analyze site traffic, and personalize content. By clicking "Accept", you consent to our use of cookies. <a href="../privacy.html">Learn more</a></p>
+      </div>
+      <div class="cookie-consent-buttons">
+        <button id="cookieAcceptBtn" class="cookie-consent-btn cookie-consent-btn-accept">Accept</button>
+        <button id="cookieDeclineBtn" class="cookie-consent-btn cookie-consent-btn-decline">Decline</button>
+      </div>
+    </div>
+  </div>
+  
   <script>
+    // Redirect .md URLs to .html (for browser cache/history issues)
+    (function() {
+      const currentPath = window.location.pathname;
+      if (currentPath.endsWith('.md')) {
+        const newPath = currentPath.replace(/\.md$/, '.html');
+        console.log('Redirecting .md URL to .html:', currentPath, '->', newPath);
+        window.location.replace(newPath);
+        return;
+      }
+    })();
+    
     // Article functionality
     // Define functions globally first
     window.zoomDiagram = function(diagramId, factor) {
@@ -468,10 +562,46 @@
         diagramContainer.style.maxHeight = 'none';
         diagramContainer.style.overflow = 'auto';
       } else {
-        // Normal mode - clear all container styles to let it use natural dimensions
-        // This prevents cropping when zoomed
-        diagramContainer.style.cssText = '';
-        diagramContainer.style.overflow = 'auto';
+        // Normal mode - ensure proper scrolling when zoomed
+        if (newZoom > 1) {
+          // When zoomed, ensure container allows horizontal and vertical scrolling
+          diagramContainer.style.overflow = 'auto';
+          diagramContainer.style.overflowX = 'auto';
+          diagramContainer.style.overflowY = 'auto';
+          diagramContainer.style.width = '100%';
+          diagramContainer.style.maxWidth = '100%';
+          diagramContainer.style.position = 'relative';
+          diagramContainer.style.zIndex = '1040';
+          diagramContainer.classList.add('zoomed');
+          
+          // Ensure the diagram element itself has proper width for scrolling
+          const svg = diagram.querySelector('svg');
+          if (svg) {
+            // Get the natural SVG width (before scaling)
+            const svgNaturalWidth = svg.viewBox.baseVal.width || svg.width.baseVal.value;
+            if (svgNaturalWidth > 0) {
+              // Set diagram width to accommodate scaled SVG
+              const scaledWidth = svgNaturalWidth * newZoom;
+              diagram.style.width = scaledWidth + 'px';
+              diagram.style.minWidth = scaledWidth + 'px';
+              diagram.style.maxWidth = 'none';
+            } else {
+              // Fallback: use bounding box if viewBox not available
+              const svgWidth = svg.getBoundingClientRect().width;
+              const scaledWidth = svgWidth * newZoom;
+              diagram.style.width = scaledWidth + 'px';
+              diagram.style.minWidth = scaledWidth + 'px';
+              diagram.style.maxWidth = 'none';
+            }
+          }
+        } else {
+          // At 100% zoom, clear all styles to use natural dimensions
+          diagramContainer.style.cssText = '';
+          diagram.style.width = '';
+          diagram.style.minWidth = '';
+          diagram.style.maxWidth = '';
+          diagramContainer.classList.remove('zoomed');
+        }
       }
       
       if (zoomIndicator) {
@@ -491,9 +621,12 @@
       window.zoomLevels = window.zoomLevels || {};
       window.zoomLevels[diagramId] = 1;
       
+      // Remove zoomed class and z-index
+      diagramContainer.classList.remove('zoomed');
+      
       // Reset diagram to 100% scale
       diagram.style.transform = 'scale(1)';
-      diagram.style.transformOrigin = 'top left'; // Keep consistent with zoom function
+      diagram.style.transformOrigin = 'top left';
       
       // Check if we're in fullscreen mode
       const isFullscreen = diagramContainer.style.position === 'fixed';
@@ -507,6 +640,9 @@
         // Normal mode - clear all styles exactly like fullscreen exit
         // This ensures the same behavior as exiting fullscreen mode
         diagramContainer.style.cssText = '';
+        diagram.style.width = '';
+        diagram.style.minWidth = '';
+        diagram.style.maxWidth = '';
         const mermaidEl = diagramContainer.querySelector('.mermaid');
         if (mermaidEl) {
           mermaidEl.style.cssText = '';
@@ -616,21 +752,84 @@
       console.log('DOMContentLoaded fired');
       console.log('Mermaid available:', typeof mermaid);
       
-      // Initialize Mermaid with automatic rendering
+      // Initialize Mermaid with automatic rendering and minimal padding
       try {
         mermaid.initialize({
           startOnLoad: true,
           theme: 'default',
           securityLevel: 'loose',
-          fontFamily: 'Arial, sans-serif'
+          fontFamily: 'Arial, sans-serif',
+          // Global settings for all diagram types
+          useMaxWidth: true,
+          // Flowchart settings - optimized for Mermaid 10.7.0
+          // Critical: padding must be set to ensure viewBox includes all content
+          flowchart: {
+            padding: 20, // Increased padding to ensure all content is in viewBox
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis',
+            nodeSpacing: 50,
+            rankSpacing: 50,
+            wrap: false
+          },
+          // Sequence diagram settings
+          sequence: {
+            diagramMarginX: 10,
+            diagramMarginY: 10,
+            actorMargin: 50,
+            width: 150,
+            height: 65,
+            boxMargin: 10,
+            boxTextMargin: 5,
+            noteMargin: 35,
+            messageMargin: 35,
+            mirrorActors: true,
+            bottomMarginAdj: 1,
+            useMaxWidth: true
+          },
+          // Class diagram settings
+          class: {
+            useMaxWidth: true,
+            padding: 10
+          },
+          // State diagram settings
+          state: {
+            useMaxWidth: true,
+            padding: 10
+          },
+          // Gantt chart settings
+          gantt: {
+            useMaxWidth: true
+          },
+          // Pie chart settings
+          pie: {
+            useMaxWidth: true
+          },
+          // Git graph settings
+          gitGraph: {
+            useMaxWidth: true
+          },
+          // ER diagram settings
+          er: {
+            useMaxWidth: true
+          },
+          // Journey diagram settings
+          journey: {
+            useMaxWidth: true
+          },
+          // C4 diagram settings
+          c4: {
+            useMaxWidth: true
+          }
         });
         console.log('Mermaid initialized successfully');
         
-        // Wait for Mermaid to render all diagrams, then reset them to 100% zoom
+        // Simple approach: Just ensure diagrams are properly displayed after Mermaid renders
+        // Wait for Mermaid to render all diagrams, then ensure they're visible
         setTimeout(function() {
-          console.log('Resetting all diagrams to 100% zoom on page load');
+          console.log('Ensuring all diagrams are properly displayed');
           
-          // Find all Mermaid diagrams and reset them to 100% zoom
+          // Find all Mermaid diagrams
           const mermaidContainers = document.querySelectorAll('.mermaid-diagram');
           mermaidContainers.forEach(function(container) {
             const diagramId = container.id.replace('diagram-', '');
@@ -638,31 +837,131 @@
             const zoomIndicator = document.getElementById('zoom-' + diagramId);
             
             if (diagram && container) {
+              // Check if this is a sequence diagram
+              const svg = container.querySelector('svg');
+              let isSequenceDiagram = false;
+              if (svg) {
+                // Detect sequence diagrams
+                const hasSequenceElements = svg.querySelector('g.actor, g.note, g.activation, g[class*="sequence"]');
+                if (hasSequenceElements) {
+                  isSequenceDiagram = true;
+                  container.classList.add('sequence-diagram-container');
+                }
+              }
+              
               // Initialize zoom level to 100%
+              window.zoomLevels = window.zoomLevels || {};
               window.zoomLevels[diagramId] = 1;
               
               // Reset diagram to 100% scale
               diagram.style.transform = 'scale(1)';
               diagram.style.transformOrigin = 'top left';
               
-              // Clear all inline styles to let the diagram use its natural dimensions
-              // This mimics what happens when exiting fullscreen mode
-              container.style.cssText = '';
+              // CRITICAL FIX for Mermaid 10.7.0: Ensure container and SVG can display full content
+              // Remove ALL height and overflow constraints
+              container.style.cssText = `
+                overflow: visible !important;
+                height: auto !important;
+                max-height: none !important;
+                min-height: auto !important;
+                margin: 1rem 0 !important;
+                padding: 0.75rem 1rem !important;
+                background: #f8f9fa !important;
+                border-radius: 8px !important;
+                border: 1px solid #e9ecef !important;
+                position: relative !important;
+                z-index: 1 !important;
+              `;
+              
+              // CRITICAL FIX for Mermaid 10.7.0: Ensure SVG displays fully
+              // Issue: Mermaid 10.7.0 may generate viewBox that cuts off content or has wrong aspect ratio
+              if (svg) {
+                // Use multiple attempts to ensure SVG is fully rendered
+                function fixSvgDimensions() {
+                  const viewBox = svg.viewBox.baseVal;
+                  
+                  if (viewBox && viewBox.width > 0 && viewBox.height > 0) {
+                    // Remove any explicit width/height attributes that might conflict
+                    // Let CSS handle sizing based on viewBox
+                    svg.removeAttribute('width');
+                    svg.removeAttribute('height');
+                    
+                    // Ensure preserveAspectRatio is set correctly
+                    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                    
+                    // Set styles to ensure full content is visible
+                    // Use viewBox-based sizing (browser will calculate height from aspect ratio)
+                    svg.style.cssText = `
+                      display: block !important;
+                      margin: 0 auto !important;
+                      width: 100% !important;
+                      max-width: 100% !important;
+                      height: auto !important;
+                      min-height: auto !important;
+                      max-height: none !important;
+                      overflow: visible !important;
+                      box-sizing: border-box !important;
+                    `;
+                    
+                    // Verify content is not cut off by checking bounding box
+                    try {
+                      const bbox = svg.getBBox();
+                      if (bbox) {
+                        // If content extends beyond viewBox, we need to expand it
+                        const contentRight = bbox.x + bbox.width;
+                        const contentBottom = bbox.y + bbox.height;
+                        const viewBoxRight = viewBox.x + viewBox.width;
+                        const viewBoxBottom = viewBox.y + viewBox.height;
+                        
+                        // If content is cut off, expand viewBox
+                        if (contentRight > viewBoxRight || contentBottom > viewBoxBottom) {
+                          const newX = Math.min(viewBox.x, bbox.x - 10);
+                          const newY = Math.min(viewBox.y, bbox.y - 10);
+                          const newWidth = Math.max(viewBox.width, contentRight - newX + 10);
+                          const newHeight = Math.max(viewBox.height, contentBottom - newY + 10);
+                          
+                          svg.setAttribute('viewBox', `${newX} ${newY} ${newWidth} ${newHeight}`);
+                          console.log('Expanded viewBox for', diagramId, 'to show full content');
+                        }
+                      }
+                    } catch (e) {
+                      // getBBox might fail if SVG is not fully rendered, that's OK
+                    }
+                  }
+                }
+                
+                // Try immediately
+                fixSvgDimensions();
+                
+                // Try again after a short delay (Mermaid might still be rendering)
+                setTimeout(fixSvgDimensions, 100);
+                setTimeout(fixSvgDimensions, 500);
+              }
+              
+              // Also ensure the mermaid element itself doesn't constrain
               const mermaidEl = container.querySelector('.mermaid');
               if (mermaidEl) {
-                mermaidEl.style.cssText = '';
+                mermaidEl.style.cssText = `
+                  text-align: center !important;
+                  display: block !important;
+                  width: 100% !important;
+                  height: auto !important;
+                  max-height: none !important;
+                  overflow: visible !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
+                `;
               }
-              const svgEl = mermaidEl?.querySelector('svg');
-              if (svgEl) {
-                svgEl.style.cssText = '';
+              
+              // Re-apply reduced padding for sequence diagrams
+              if (isSequenceDiagram) {
+                container.style.padding = '0.4rem 1rem';
               }
               
               // Update zoom indicator
               if (zoomIndicator) {
                 zoomIndicator.textContent = '100%';
               }
-              
-              console.log('Reset diagram', diagramId, 'to 100% zoom with natural dimensions');
             }
           });
         }, 1000); // Wait 1 second for Mermaid to finish rendering

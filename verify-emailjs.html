@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmailJS Configuration Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #2d5016; border-left: 4px solid #4caf50; }
+        .error { background: #5d1a1a; border-left: 4px solid #f44336; }
+        .warning { background: #5d4e1a; border-left: 4px solid #ff9800; }
+        .info { background: #1a3a5d; border-left: 4px solid #2196f3; }
+        pre {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 5px;
+        }
+        button {
+            background: #3ddc84;
+            color: #0a0a0a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover { background: #2bc470; }
+        button:disabled { background: #666; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <h1>🔍 EmailJS Configuration Verification</h1>
+    
+    <div id="results"></div>
+    
+    <div class="test-section">
+        <h2>Test Newsletter Subscription</h2>
+        <input type="email" id="testEmail" placeholder="Enter your email" style="padding: 10px; width: 300px; margin: 10px 0; border-radius: 5px; border: none;">
+        <br>
+        <button onclick="testNewsletter()">Test Newsletter Subscription</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Contact Form</h2>
+        <input type="text" id="testName" placeholder="Your name" style="padding: 10px; width: 300px; margin: 5px 0; border-radius: 5px; border: none; display: block;">
+        <input type="email" id="testContactEmail" placeholder="Your email" style="padding: 10px; width: 300px; margin: 5px 0; border-radius: 5px; border: none; display: block;">
+        <textarea id="testMessage" placeholder="Your message" style="padding: 10px; width: 300px; margin: 5px 0; border-radius: 5px; border: none; display: block; min-height: 100px;"></textarea>
+        <button onclick="testContact()">Test Contact Form</button>
+    </div>
+
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript" src="config.js"></script>
+    
+    <script>
+        const resultsDiv = document.getElementById('results');
+        
+        function addResult(type, title, message) {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `<strong>${title}</strong><br>${message}`;
+            resultsDiv.appendChild(div);
+        }
+        
+        function verifyConfiguration() {
+            resultsDiv.innerHTML = '<h2>Configuration Check Results:</h2>';
+            
+            // Check EmailJS library
+            if (typeof emailjs === 'undefined') {
+                addResult('error', '❌ EmailJS Library', 'EmailJS library is not loaded. Check the CDN link.');
+                return false;
+            } else {
+                addResult('success', '✅ EmailJS Library', 'EmailJS library is loaded successfully.');
+            }
+            
+            // Check EMAILJS_CONFIG
+            if (typeof window.EMAILJS_CONFIG === 'undefined') {
+                addResult('error', '❌ EmailJS Configuration', 'window.EMAILJS_CONFIG is not defined. Check config.js file.');
+                return false;
+            } else {
+                addResult('success', '✅ EmailJS Configuration Object', 'window.EMAILJS_CONFIG exists.');
+            }
+            
+            const config = window.EMAILJS_CONFIG;
+            let allGood = true;
+            
+            // Check publicKey
+            if (!config.publicKey || config.publicKey === 'YOUR_EMAILJS_PUBLIC_KEY_HERE') {
+                addResult('error', '❌ Public Key', 'EmailJS publicKey is missing or not configured. Update config.js with your actual public key.');
+                allGood = false;
+            } else {
+                addResult('success', '✅ Public Key', `Public key is configured: ${config.publicKey.substring(0, 10)}...`);
+            }
+            
+            // Check serviceId
+            if (!config.serviceId || config.serviceId === 'YOUR_EMAILJS_SERVICE_ID_HERE') {
+                addResult('error', '❌ Service ID', 'EmailJS serviceId is missing or not configured. Update config.js with your actual service ID.');
+                allGood = false;
+            } else {
+                addResult('success', '✅ Service ID', `Service ID is configured: ${config.serviceId}`);
+            }
+            
+            // Check newsletterTemplate
+            if (!config.newsletterTemplate || config.newsletterTemplate === 'YOUR_NEWSLETTER_TEMPLATE_ID_HERE') {
+                addResult('error', '❌ Newsletter Template', 'Newsletter template ID is missing or not configured. Update config.js with your actual template ID.');
+                allGood = false;
+            } else {
+                addResult('success', '✅ Newsletter Template', `Newsletter template ID: ${config.newsletterTemplate}`);
+            }
+            
+            // Check contactTemplate
+            if (!config.contactTemplate || config.contactTemplate === 'YOUR_CONTACT_TEMPLATE_ID_HERE') {
+                addResult('error', '❌ Contact Template', 'Contact template ID is missing or not configured. Update config.js with your actual template ID.');
+                allGood = false;
+            } else {
+                addResult('success', '✅ Contact Template', `Contact template ID: ${config.contactTemplate}`);
+            }
+            
+            // Try to initialize EmailJS
+            if (allGood) {
+                try {
+                    emailjs.init(config.publicKey);
+                    addResult('success', '✅ EmailJS Initialized', 'EmailJS has been initialized successfully with your public key.');
+                } catch (error) {
+                    addResult('error', '❌ EmailJS Initialization', `Failed to initialize EmailJS: ${error.message}`);
+                    allGood = false;
+                }
+            }
+            
+            // Display full config (masked)
+            addResult('info', '📋 Current Configuration', `
+                <pre>${JSON.stringify({
+                    publicKey: config.publicKey ? config.publicKey.substring(0, 10) + '...' : 'NOT SET',
+                    serviceId: config.serviceId || 'NOT SET',
+                    newsletterTemplate: config.newsletterTemplate || 'NOT SET',
+                    contactTemplate: config.contactTemplate || 'NOT SET',
+                    enableNewsletter: config.enableNewsletter,
+                    enableContactForm: config.enableContactForm
+                }, null, 2)}</pre>
+            `);
+            
+            return allGood;
+        }
+        
+        async function testNewsletter() {
+            const email = document.getElementById('testEmail').value;
+            if (!email) {
+                alert('Please enter an email address');
+                return;
+            }
+            
+            const config = window.EMAILJS_CONFIG;
+            if (!config || !config.serviceId || !config.newsletterTemplate) {
+                alert('EmailJS is not properly configured. Please check the configuration first.');
+                return;
+            }
+            
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            
+            const templateParams = {
+                to_email: 'info@hemangpandhi.com',
+                to_name: 'Hemang Pandhi',
+                from_name: 'Newsletter Subscriber',
+                from_email: email,
+                message: `Test newsletter subscription from: ${email}`,
+                subject: 'Test Newsletter Subscription - Android Internals',
+                reply_to: email,
+                email: email,
+                name: 'Newsletter Subscriber',
+                recipient_email: 'info@hemangpandhi.com',
+                recipient_name: 'Hemang Pandhi'
+            };
+            
+            try {
+                const response = await emailjs.send(config.serviceId, config.newsletterTemplate, templateParams);
+                addResult('success', '✅ Newsletter Test', `Newsletter subscription test email sent successfully! Status: ${response.status}`);
+            } catch (error) {
+                addResult('error', '❌ Newsletter Test Failed', `Error: ${error.text || error.message || JSON.stringify(error)}`);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Test Newsletter Subscription';
+            }
+        }
+        
+        async function testContact() {
+            const name = document.getElementById('testName').value;
+            const email = document.getElementById('testContactEmail').value;
+            const message = document.getElementById('testMessage').value;
+            
+            if (!name || !email || !message) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            const config = window.EMAILJS_CONFIG;
+            if (!config || !config.serviceId || !config.contactTemplate) {
+                alert('EmailJS is not properly configured. Please check the configuration first.');
+                return;
+            }
+            
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            
+            const templateParams = {
+                from_name: name,
+                from_email: email,
+                message: message,
+                to_email: 'info@hemangpandhi.com',
+                to_name: 'Hemang Pandhi',
+                subject: 'Test Contact Message - Android Internals',
+                reply_to: email,
+                email: 'info@hemangpandhi.com',
+                name: 'Hemang Pandhi',
+                recipient_email: 'info@hemangpandhi.com',
+                recipient_name: 'Hemang Pandhi'
+            };
+            
+            try {
+                const response = await emailjs.send(config.serviceId, config.contactTemplate, templateParams);
+                addResult('success', '✅ Contact Form Test', `Contact form test email sent successfully! Status: ${response.status}`);
+            } catch (error) {
+                addResult('error', '❌ Contact Form Test Failed', `Error: ${error.text || error.message || JSON.stringify(error)}`);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Test Contact Form';
+            }
+        }
+        
+        // Run verification on load
+        window.addEventListener('load', function() {
+            setTimeout(verifyConfiguration, 500);
+        });
+    </script>
+</body>
+</html>

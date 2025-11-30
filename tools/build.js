@@ -11,9 +11,16 @@ function parseVideosFromMarkdown(markdownContent) {
   let currentSection = null;
   let currentVideo = null;
   let inVideoSection = false;
+  let disclaimer = '';
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
+    
+    // Extract disclaimer (blockquote starting with >)
+    if (line.startsWith('> **Disclaimer:**')) {
+      disclaimer = line.replace('> **Disclaimer:**', '').trim();
+      continue;
+    }
     
     // Check if we're starting a new section (## but not ## Categories or ## Sources)
     if (line.startsWith('## ') && !line.includes('Categories') && !line.includes('Sources')) {
@@ -102,16 +109,17 @@ function parseVideosFromMarkdown(markdownContent) {
     sections.push(currentSection);
   }
   
-  return sections;
+  return { sections, disclaimer };
 }
 
 // Generate videos.html from Markdown
-function generateVideosHTML(sections) {
+function generateVideosHTML(sections, disclaimer = '') {
   // Generate sections HTML
   const sectionsHTML = sections.map(section => {
     const videoCards = section.videos.map(video => {
-      const startTimeParam = video.startTime === '0s' ? '' : `&t=${video.startTime}`;
-      const youtubeUrl = `https://www.youtube.com/watch?v=${video.youtubeId}${startTimeParam}`;
+      // Always start from beginning - add &t=0 to force YouTube to start from 0 seconds
+      // This overrides YouTube's "resume from last position" feature
+      const youtubeUrl = `https://www.youtube.com/watch?v=${video.youtubeId}&t=0`;
       const thumbnailUrl = `https://img.youtube.com/vi/${video.youtubeId}/maxresdefault.jpg`;
       
       return `
@@ -218,6 +226,8 @@ function generateVideosHTML(sections) {
           <h2>Essential Android Internals Video Collection</h2>
           <p>Curated collection of essential Android internals videos from conferences and expert sources. Learn from industry experts about Android system architecture, performance optimization, and security.</p>
           
+          ${disclaimer ? `<div class="disclaimer"><p><strong>Disclaimer:</strong> ${disclaimer}</p></div>` : ''}
+          
           ${sectionsHTML}
         
         <!-- Video Categories -->
@@ -242,11 +252,48 @@ function generateVideosHTML(sections) {
 
   <footer class="main-footer">
     <div class="container">
-      <p>&copy; 2024 Android Internals. All rights reserved.</p>
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>Android Internals</h3>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="books.html">Books</a></li>
+            <li><a href="videos.html">Videos</a></li>
+            <li><a href="index.html#contact">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Legal</h3>
+          <ul>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
     </div>
   </footer>
 
   <script src="assets/js/scripts.js"></script>
+  
+  <!-- Cookie Consent Banner -->
+  <div id="cookieConsentBanner" class="cookie-consent-banner">
+    <div class="cookie-consent-content">
+      <div class="cookie-consent-text">
+        <p>We use cookies and service workers to enhance your browsing experience, analyze site traffic, and personalize content. By clicking "Accept", you consent to our use of cookies. <a href="privacy.html">Learn more</a></p>
+      </div>
+      <div class="cookie-consent-buttons">
+        <button id="cookieAcceptBtn" class="cookie-consent-btn cookie-consent-btn-accept">Accept</button>
+        <button id="cookieDeclineBtn" class="cookie-consent-btn cookie-consent-btn-decline">Decline</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>`;
 }
@@ -299,6 +346,51 @@ function highlightSyntax(code, language) {
   }
 }
 
+// Convert AOSP file path to Android source URL
+function pathToAndroidSourceUrl(filePath) {
+  const ANDROID_SOURCE_BASE = 'https://android.googlesource.com/platform';
+  const ANDROID_VERSION_TAG = 'refs/tags/android-16.0.0_r3';
+  
+  // Remove leading slashes and normalize
+  let normalized = filePath.trim();
+  if (normalized.startsWith('/')) {
+    normalized = normalized.substring(1);
+  }
+  
+  // Split path into components
+  const parts = normalized.split('/');
+  
+  if (parts.length < 2) {
+    return null; // Invalid path
+  }
+  
+  const topLevel = parts[0]; // frameworks, packages, system, etc.
+  let subdir = '';
+  let rest = '';
+  
+  // Special handling for common patterns
+  // Correct format: platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/java/com/android/server/SystemServer.java
+  if (topLevel === 'frameworks' && parts.length >= 2) {
+    // frameworks/base/path/to/file -> platform/frameworks/base/+/refs/tags/android-16.0.0_r3/path/to/file
+    subdir = parts[1]; // base
+    rest = parts.slice(2).join('/'); // path/to/file
+    return `${ANDROID_SOURCE_BASE}/${topLevel}/${subdir}/+/${ANDROID_VERSION_TAG}/${rest}`;
+  } else if (topLevel === 'packages' && parts.length >= 2) {
+    // packages/apps/Settings/path/to/file -> platform/packages/apps/+/refs/tags/android-16.0.0_r3/Settings/path/to/file
+    subdir = parts[1]; // apps
+    rest = parts.slice(2).join('/'); // Settings/path/to/file
+    return `${ANDROID_SOURCE_BASE}/${topLevel}/${subdir}/+/${ANDROID_VERSION_TAG}/${rest}`;
+  } else if (topLevel === 'system' && parts.length >= 2) {
+    // system/sepolicy/path -> platform/system/+/refs/tags/android-16.0.0_r3/sepolicy/path
+    rest = parts.slice(1).join('/');
+    return `${ANDROID_SOURCE_BASE}/${topLevel}/+/${ANDROID_VERSION_TAG}/${rest}`;
+  } else {
+    // For other paths, assume structure: topLevel/rest
+    rest = parts.slice(1).join('/');
+    return `${ANDROID_SOURCE_BASE}/${topLevel}/+/${ANDROID_VERSION_TAG}/${rest}`;
+  }
+}
+
 function markdownToHtml(markdown) {
   // Split content into lines for better processing
   const lines = markdown.split('\n');
@@ -329,11 +421,12 @@ function markdownToHtml(markdown) {
     let line = lines[i];
     let originalLine = line;
     
-    // Handle fenced code blocks (```)
-    if (line.startsWith('```')) {
+    // Handle fenced code blocks (```) - also handle indented ones
+    const trimmedLine = line.trim();
+    if (trimmedLine.startsWith('```')) {
       if (!inFencedCodeBlock) {
         inFencedCodeBlock = true;
-        fencedCodeLang = line.substring(3).trim() || 'text';
+        fencedCodeLang = trimmedLine.substring(3).trim() || 'text';
         fencedCodeContent = '';
         continue;
       } else {
@@ -353,10 +446,97 @@ function markdownToHtml(markdown) {
             <div class="zoom-indicator" id="zoom-${mermaidId}">100%</div>
           </div>\n`;
         } else {
-          const highlightedCode = highlightSyntax(fencedCodeContent.trim(), fencedCodeLang);
-          html += `<div class="code-example">
+          // Extract Android source file paths from comments and convert to URLs
+          let sourceLinkHtml = '';
+          const sourceLinksMap = new Map(); // Use Map to avoid duplicates
+          let processedContent = fencedCodeContent;
+          
+          // Pattern 1: Comment with markdown link: // [path](url)
+          const linkPattern = /\/\/\s*\[([^\]]*(?:frameworks|packages|system|device|hardware|vendor)\/[^\]]+)\]\(([^)]+android\.googlesource[^)]+)\)/g;
+          let match;
+          while ((match = linkPattern.exec(fencedCodeContent)) !== null) {
+            const fullPath = match[1].trim();
+            const existingUrl = match[2].trim();
+            
+            if (fullPath && existingUrl && !sourceLinksMap.has(fullPath)) {
+              sourceLinksMap.set(fullPath, existingUrl);
+              // Remove the comment since it's now in the Source Code section above
+              processedContent = processedContent.replace(match[0], '');
+            }
+          }
+          
+          // Pattern 2: Comment with just path (no link yet): // frameworks/base/...
+          const pathPattern = /\/\/\s*((?:frameworks|packages|system|device|hardware|vendor)\/[^\n]+)/g;
+          processedContent = processedContent.replace(pathPattern, (match, path) => {
+            // Skip if already processed or if it's part of a link
+            if (match.includes('](') || match.includes('android.googlesource')) {
+              return match;
+            }
+            
+            const fullPath = path.trim();
+            
+            // Skip if already added
+            if (sourceLinksMap.has(fullPath)) {
+              // Remove the comment since it's already in the Source Code section
+              return '';
+            }
+            
+            const url = pathToAndroidSourceUrl(fullPath);
+            
+            if (url) {
+              sourceLinksMap.set(fullPath, url);
+              // Remove the comment since it's now in the Source Code section above
+              return '';
+            }
+            return match;
+          });
+          
+          // Clean up empty lines left by removed comments
+          processedContent = processedContent.replace(/\n\s*\n\s*\n/g, '\n\n');
+          
+          // Convert Map to array
+          const sourceLinks = Array.from(sourceLinksMap.entries()).map(([path, url]) => ({ path, url }));
+          
+          // Create source link section if found
+          if (sourceLinks.length > 0) {
+            const linksHtml = sourceLinks.map(link => 
+              `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">${link.path}</span>
+                <span class="source-link-arrow">→</span>
+              </a>`
+            ).join('');
+            sourceLinkHtml = `<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list">${linksHtml}</div>
+            </div>`;
+          }
+          
+          const highlightedCode = highlightSyntax(processedContent.trim(), fencedCodeLang);
+          
+          // Detect BAD/GOOD patterns for special styling
+          const hasBad = processedContent.includes('❌ BAD') || processedContent.includes('BAD:');
+          const hasGood = processedContent.includes('✅ GOOD') || processedContent.includes('GOOD:');
+          let codeClass = 'code-example';
+          let badgeHtml = '';
+          
+          if (hasBad && hasGood) {
+            codeClass = 'code-example code-bad-good';
+            badgeHtml = '<span class="code-badge code-badge-both">BAD vs GOOD</span>';
+          } else if (hasBad) {
+            codeClass = 'code-example code-bad';
+            badgeHtml = '<span class="code-badge code-badge-bad">❌ BAD</span>';
+          } else if (hasGood) {
+            codeClass = 'code-example code-good';
+            badgeHtml = '<span class="code-badge code-badge-good">✅ GOOD</span>';
+          }
+          
+          html += `${sourceLinkHtml}<div class="${codeClass}">
             <div class="code-header">
-              <span class="code-language">${fencedCodeLang.toUpperCase()}</span>
+              <div class="code-header-left">
+                <span class="code-language">${fencedCodeLang.toUpperCase()}</span>
+                ${badgeHtml}
+              </div>
               <span class="code-copy" onclick="copyCode(this)">Copy</span>
             </div>
             <pre><code class="language-${fencedCodeLang}">${highlightedCode}</code></pre>
@@ -367,6 +547,8 @@ function markdownToHtml(markdown) {
     }
     
     if (inFencedCodeBlock) {
+      // For indented code blocks, preserve original indentation in content
+      // but don't include the closing ``` line
       fencedCodeContent += line + '\n';
       continue;
     }
@@ -672,12 +854,20 @@ function processInlineMarkdown(text) {
     
     // Links with titles
     .replace(/\[([^\]]+)\]\(([^)]+)\s+"([^"]+)"\)/g, (match, text, url, title) => {
-      const isInternalLink = url.startsWith('#');
+      // Internal links: anchor links (#), relative paths (./, ../), or paths without http/https
+      const isInternalLink = url.startsWith('#') || 
+                            url.startsWith('./') || 
+                            url.startsWith('../') || 
+                            (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('mailto:'));
       const targetAttr = isInternalLink ? '' : ' target="_blank" rel="noopener noreferrer"';
       return `<a href="${validateUrl(url)}" class="article-link" title="${sanitizeHtml(title)}"${targetAttr}>${sanitizeHtml(text)}</a>`;
     })
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
-      const isInternalLink = url.startsWith('#');
+      // Internal links: anchor links (#), relative paths (./, ../), or paths without http/https
+      const isInternalLink = url.startsWith('#') || 
+                            url.startsWith('./') || 
+                            url.startsWith('../') || 
+                            (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('mailto:'));
       const targetAttr = isInternalLink ? '' : ' target="_blank" rel="noopener noreferrer"';
       return `<a href="${validateUrl(url)}" class="article-link"${targetAttr}>${sanitizeHtml(text)}</a>`;
     })
@@ -745,8 +935,15 @@ function parseFrontMatter(content) {
         value = value.slice(1, -1);
       }
       
-      // Parse arrays
-      if (value.startsWith('[') && value.endsWith(']')) {
+      // Parse booleans
+      if (value === 'true') {
+        value = true;
+      } else if (value === 'false') {
+        value = false;
+      }
+      
+      // Parse arrays (only if value is still a string)
+      if (typeof value === 'string' && value.startsWith('[') && value.endsWith(']')) {
         value = value.slice(1, -1).split(',').map(v => v.trim().replace(/"/g, ''));
       }
       
@@ -786,10 +983,28 @@ function buildArticles() {
         ...frontMatter,
         html,
         slug: file.replace('.md', ''),
-        filename: file
+        filename: file,
+        series_order: frontMatter.series_order !== undefined ? frontMatter.series_order : 999,
+        featured: frontMatter.featured === true
       };
     })
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
+    .sort((a, b) => {
+      // First: Featured articles (especially series index with series_order 0)
+      if (a.featured && a.series_order === 0) return -1;
+      if (b.featured && b.series_order === 0) return 1;
+      
+      // Second: Other featured articles
+      if (a.featured && !b.featured) return -1;
+      if (!a.featured && b.featured) return 1;
+      
+      // Third: If same series, sort by series_order
+      if (a.series && b.series && a.series === b.series) {
+        return (a.series_order || 999) - (b.series_order || 999);
+      }
+      
+      // Fourth: Sort by date (newest first)
+      return new Date(b.date || 0) - new Date(a.date || 0);
+    });
     
   console.log(`✅ Found ${articles.length} articles`);
   return articles;
@@ -825,12 +1040,37 @@ function updateIndexPage(articles) {
   
   const indexTemplate = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   
+  // Filter out redirect articles and prioritize featured/series index
+  // Show all articles in the "Android System Server Deep Dive" series plus any other featured articles
+  const systemServerSeries = articles.filter(article => 
+    article.series === "Android System Server Deep Dive" && !article.redirect
+  );
+  const otherFeatured = articles.filter(article => 
+    article.featured && 
+    article.series !== "Android System Server Deep Dive" && 
+    !article.redirect
+  );
+  
+  // Combine: series articles first (already sorted by series_order), then other featured
+  const displayArticles = [...systemServerSeries, ...otherFeatured].slice(0, 10); // Show up to 10 articles
+  
   // Generate articles list for homepage
-  const articlesList = articles
-    .slice(0, 6) // Show latest 6 articles
+  const articlesList = displayArticles
     .map((article, index) => {
-      const icons = ['🔌', '🔧', '⚡', '🔒', '🏗️', '📱'];
-      const icon = icons[index] || '📱';
+      // Use special icon for series index
+      let icon = '📱';
+      if (article.series_order === 0 && article.featured) {
+        icon = '📚'; // Series index
+      } else {
+        const icons = ['🔌', '🔧', '⚡', '🔒', '🏗️', '📱'];
+        icon = icons[index % icons.length];
+      }
+      
+      // Add series badge for series articles
+      let seriesBadge = '';
+      if (article.series && article.series_order > 0) {
+        seriesBadge = `<span class="blog-series-badge">Part ${article.series_order}</span>`;
+      }
       
       return `
               <article class="blog-card">
@@ -838,7 +1078,7 @@ function updateIndexPage(articles) {
                   <div class="blog-placeholder">${icon}</div>
                 </div>
                 <div class="blog-content">
-                  <h3><a href="articles/${article.slug}.html">${article.title}</a></h3>
+                  <h3><a href="articles/${article.slug}.html">${article.title}</a>${seriesBadge}</h3>
                   <p>${article.description || 'Read more about Android internals...'}</p>
                   <div class="blog-meta">
                     <span class="blog-date">${article.date}</span>
@@ -1025,7 +1265,10 @@ function copyAssets() {
     'system-performance.html',
     'android-commands.html',
     'other-internals.html',
-    'books.html'
+    'books.html',
+    'privacy.html',
+    'terms.html',
+    '404.html'
   ];
   
   subpages.forEach(file => {
@@ -1091,6 +1334,18 @@ function generateSitemap(articles) {
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/privacy.html</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/terms.html</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
   </url>`;
 
   // Add article URLs
@@ -1166,10 +1421,10 @@ function generateVideosPage() {
     const markdownContent = fs.readFileSync(videosMarkdownPath, 'utf8');
     
     // Parse videos from markdown
-    const sections = parseVideosFromMarkdown(markdownContent);
+    const { sections, disclaimer } = parseVideosFromMarkdown(markdownContent);
     
     // Generate HTML page
-    const htmlContent = generateVideosHTML(sections);
+    const htmlContent = generateVideosHTML(sections, disclaimer);
     
     // Write to build directory
     const outputPath = path.join(buildDir, 'videos.html');

@@ -245,17 +245,8 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
   // ===== SERVICE WORKER REGISTRATION =====
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/assets/sw.js')
-        .then(function(registration) {
-          console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        })
-        .catch(function(err) {
-          console.log('ServiceWorker registration failed: ', err);
-        });
-    });
-  }
+  // Note: Service worker is registered in index.html to avoid duplicate registrations
+  // This section is kept for reference but registration happens in the HTML file
   
   // ===== PERFORMANCE MONITORING =====
   if ('performance' in window) {
@@ -726,5 +717,76 @@ window.onclick = function(event) {
     closeProfileModal();
   }
 }
+
+// ===== COOKIE CONSENT BANNER =====
+(function() {
+  'use strict';
+  
+  // Check if user has already accepted/declined cookies
+  function getCookieConsent() {
+    return localStorage.getItem('cookieConsent');
+  }
+  
+  function setCookieConsent(value) {
+    localStorage.setItem('cookieConsent', value);
+    // Set expiration to 1 year
+    const expiry = new Date();
+    expiry.setFullYear(expiry.getFullYear() + 1);
+    document.cookie = `cookieConsent=${value}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+  }
+  
+  function showCookieBanner() {
+    const banner = document.getElementById('cookieConsentBanner');
+    if (banner) {
+      banner.classList.add('show');
+    }
+  }
+  
+  function hideCookieBanner() {
+    const banner = document.getElementById('cookieConsentBanner');
+    if (banner) {
+      banner.classList.remove('show');
+      setTimeout(() => {
+        banner.style.display = 'none';
+      }, 300);
+    }
+  }
+  
+  function acceptCookies() {
+    setCookieConsent('accepted');
+    hideCookieBanner();
+    console.log('Cookies accepted');
+  }
+  
+  function declineCookies() {
+    setCookieConsent('declined');
+    hideCookieBanner();
+    console.log('Cookies declined');
+    // Optionally disable non-essential cookies here
+  }
+  
+  // Initialize cookie consent banner
+  document.addEventListener('DOMContentLoaded', function() {
+    const consent = getCookieConsent();
+    
+    // Only show banner if user hasn't made a choice
+    if (!consent) {
+      // Small delay to ensure page is loaded
+      setTimeout(showCookieBanner, 1000);
+    }
+    
+    // Attach event listeners
+    const acceptBtn = document.getElementById('cookieAcceptBtn');
+    const declineBtn = document.getElementById('cookieDeclineBtn');
+    
+    if (acceptBtn) {
+      acceptBtn.addEventListener('click', acceptCookies);
+    }
+    
+    if (declineBtn) {
+      declineBtn.addEventListener('click', declineCookies);
+    }
+  });
+})();
   
 }); 

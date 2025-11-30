@@ -107,4 +107,10 @@ debug/
 local/
 dev/
 
+# AOSP Code Cache
+.aosp-cache/
+
+# AOSP Local Repository
+.aosp-repo/
+
 

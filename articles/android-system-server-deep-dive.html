@@ -441,14 +441,14 @@
 <ul class="article-list"><li class="list-item"><strong>Unified Service Management</strong>: All framework services share the same process space, enabling efficient in-memory communication</li><li class="list-item"><strong>Optimized Boot Sequence</strong>: Services can be initialized in dependency order without IPC overhead</li><li class="list-item"><strong>Memory Efficiency</strong>: Shared framework classes and data structures reduce overall system memory footprint</li><li class="list-item"><strong>Performance</strong>: Critical service interactions avoid Binder IPC overhead</li></ul>
 <h3 id="-architectural--position--in--android--hierarchy">Architectural Position in Android Hierarchy</h3>
 
-<div class="mermaid-diagram" id="diagram-mermaid-3chs5oh68">
+<div class="mermaid-diagram" id="diagram-mermaid-8vwbbtrpj">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-3chs5oh68', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-3chs5oh68')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-3chs5oh68', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-3chs5oh68')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-8vwbbtrpj', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-8vwbbtrpj')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-8vwbbtrpj', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-8vwbbtrpj')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-3chs5oh68">graph TD
+            <div class="mermaid" id="mermaid-8vwbbtrpj">graph TD
     A[Linux Kernel] --> B[Init Process]
     B --> C[Zygote Process]
     C --> D[System Server]
@@ -463,7 +463,7 @@
     H --> K
     I --> K
     K --> L[Android Applications]</div>
-            <div class="zoom-indicator" id="zoom-mermaid-3chs5oh68">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-8vwbbtrpj">100%</div>
           </div>
 
 <p class="article-paragraph">The System Server sits at the critical junction between the native Android runtime and the application framework, managing the lifecycle of all Android applications while coordinating with hardware abstraction layers (HAL) and kernel services.</p>
@@ -580,14 +580,14 @@ adb shell <span class="keyword">ls</span> -Z /system/bin/system_server
 
 <p class="article-paragraph"><strong>Detailed Initialization Sequence:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-rmb5ec1re">
+<div class="mermaid-diagram" id="diagram-mermaid-2ilb58hf1">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-rmb5ec1re', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-rmb5ec1re')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-rmb5ec1re', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-rmb5ec1re')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-2ilb58hf1', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-2ilb58hf1')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-2ilb58hf1', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-2ilb58hf1')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-rmb5ec1re">sequenceDiagram
+            <div class="mermaid" id="mermaid-2ilb58hf1">sequenceDiagram
     participant Init as Init Process
     participant Zygote as Zygote Process
     participant SystemServer as System Server
@@ -604,7 +604,7 @@ adb shell <span class="keyword">ls</span> -Z /system/bin/system_server
     SystemServer->>WMS: Start core services
     SystemServer->>SystemServer: Start other services
     SystemServer->>SystemServer: Signal ready to Zygote</div>
-            <div class="zoom-indicator" id="zoom-mermaid-rmb5ec1re">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-2ilb58hf1">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>AOSP Source Code Deep Dive:</strong></p>
@@ -852,14 +852,14 @@ adb shell dumpsys meminfo system_server</code></pre>
 <ul class="article-list"><li class="list-item"><strong>ServiceManager</strong> (native): Handles Binder service registration/discovery for cross-process communication</li><li class="list-item"><strong>SystemServiceManager</strong> (Java): Manages in-process service lifecycle and boot sequencing</li></ul>
 <p class="article-paragraph"><strong>Service Class Hierarchy:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-zkao2yv7l">
+<div class="mermaid-diagram" id="diagram-mermaid-31bjudhu1">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-zkao2yv7l', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-zkao2yv7l')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-zkao2yv7l', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-zkao2yv7l')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-31bjudhu1', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-31bjudhu1')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-31bjudhu1', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-31bjudhu1')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-zkao2yv7l">classDiagram
+            <div class="mermaid" id="mermaid-31bjudhu1">classDiagram
     class SystemService {
         <<abstract>>
         +onStart()
@@ -914,19 +914,19 @@ adb shell dumpsys meminfo system_server</code></pre>
     SystemService <|-- PackageManagerService
     SystemServiceManager "1" --> "*" SystemService : manages lifecycle
     SystemServiceManager ..> SystemService : calls onBootPhase()</div>
-            <div class="zoom-indicator" id="zoom-mermaid-zkao2yv7l">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-31bjudhu1">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Service Lifecycle States:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-atb75os67">
+<div class="mermaid-diagram" id="diagram-mermaid-mxesggnw4">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-atb75os67', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-atb75os67')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-atb75os67', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-atb75os67')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-mxesggnw4', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-mxesggnw4')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-mxesggnw4', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-mxesggnw4')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-atb75os67">stateDiagram-v2
+            <div class="mermaid" id="mermaid-mxesggnw4">stateDiagram-v2
     [*] --> Created: Service class instantiated
     Created --> Starting: SystemServiceManager.startService()
     Starting --> onStart: Service.onStart() called
@@ -940,7 +940,7 @@ adb shell dumpsys meminfo system_server</code></pre>
     UserUnlocking --> Running: User ready
     Running --> Stopping: System shutdown
     Stopping --> [*]: Service destroyed</div>
-            <div class="zoom-indicator" id="zoom-mermaid-atb75os67">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-mxesggnw4">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Boot Phases Explained:</strong></p>
@@ -948,14 +948,14 @@ adb shell dumpsys meminfo system_server</code></pre>
 <ul class="article-list"><li class="list-item"><strong>Phase 0-99</strong>: Pre-bootstrap initialization (native services, basic infrastructure)</li><li class="list-item"><strong>Phase 100-499</strong>: Bootstrap services (<code class="inline-code">startBootstrapServices()</code>) - Critical services like ActivityManagerService, PowerManagerService, PackageManagerService</li><li class="list-item"><strong>Phase 500-999</strong>: Core services (<code class="inline-code">startCoreServices()</code>) - Services that depend on bootstrap services (BatteryService, UsageStatsService)</li><li class="list-item"><strong>Phase 1000+</strong>: Other services (<code class="inline-code">startOtherServices()</code>) - Remaining services with complex dependencies</li></ul>
 <p class="article-paragraph"><strong>Service Registration Flow:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-oeexfd1ji">
+<div class="mermaid-diagram" id="diagram-mermaid-nf70xnn0s">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-oeexfd1ji', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-oeexfd1ji')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-oeexfd1ji', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-oeexfd1ji')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-nf70xnn0s', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-nf70xnn0s')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-nf70xnn0s', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-nf70xnn0s')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-oeexfd1ji">sequenceDiagram
+            <div class="mermaid" id="mermaid-nf70xnn0s">sequenceDiagram
     participant SSM as SystemServiceManager
     participant Service as SystemService
     participant NativeSM as ServiceManager (Native)
@@ -969,7 +969,7 @@ adb shell dumpsys meminfo system_server</code></pre>
     Client->>NativeSM: getService("service_name")
     NativeSM->>Client: Return Binder handle
     Client->>Service: Direct Binder IPC call</div>
-            <div class="zoom-indicator" id="zoom-mermaid-oeexfd1ji">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-nf70xnn0s">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Internal vs External Communication:</strong></p>
@@ -1028,14 +1028,14 @@ adb logcat | <span class="keyword">grep</span> <span class="string">&quot;System
 <ul class="article-list"><li class="list-item"><strong>Activity Lifecycle</strong>: Orchestrates Activity state transitions (onCreate, onStart, onResume, etc.)</li><li class="list-item"><strong>Task Management</strong>: Manages task stacks, recent tasks, and task navigation</li><li class="list-item"><strong>Intent Resolution</strong>: Resolves implicit intents to specific Activity components</li><li class="list-item"><strong>Activity Stack</strong>: Maintains back stack and handles task switching</li><li class="list-item"><strong>Multi-Window Support</strong>: Coordinates split-screen, freeform, and picture-in-picture modes</li></ul>
 <p class="article-paragraph"><strong>Service Interaction Diagram:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-4vx93sqfx">
+<div class="mermaid-diagram" id="diagram-mermaid-kuzenbmtm">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-4vx93sqfx', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-4vx93sqfx')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-4vx93sqfx', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-4vx93sqfx')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-kuzenbmtm', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-kuzenbmtm')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-kuzenbmtm', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-kuzenbmtm')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-4vx93sqfx">classDiagram
+            <div class="mermaid" id="mermaid-kuzenbmtm">classDiagram
     class ActivityManagerService {
         -ProcessList mProcessList
         -ActiveServices mServices
@@ -1071,19 +1071,19 @@ adb logcat | <span class="keyword">grep</span> <span class="string">&quot;System
     ActivityManagerService --> ProcessList : manages
     ActivityManagerService --> ActivityTaskManagerService : coordinates
     ActivityTaskManagerService --> WindowManagerService : window coordination</div>
-            <div class="zoom-indicator" id="zoom-mermaid-4vx93sqfx">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-kuzenbmtm">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Process Lifecycle Flow:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-yv9cjjqbf">
+<div class="mermaid-diagram" id="diagram-mermaid-nwft8zm4m">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-yv9cjjqbf', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-yv9cjjqbf')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-yv9cjjqbf', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-yv9cjjqbf')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-nwft8zm4m', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-nwft8zm4m')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-nwft8zm4m', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-nwft8zm4m')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-yv9cjjqbf">sequenceDiagram
+            <div class="mermaid" id="mermaid-nwft8zm4m">sequenceDiagram
     participant App as Application
     participant AMS as ActivityManagerService
     participant Zygote as Zygote Process
@@ -1102,19 +1102,19 @@ adb logcat | <span class="keyword">grep</span> <span class="string">&quot;System
     ATMS->>Process: scheduleLaunchActivity()
     Process->>ATMS: activityResumed()
     ATMS->>AMS: updateProcessState()</div>
-            <div class="zoom-indicator" id="zoom-mermaid-yv9cjjqbf">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-nwft8zm4m">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>ANR Detection Mechanism:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-ei607dy7m">
+<div class="mermaid-diagram" id="diagram-mermaid-ynrbue409">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-ei607dy7m', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-ei607dy7m')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-ei607dy7m', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-ei607dy7m')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-ynrbue409', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-ynrbue409')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-ynrbue409', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-ynrbue409')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-ei607dy7m">sequenceDiagram
+            <div class="mermaid" id="mermaid-ynrbue409">sequenceDiagram
     participant App as Application Thread
     participant AMS as ActivityManagerService
     participant Handler as Main Handler
@@ -1132,7 +1132,7 @@ adb logcat | <span class="keyword">grep</span> <span class="string">&quot;System
         AMS->>Watchdog: report ANR
         AMS->>App: Show ANR dialog
     end</div>
-            <div class="zoom-indicator" id="zoom-mermaid-ei607dy7m">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-ynrbue409">100%</div>
           </div>
 
 <h3 id="-22--windowmanagerservice--wms">2.2 WindowManagerService (WMS)</h3>
@@ -1153,14 +1153,14 @@ adb logcat | <span class="keyword">grep</span> <span class="string">&quot;System
 <ul class="article-list"><li class="list-item"><strong>Window Animations</strong>: Manages window transition animations (open, close, minimize)</li><li class="list-item"><strong>Activity Transitions</strong>: Coordinates Activity transition animations with ATMS</li><li class="list-item"><strong>Screen Rotation</strong>: Handles display rotation and window reconfiguration</li><li class="list-item"><strong>Multi-Display Support</strong>: Manages windows across multiple displays</li></ul>
 <p class="article-paragraph"><strong>Window Hierarchy:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-qeqdjofe1">
+<div class="mermaid-diagram" id="diagram-mermaid-e662kobh8">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-qeqdjofe1', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-qeqdjofe1')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-qeqdjofe1', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-qeqdjofe1')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-e662kobh8', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-e662kobh8')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-e662kobh8', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-e662kobh8')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-qeqdjofe1">graph TD
+            <div class="mermaid" id="mermaid-e662kobh8">graph TD
     A[WindowManagerService] --> B[DisplayContent]
     B --> C[TaskStack]
     C --> D[Task]
@@ -1176,19 +1176,19 @@ adb logcat | <span class="keyword">grep</span> <span class="string">&quot;System
     
     A --> L[WindowAnimator]
     L --> G</div>
-            <div class="zoom-indicator" id="zoom-mermaid-qeqdjofe1">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-e662kobh8">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Window Addition Flow:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-2p7dg6gxm">
+<div class="mermaid-diagram" id="diagram-mermaid-i2gletujv">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-2p7dg6gxm', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-2p7dg6gxm')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-2p7dg6gxm', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-2p7dg6gxm')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-i2gletujv', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-i2gletujv')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-i2gletujv', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-i2gletujv')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-2p7dg6gxm">sequenceDiagram
+            <div class="mermaid" id="mermaid-i2gletujv">sequenceDiagram
     participant App as Application
     participant WMS as WindowManagerService
     participant SurfaceFlinger as SurfaceFlinger
@@ -1202,7 +1202,7 @@ adb logcat | <span class="keyword">grep</span> <span class="string">&quot;System
     InputManager->>WMS: InputChannel
     WMS->>WMS: updateWindowOrdering()
     WMS->>App: Window added, ready for drawing</div>
-            <div class="zoom-indicator" id="zoom-mermaid-2p7dg6gxm">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-i2gletujv">100%</div>
           </div>
 
 <h3 id="-23--packagemanagerservice--pms">2.3 PackageManagerService (PMS)</h3>
@@ -1223,14 +1223,14 @@ adb logcat | <span class="keyword">grep</span> <span class="string">&quot;System
 <ul class="article-list"><li class="list-item"><strong>Application Data</strong>: Manages application data directories (<code class="inline-code">/data/data/&lt;package&gt;</code>)</li><li class="list-item"><strong>Code Paths</strong>: Tracks APK and library paths for each package</li><li class="list-item"><strong>Shared Libraries</strong>: Manages shared library dependencies</li><li class="list-item"><strong>Package Signatures</strong>: Validates and stores package signatures</li></ul>
 <p class="article-paragraph"><strong>Package Installation Flow:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-lffp2g02g">
+<div class="mermaid-diagram" id="diagram-mermaid-rshfgmp1a">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-lffp2g02g', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-lffp2g02g')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-lffp2g02g', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-lffp2g02g')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-rshfgmp1a', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-rshfgmp1a')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-rshfgmp1a', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-rshfgmp1a')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-lffp2g02g">sequenceDiagram
+            <div class="mermaid" id="mermaid-rshfgmp1a">sequenceDiagram
     participant Installer as PackageInstaller
     participant PMS as PackageManagerService
     participant Parser as PackageParser
@@ -1246,19 +1246,19 @@ adb logcat | <span class="keyword">grep</span> <span class="string">&quot;System
     PMS->>AMS: notifyPackageInstalled()
     AMS->>AMS: Update process list
     PMS->>Installer: Installation complete</div>
-            <div class="zoom-indicator" id="zoom-mermaid-lffp2g02g">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-rshfgmp1a">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Component Resolution:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-gytafmpct">
+<div class="mermaid-diagram" id="diagram-mermaid-bnoyw9gp0">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-gytafmpct', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-gytafmpct')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-gytafmpct', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-gytafmpct')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-bnoyw9gp0', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-bnoyw9gp0')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-bnoyw9gp0', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-bnoyw9gp0')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-gytafmpct">graph TD
+            <div class="mermaid" id="mermaid-bnoyw9gp0">graph TD
     A[Intent] --> B{PackageManagerService}
     B --> C{Explicit Intent?}
     C -->|Yes| D[Direct Component Lookup]
@@ -1271,7 +1271,7 @@ adb logcat | <span class="keyword">grep</span> <span class="string">&quot;System
     H --> I
     D --> I
     I --> J[ComponentInfo]</div>
-            <div class="zoom-indicator" id="zoom-mermaid-gytafmpct">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-bnoyw9gp0">100%</div>
           </div>
 
 <h3 id="-24--powermanagerservice">2.4 PowerManagerService</h3>
@@ -1295,14 +1295,14 @@ adb logcat | <span class="keyword">grep</span> <span class="string">&quot;System
 <ul class="article-list"><li class="list-item"><strong>Battery Saver Mode</strong>: Implements battery saver restrictions (background restrictions, reduced performance)</li><li class="list-item"><strong>Doze Mode</strong>: Manages doze mode for deep sleep optimization</li><li class="list-item"><strong>App Standby</strong>: Manages app standby buckets for background optimization</li><li class="list-item"><strong>Adaptive Battery</strong>: Coordinates with machine learning for predictive power management</li></ul>
 <p class="article-paragraph"><strong>Power Management Flow:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-qzxckeir2">
+<div class="mermaid-diagram" id="diagram-mermaid-18c4qeas8">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-qzxckeir2', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-qzxckeir2')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-qzxckeir2', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-qzxckeir2')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-18c4qeas8', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-18c4qeas8')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-18c4qeas8', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-18c4qeas8')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-qzxckeir2">sequenceDiagram
+            <div class="mermaid" id="mermaid-18c4qeas8">sequenceDiagram
     participant App as Application
     participant PMS as PowerManagerService
     participant Kernel as Kernel Power Driver
@@ -1320,19 +1320,19 @@ adb logcat | <span class="keyword">grep</span> <span class="string">&quot;System
     App->>PMS: releaseWakeLock()
     PMS->>PMS: Unregister wake lock
     PMS->>Kernel: Allow CPU sleep</div>
-            <div class="zoom-indicator" id="zoom-mermaid-qzxckeir2">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-18c4qeas8">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Wake Lock Hierarchy:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-v8katrnvs">
+<div class="mermaid-diagram" id="diagram-mermaid-61uein8kv">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-v8katrnvs', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-v8katrnvs')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-v8katrnvs', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-v8katrnvs')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-61uein8kv', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-61uein8kv')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-61uein8kv', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-61uein8kv')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-v8katrnvs">graph TD
+            <div class="mermaid" id="mermaid-61uein8kv">graph TD
     A[PowerManagerService] --> B[WakeLockList]
     B --> C[PARTIAL_WAKE_LOCK]
     B --> D[SCREEN_BRIGHT]
@@ -1348,7 +1348,7 @@ adb logcat | <span class="keyword">grep</span> <span class="string">&quot;System
     K --> L[Awake]
     K --> M[Asleep]
     K --> N[Doze]</div>
-            <div class="zoom-indicator" id="zoom-mermaid-v8katrnvs">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-61uein8kv">100%</div>
           </div>
 
 <h2 id="-part--iii--binder--ipc--framework">Part III: Binder IPC Framework</h2>
@@ -1714,14 +1714,14 @@ adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;(Wa
 <p class="article-paragraph">Binder IPC uses a sophisticated kernel-level message passing system with optimizations for Android's mobile constraints:</p>
 
 <p class="article-paragraph"><strong>Binder Architecture:</strong></p>
-<div class="mermaid-diagram" id="diagram-mermaid-gibd571u9">
+<div class="mermaid-diagram" id="diagram-mermaid-lsq9ltb4q">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-gibd571u9', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-gibd571u9')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-gibd571u9', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-gibd571u9')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-lsq9ltb4q', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-lsq9ltb4q')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-lsq9ltb4q', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-lsq9ltb4q')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-gibd571u9">graph TD
+            <div class="mermaid" id="mermaid-lsq9ltb4q">graph TD
     A[App Process] --> B[Binder Proxy]
     B --> C[Binder Driver /dev/binder]
     C -->|"Kernel Space<br/>Cross-Process Boundary"| D[Binder Stub in system_server]
@@ -1730,7 +1730,7 @@ adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;(Wa
     F --> C
     C -->|"Kernel Space<br/>Cross-Process Boundary"| B
     B --> A</div>
-            <div class="zoom-indicator" id="zoom-mermaid-gibd571u9">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-lsq9ltb4q">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Transaction Lifecycle:</strong></p>
@@ -1858,14 +1858,14 @@ adb shell cat /proc/meminfo</code></pre>
 <p class="article-paragraph">The system_server-Zygote relationship is fundamental to Android's process model and application lifecycle:</p>
 
 <p class="article-paragraph"><strong>Architectural Relationship:</strong></p>
-<div class="mermaid-diagram" id="diagram-mermaid-c3nwtjjds">
+<div class="mermaid-diagram" id="diagram-mermaid-c5wshiydl">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-c3nwtjjds', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-c3nwtjjds')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-c3nwtjjds', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-c3nwtjjds')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-c5wshiydl', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-c5wshiydl')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-c5wshiydl', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-c5wshiydl')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-c3nwtjjds">graph TD
+            <div class="mermaid" id="mermaid-c5wshiydl">graph TD
     A[Init Process] --> B[Zygote Process]
     B --> C[System Server]
     B --> D[App Process 1]
@@ -1876,7 +1876,7 @@ adb shell cat /proc/meminfo</code></pre>
     H --> D
     H --> E
     H --> F</div>
-            <div class="zoom-indicator" id="zoom-mermaid-c3nwtjjds">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-c5wshiydl">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Critical Dependencies:</strong></p>
@@ -2130,14 +2130,14 @@ adb logcat | <span class="keyword">grep</span> -i anr</code></pre>
 <p class="article-paragraph">System_server processes input events through a sophisticated pipeline involving multiple services:</p>
 
 <p class="article-paragraph"><strong>Input Event Pipeline:</strong></p>
-<div class="mermaid-diagram" id="diagram-mermaid-io080s25y">
+<div class="mermaid-diagram" id="diagram-mermaid-uj5uajgia">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-io080s25y', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-io080s25y')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-io080s25y', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-io080s25y')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-uj5uajgia', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-uj5uajgia')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-uj5uajgia', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-uj5uajgia')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-io080s25y">graph TD
+            <div class="mermaid" id="mermaid-uj5uajgia">graph TD
     A[Input Device] --> B[Input Reader]
     B --> C[Input Dispatcher]
     C --> D[WindowManagerService]
@@ -2145,7 +2145,7 @@ adb logcat | <span class="keyword">grep</span> -i anr</code></pre>
     E --> F[Application Process]
     F --> G[UI Thread]
     G --> H[View Hierarchy]</div>
-            <div class="zoom-indicator" id="zoom-mermaid-io080s25y">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-uj5uajgia">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Window Management:</strong></p>

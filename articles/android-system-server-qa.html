@@ -586,14 +586,14 @@ adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;(Wa
 <p class="article-paragraph">Binder IPC uses a sophisticated kernel-level message passing system with optimizations for Android's mobile constraints:</p>
 
 <p class="article-paragraph"><strong>Binder Architecture:</strong></p>
-<div class="mermaid-diagram" id="diagram-mermaid-4xdzhdhzp">
+<div class="mermaid-diagram" id="diagram-mermaid-g2xzuvhq7">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-4xdzhdhzp', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-4xdzhdhzp')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-4xdzhdhzp', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-4xdzhdhzp')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-g2xzuvhq7', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-g2xzuvhq7')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-g2xzuvhq7', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-g2xzuvhq7')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-4xdzhdhzp">graph TD
+            <div class="mermaid" id="mermaid-g2xzuvhq7">graph TD
     A[App Process] --> B[Binder Proxy]
     B --> C[Binder Driver /dev/binder]
     C -->|"Kernel Space<br/>Cross-Process Boundary"| D[Binder Stub in system_server]
@@ -602,7 +602,7 @@ adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;(Wa
     F --> C
     C -->|"Kernel Space<br/>Cross-Process Boundary"| B
     B --> A</div>
-            <div class="zoom-indicator" id="zoom-mermaid-4xdzhdhzp">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-g2xzuvhq7">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Transaction Lifecycle:</strong></p>
@@ -730,14 +730,14 @@ adb shell cat /proc/meminfo</code></pre>
 <p class="article-paragraph">The system_server-Zygote relationship is fundamental to Android's process model and application lifecycle:</p>
 
 <p class="article-paragraph"><strong>Architectural Relationship:</strong></p>
-<div class="mermaid-diagram" id="diagram-mermaid-yc1if87x9">
+<div class="mermaid-diagram" id="diagram-mermaid-5xmdk2zq3">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-yc1if87x9', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-yc1if87x9')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-yc1if87x9', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-yc1if87x9')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-5xmdk2zq3', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-5xmdk2zq3')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-5xmdk2zq3', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-5xmdk2zq3')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-yc1if87x9">graph TD
+            <div class="mermaid" id="mermaid-5xmdk2zq3">graph TD
     A[Init Process] --> B[Zygote Process]
     B --> C[System Server]
     B --> D[App Process 1]
@@ -748,7 +748,7 @@ adb shell cat /proc/meminfo</code></pre>
     H --> D
     H --> E
     H --> F</div>
-            <div class="zoom-indicator" id="zoom-mermaid-yc1if87x9">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-5xmdk2zq3">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Critical Dependencies:</strong></p>
@@ -1002,14 +1002,14 @@ adb logcat | <span class="keyword">grep</span> -i anr</code></pre>
 <p class="article-paragraph">System_server processes input events through a sophisticated pipeline involving multiple services:</p>
 
 <p class="article-paragraph"><strong>Input Event Pipeline:</strong></p>
-<div class="mermaid-diagram" id="diagram-mermaid-m9w70bjeg">
+<div class="mermaid-diagram" id="diagram-mermaid-sdxyimihj">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-m9w70bjeg', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-m9w70bjeg')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-m9w70bjeg', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-m9w70bjeg')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-sdxyimihj', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-sdxyimihj')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-sdxyimihj', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-sdxyimihj')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-m9w70bjeg">graph TD
+            <div class="mermaid" id="mermaid-sdxyimihj">graph TD
     A[Input Device] --> B[Input Reader]
     B --> C[Input Dispatcher]
     C --> D[WindowManagerService]
@@ -1017,7 +1017,7 @@ adb logcat | <span class="keyword">grep</span> -i anr</code></pre>
     E --> F[Application Process]
     F --> G[UI Thread]
     G --> H[View Hierarchy]</div>
-            <div class="zoom-indicator" id="zoom-mermaid-m9w70bjeg">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-sdxyimihj">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Window Management:</strong></p>

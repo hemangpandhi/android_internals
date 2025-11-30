@@ -352,22 +352,8 @@ document.addEventListener('DOMContentLoaded', function() {
       submitBtn.textContent = 'Subscribing...';
       submitBtn.disabled = true;
       
-      // Prepare two emails:
-      // 1. Confirmation email to subscriber
-      // 2. Notification email to owner
-      
-      const subscriberConfirmationParams = {
-        to_email: email,
-        to_name: 'Subscriber',
-        from_name: window.EMAILJS_CONFIG.newsletterFromName || 'Android Internals Newsletter',
-        from_email: window.EMAILJS_CONFIG.newsletterFromEmail || 'noreply@hemangpandhi.com',
-        message: `Thank you for subscribing to Android Internals newsletter!\n\nYou will receive updates when new articles are published.\n\nIf you did not subscribe, please ignore this email.`,
-        subject: 'Welcome to Android Internals Newsletter',
-        reply_to: window.EMAILJS_CONFIG.newsletterFromEmail || 'noreply@hemangpandhi.com',
-        email: email,
-        name: 'Subscriber'
-      };
-      
+      // Send notification email to owner about new subscription
+      // Using contact template to notify owner
       const ownerNotificationParams = {
         to_email: 'info@hemangpandhi.com',
         to_name: 'Hemang Pandhi',
@@ -408,41 +394,26 @@ document.addEventListener('DOMContentLoaded', function() {
           return;
         }
         
-        // EmailJS is loaded, proceed with sending both emails
-        const confirmationTemplate = window.EMAILJS_CONFIG.newsletterConfirmationTemplate || window.EMAILJS_CONFIG.newsletterTemplate;
-        const notificationTemplate = window.EMAILJS_CONFIG.newsletterTemplate;
+        // EmailJS is loaded, proceed with sending notification to owner
+        // Use contact template to notify owner about new subscription
+        console.log('Sending subscription notification email to owner: info@hemangpandhi.com');
         
-        console.log('Sending confirmation email to subscriber:', email);
-        console.log('Sending notification email to owner: info@hemangpandhi.com');
-        
-        // Send confirmation to subscriber first
-        const confirmationPromise = emailjs.send(
+        const emailPromise = emailjs.send(
           window.EMAILJS_CONFIG.serviceId, 
-          confirmationTemplate, 
-          subscriberConfirmationParams
-        );
-        
-        // Send notification to owner
-        const notificationPromise = emailjs.send(
-          window.EMAILJS_CONFIG.serviceId, 
-          notificationTemplate, 
+          window.EMAILJS_CONFIG.contactTemplate, 
           ownerNotificationParams
         );
         
-        // Wait for both emails to be sent
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('EmailJS timeout')), 15000)
+          setTimeout(() => reject(new Error('EmailJS timeout')), 10000)
         );
         
-        Promise.race([
-          Promise.all([confirmationPromise, notificationPromise]),
-          timeoutPromise
-        ])
-          .then(function(responses) {
-            console.log('Newsletter emails sent successfully:', responses);
+        Promise.race([emailPromise, timeoutPromise])
+          .then(function(response) {
+            console.log('Newsletter subscription notification sent:', response);
             
-            // Success - both emails sent
-            toast.success('Subscription Successful!', 'You\'ll receive a confirmation email shortly.');
+            // Success - subscription notification sent to owner
+            toast.success('Subscription Successful!', 'You\'ll receive updates when new articles are published.');
             newsletterForm.reset();
             
             // Try to add to local API if available (for development)

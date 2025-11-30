@@ -5,8 +5,9 @@ window.EMAILJS_CONFIG = {
   // EmailJS Configuration
   publicKey: 'YOUR_EMAILJS_PUBLIC_KEY_HERE',
   serviceId: 'YOUR_EMAILJS_SERVICE_ID_HERE',
-  newsletterTemplate: 'YOUR_NEWSLETTER_TEMPLATE_ID_HERE', // Template for owner notification
-  newsletterConfirmationTemplate: 'YOUR_NEWSLETTER_CONFIRMATION_TEMPLATE_ID_HERE', // Template for subscriber confirmation
+  // Template for sending newsletters/articles to subscribers (Owner → Subscribers)
+  newsletterTemplate: 'YOUR_NEWSLETTER_TEMPLATE_ID_HERE',
+  // Template for contact form messages (User → Owner)
   contactTemplate: 'YOUR_CONTACT_TEMPLATE_ID_HERE',
   
   // Site Configuration

@@ -1124,8 +1124,10 @@ function updateIndexPage(articles) {
             <div class="cta-content">`
   );
   
+  // Write to both build directory and source directory
   fs.writeFileSync(path.join(__dirname, '..', 'build', 'index.html'), updatedIndex);
-  console.log('  ✅ Updated index.html');
+  fs.writeFileSync(path.join(__dirname, '..', 'index.html'), updatedIndex);
+  console.log('  ✅ Updated index.html (both source and build)');
 }
 
 function countBooks() {

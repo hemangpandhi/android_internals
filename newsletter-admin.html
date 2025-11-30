@@ -571,54 +571,33 @@
                 let response = null;
                 let subscribers = [];
                 
-                // Try relative path first (works for GitHub Pages and local)
-                try {
-                    response = await fetch('./data/subscribers.json');
-                    if (response.ok) {
-                        subscribers = await response.json();
-                        console.log('✅ Loaded from ./data/subscribers.json');
-                    }
-                } catch (e) {
-                    console.log('Failed to load from ./data/subscribers.json:', e);
-                }
+                // Try multiple paths in order of preference
+                const pathsToTry = [
+                    '/data/subscribers.json',  // GitHub Pages absolute path (most reliable)
+                    './data/subscribers.json', // Relative path
+                    'data/subscribers.json',   // No leading slash
+                    `${window.location.origin}/data/subscribers.json` // Full absolute URL
+                ];
                 
-                // If that failed, try root path (production)
-                if (!subscribers || subscribers.length === 0) {
+                for (const path of pathsToTry) {
                     try {
-                        response = await fetch('/data/subscribers.json');
+                        response = await fetch(path);
                         if (response.ok) {
-                            subscribers = await response.json();
-                            console.log('✅ Loaded from /data/subscribers.json');
+                            const data = await response.json();
+                            if (Array.isArray(data) && data.length > 0) {
+                                subscribers = data;
+                                console.log(`✅ Loaded ${subscribers.length} subscriber(s) from ${path}`);
+                                break; // Success, stop trying other paths
+                            } else if (Array.isArray(data)) {
+                                subscribers = data; // Empty array is valid
+                                console.log(`✅ Loaded (empty) from ${path}`);
+                                break;
+                            }
+                        } else {
+                            console.log(`⚠️ Path ${path} returned status ${response.status}`);
                         }
                     } catch (e) {
-                        console.log('Failed to load from /data/subscribers.json:', e);
-                    }
-                }
-                
-                // If still no data, try without leading slash (local dev)
-                if (!subscribers || subscribers.length === 0) {
-                    try {
-                        response = await fetch('data/subscribers.json');
-                        if (response.ok) {
-                            subscribers = await response.json();
-                            console.log('✅ Loaded from data/subscribers.json');
-                        }
-                    } catch (e) {
-                        console.log('Failed to load from data/subscribers.json:', e);
-                    }
-                }
-                
-                // If still no data, try absolute path
-                if (!subscribers || subscribers.length === 0) {
-                    try {
-                        const baseUrl = window.location.origin;
-                        response = await fetch(`${baseUrl}/data/subscribers.json`);
-                        if (response.ok) {
-                            subscribers = await response.json();
-                            console.log('✅ Loaded from absolute path');
-                        }
-                    } catch (e) {
-                        console.log('Failed to load subscribers from absolute path:', e);
+                        console.log(`⚠️ Failed to load from ${path}:`, e.message);
                     }
                 }
                 

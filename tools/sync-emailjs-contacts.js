@@ -156,7 +156,8 @@ class EmailJSSync {
     this.newsletterManager.saveSubscribers();
     
     // Also update build directory
-    const subscribers = this.newsletterManager.loadSubscribers();
+    this.newsletterManager.loadSubscribers();
+    const subscribers = this.newsletterManager.subscribers || [];
     const buildDataDir = path.dirname(buildSubscribersFile);
     if (!fs.existsSync(buildDataDir)) {
       fs.mkdirSync(buildDataDir, { recursive: true });

@@ -151,27 +151,43 @@ class APIServer {
     }
   }
 
-  handleSyncEmailJS(req, res, data) {
+  async handleSyncEmailJS(req, res, data) {
     try {
       const EmailJSSync = require('./sync-emailjs-contacts');
       const sync = new EmailJSSync();
       const csvPath = data.csvPath;
       
-      sync.sync(csvPath)
-        .then(result => {
-          this.sendResponse(res, 200, {
-            success: true,
-            message: 'Contacts synced successfully',
-            result: result
-          });
-        })
-        .catch(error => {
-          this.sendResponse(res, 500, {
-            success: false,
-            error: error.message
-          });
+      if (!csvPath) {
+        this.sendResponse(res, 400, {
+          success: false,
+          error: 'csvPath is required in request body'
         });
+        return;
+      }
+      
+      // Resolve path relative to project root
+      const path = require('path');
+      const fs = require('fs');
+      const projectRoot = path.join(__dirname, '..');
+      const fullCsvPath = path.isAbsolute(csvPath) ? csvPath : path.join(projectRoot, csvPath);
+      
+      if (!fs.existsSync(fullCsvPath)) {
+        this.sendResponse(res, 404, {
+          success: false,
+          error: `CSV file not found: ${csvPath}`
+        });
+        return;
+      }
+      
+      const result = await sync.sync(fullCsvPath);
+      
+      this.sendResponse(res, 200, {
+        success: true,
+        message: 'Contacts synced successfully',
+        result: result
+      });
     } catch (error) {
+      console.error('Sync error:', error);
       this.sendResponse(res, 500, {
         success: false,
         error: 'Failed to sync contacts: ' + error.message

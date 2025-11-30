@@ -5,15 +5,34 @@
 const jwtUtils = require('./jwt-utils');
 const { createAccessToken, createRefreshToken, verifyToken } = jwtUtils;
 
+// Parse cookies from request
+function parseCookies(cookieHeader) {
+  const cookies = {};
+  if (cookieHeader) {
+    cookieHeader.split(';').forEach(cookie => {
+      const parts = cookie.trim().split('=');
+      if (parts.length === 2) {
+        cookies[parts[0]] = decodeURIComponent(parts[1]);
+      }
+    });
+  }
+  return cookies;
+}
+
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
+
+  // Parse cookies from request headers
+  const cookies = parseCookies(req.headers.cookie);
+  req.cookies = cookies;
 
   const { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, ALLOWED_GITHUB_USERS, JWT_SECRET, SITE_URL } = process.env;
 

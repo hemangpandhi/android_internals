@@ -6333,12 +6333,13 @@ del {
   }
   
   .nav-links {
-    gap: var(--space-sm);
+    gap: 0.5rem;
+    flex-wrap: wrap;
   }
   
   .nav-link {
     font-size: var(--font-size-xs);
-    padding: var(--space-xs) var(--space-sm);
+    padding: 0.3rem 0.6rem;
   }
   
   .hero {

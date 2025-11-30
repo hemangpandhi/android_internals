@@ -2,13 +2,14 @@ name: Sync EmailJS Contacts
 
 on:
   schedule:
-    # Run daily at 2 AM UTC (adjust timezone as needed)
-    - cron: '0 2 * * *'
+    # Run every 6 hours to keep subscribers in sync
+    - cron: '0 */6 * * *'
   workflow_dispatch: # Allow manual trigger
   push:
     paths:
       - 'tools/sync-emailjs-contacts.js'
       - '.github/workflows/sync-emailjs.yml'
+      - 'data/subscribers.json'
 
 jobs:
   sync-contacts:

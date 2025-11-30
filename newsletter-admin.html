@@ -1105,13 +1105,22 @@
                         const email = values[emailIndex];
                         const name = nameIndex !== -1 ? values[nameIndex] : '';
                         
+                        console.log(`Processing row ${i}: email="${email}", name="${name}", values=`, values);
+                        
                         // Validate email format
                         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                        if (!email || !emailRegex.test(email)) {
-                            console.log('Skipped invalid email:', email, 'from values:', values);
+                        if (!email) {
+                            console.log(`Row ${i}: Skipped - no email found in column ${emailIndex}`);
                             skipped++;
                             continue;
                         }
+                        if (!emailRegex.test(email)) {
+                            console.log(`Row ${i}: Skipped - invalid email format: "${email}"`);
+                            skipped++;
+                            continue;
+                        }
+                        
+                        console.log(`Row ${i}: Valid email found: ${email}`);
                         
                         // Check if subscriber already exists
                         const existingIndex = allSubscribers.findIndex(sub => sub.email.toLowerCase() === email.toLowerCase());

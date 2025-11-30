@@ -1165,8 +1165,20 @@ function countVideos() {
 function checkForNewArticles(articles, newsletterManager) {
   console.log('📧 Checking for new articles to send newsletters...');
   
+  // Check if there are any articles
+  if (!articles || articles.length === 0) {
+    console.log('📧 No articles found');
+    return;
+  }
+  
   // Get the most recent article (first in the sorted list)
   const latestArticle = articles[0];
+  
+  // Check if article has required properties
+  if (!latestArticle || !latestArticle.date) {
+    console.log('📧 Latest article missing date information');
+    return;
+  }
   
   // Check if this article was published today
   const today = new Date().toISOString().split('T')[0];

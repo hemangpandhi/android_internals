@@ -457,14 +457,15 @@
                 let response = null;
                 let queue = null;
                 
-                // Try build directory path (GitHub Pages)
+                // Try relative path first (works for GitHub Pages)
                 try {
                     response = await fetch('./data/newsletter-queue.json');
                     if (response.ok) {
                         queue = await response.json();
+                        console.log('✅ Loaded newsletter queue from ./data/newsletter-queue.json');
                     }
                 } catch (e) {
-                    console.log('Failed to load from ./data/newsletter-queue.json');
+                    console.log('Failed to load from ./data/newsletter-queue.json:', e);
                 }
                 
                 // Try root path
@@ -473,9 +474,10 @@
                         response = await fetch('/data/newsletter-queue.json');
                         if (response.ok) {
                             queue = await response.json();
+                            console.log('✅ Loaded newsletter queue from /data/newsletter-queue.json');
                         }
                     } catch (e) {
-                        console.log('Failed to load from /data/newsletter-queue.json');
+                        console.log('Failed to load from /data/newsletter-queue.json:', e);
                     }
                 }
                 
@@ -486,9 +488,10 @@
                         response = await fetch(`${baseUrl}/data/newsletter-queue.json`);
                         if (response.ok) {
                             queue = await response.json();
+                            console.log('✅ Loaded newsletter queue from absolute path');
                         }
                     } catch (e) {
-                        console.log('Failed to load from absolute path');
+                        console.log('Failed to load from absolute path:', e);
                     }
                 }
                 
@@ -496,7 +499,7 @@
                     throw new Error('No newsletter queue found');
                 }
                 
-                const response = { ok: true, json: () => Promise.resolve(queue) };
+                newsletterQueue = queue;
                 if (!response.ok) {
                     throw new Error('No newsletter queue found');
                 }

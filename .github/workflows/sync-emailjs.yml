@@ -27,28 +27,43 @@ jobs:
       - name: Install dependencies
         run: npm install
       
-      - name: Download EmailJS Contacts CSV
+      - name: Check for EmailJS CSV file
+        id: check_csv
         run: |
-          echo "📥 To sync contacts, you need to:"
-          echo "1. Export contacts from EmailJS Dashboard as CSV"
-          echo "2. Save the CSV file in the repository"
-          echo "3. Update this workflow to use the CSV file"
-          echo ""
-          echo "Or use the manual sync method in newsletter-admin.html"
-        continue-on-error: true
+          if [ -f "emailjs-contacts.csv" ]; then
+            echo "csv_exists=true" >> $GITHUB_OUTPUT
+            echo "✅ Found emailjs-contacts.csv - will sync contacts"
+          else
+            echo "csv_exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️  No CSV file found"
+            echo ""
+            echo "📋 To enable automatic sync (EmailJS as single source of truth):"
+            echo "   1. Go to EmailJS Dashboard → Contacts"
+            echo "   2. Click 'Export to CSV'"
+            echo "   3. Save as 'emailjs-contacts.csv' in repository root"
+            echo "   4. Commit and push the file"
+            echo "   5. This workflow will automatically sync every 6 hours"
+            echo ""
+            echo "💡 After initial setup, just export CSV periodically and push to repo"
+            echo "   The sync will happen automatically - no recompilation needed!"
+          fi
       
-      - name: Sync Contacts (if CSV available)
+      - name: Sync Contacts from EmailJS CSV
+        if: steps.check_csv.outputs.csv_exists == 'true'
         env:
           EMAILJS_PRIVATE_KEY: ${{ secrets.EMAILJS_PRIVATE_KEY }}
           EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
         run: |
-          if [ -f "emailjs-contacts.csv" ]; then
-            node tools/sync-emailjs-contacts.js emailjs-contacts.csv
-          else
-            echo "⚠️  No CSV file found. Skipping sync."
-            echo "💡 Export contacts from EmailJS Dashboard and save as emailjs-contacts.csv"
-          fi
-        continue-on-error: true
+          echo "🔄 Syncing contacts from EmailJS (single source of truth)..."
+          node tools/sync-emailjs-contacts.js emailjs-contacts.csv
+          echo "✅ Sync completed - subscribers.json updated"
+      
+      - name: No CSV - Skip sync (normal if CSV not in repo)
+        if: steps.check_csv.outputs.csv_exists == 'false'
+        run: |
+          echo "ℹ️  Skipping sync - emailjs-contacts.csv not found in repository"
+          echo "📝 This is normal if you haven't set up the CSV file yet"
+          echo "💡 Use newsletter admin panel CSV import for manual sync"
       
       - name: Commit and push changes
         if: success()

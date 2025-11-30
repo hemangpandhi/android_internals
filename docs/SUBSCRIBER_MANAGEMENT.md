@@ -37,18 +37,30 @@
    - **Contact Name**: `{{from_name}}`
 6. Save template
 
-### Step 2: Set Up Automatic Sync
+### Step 2: Set Up Automatic Sync (One-Time Setup)
 
-1. **Export CSV from EmailJS:**
+1. **Initial CSV Export:**
    - Go to EmailJS Dashboard → Contacts
    - Click **"Export to CSV"**
    - Save as `emailjs-contacts.csv` in repository root
-   - Commit and push the file
+   - Commit and push the file:
+     ```bash
+     git add emailjs-contacts.csv
+     git commit -m "Add EmailJS contacts CSV for automatic sync"
+     git push
+     ```
 
-2. **GitHub Actions will automatically:**
-   - Sync every 6 hours
-   - Update `subscribers.json`
-   - Deploy changes
+2. **That's it! GitHub Actions will automatically:**
+   - ✅ Sync every 6 hours from EmailJS CSV
+   - ✅ Update `subscribers.json` automatically
+   - ✅ Deploy changes automatically
+   - ✅ **No recompilation needed!**
+
+3. **When New Subscribers Join:**
+   - They automatically save to EmailJS (if "Save Contacts" enabled)
+   - Export CSV from EmailJS Dashboard (when you want to sync)
+   - Update `emailjs-contacts.csv` in repository
+   - Push to trigger sync (or wait for next 6-hour sync)
    - **No recompilation needed!**
 
 ### Step 3: Verify Sync
@@ -57,25 +69,32 @@
 - View commit history for auto-sync commits
 - Check newsletter admin panel for updated subscribers
 
-## Workflow
+## Workflow - No Recompilation Needed!
 
 ```
-New Subscriber
+New Subscriber Subscribes via Website
     ↓
-Website Form Submission
+EmailJS Sends Email + Automatically Saves Contact ✅
     ↓
-EmailJS Sends Email + Saves Contact (automatic)
+EmailJS Dashboard → Contacts (SINGLE SOURCE OF TRUTH) 📊
     ↓
-EmailJS Dashboard → Contacts (source of truth)
+Export CSV from EmailJS Dashboard (one-time setup)
     ↓
-Export CSV (manual or automated)
+Save as emailjs-contacts.csv in repository
     ↓
-GitHub Actions Sync (every 6 hours)
+GitHub Actions Auto-Sync (every 6 hours) 🔄
     ↓
-Update subscribers.json (automatic)
+Update subscribers.json automatically
     ↓
-Deploy to Production (automatic)
+Auto-deploy to Production (no recompilation!) 🚀
 ```
+
+### Key Points:
+- ✅ **EmailJS is the single source of truth** - all subscribers are stored there
+- ✅ **No recompilation needed** - GitHub Actions handles everything automatically
+- ✅ **Automatic sync** - runs every 6 hours
+- ✅ **New subscribers** - automatically saved to EmailJS when they subscribe
+- ✅ **Just export CSV periodically** - sync happens automatically
 
 ## Benefits
 

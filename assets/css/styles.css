@@ -7523,10 +7523,25 @@ del {
   flex-shrink: 0;
 }
 
+/* Ensure user auth menu is visible */
+.user-auth-menu {
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+.user-menu-logged-out {
+  display: block !important;
+}
+
+.user-menu-logged-in {
+  display: block !important;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .user-auth-menu {
     margin-left: 0.5rem;
+    order: 2; /* Show before mobile menu toggle */
   }
   
   .btn-login {
@@ -7542,5 +7557,14 @@ del {
   .user-menu-dropdown {
     right: -1rem;
     min-width: 200px;
+  }
+  
+  /* On mobile, show user menu before mobile toggle */
+  .nav-container {
+    flex-wrap: wrap;
+  }
+  
+  .user-auth-menu {
+    margin-right: 0.5rem;
   }
 }

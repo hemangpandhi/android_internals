@@ -36,22 +36,21 @@ export default async function handler(req, res) {
 
     const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SITE_URL, JWT_SECRET } = process.env;
 
-  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
-    console.error('Google OAuth credentials missing');
-    return res.status(500).json({ 
-      error: 'Google OAuth not configured',
-      message: 'Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables in Vercel'
-    });
-  }
+    if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+      console.error('Google OAuth credentials missing');
+      return res.status(500).json({ 
+        error: 'Google OAuth not configured',
+        message: 'Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables in Vercel'
+      });
+    }
 
-  // JWT_SECRET is only needed for callback/verify actions, not for login
-  // We'll check it in those specific actions
+    // JWT_SECRET is only needed for callback/verify actions, not for login
+    // We'll check it in those specific actions
 
-  const siteUrl = SITE_URL || 'https://www.hemangpandhi.com';
+    const siteUrl = SITE_URL || 'https://www.hemangpandhi.com';
 
-  // Step 1: Initiate OAuth flow (redirect to Google)
-  if (req.method === 'GET' && req.query.action === 'login') {
-    try {
+    // Step 1: Initiate OAuth flow (redirect to Google)
+    if (req.method === 'GET' && req.query.action === 'login') {
       // Use production Vercel URL for callback (must match Google OAuth app callback URL)
       const vercelUrl = 'https://android-internals.vercel.app';
       const redirectUri = `${vercelUrl}/api/auth-google?action=callback`;
@@ -63,18 +62,12 @@ export default async function handler(req, res) {
       
       const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${stateWithRedirect}&access_type=offline&prompt=consent`;
       
-      return res.redirect(googleAuthUrl);
-    } catch (error) {
-      console.error('Error in login action:', error);
-      return res.status(500).json({ 
-        error: 'Failed to initiate login',
-        message: error.message 
-      });
+      console.log('Redirecting to Google OAuth');
+      return res.redirect(302, googleAuthUrl);
     }
-  }
 
-  // Step 2: Handle OAuth callback
-  if (req.method === 'GET' && req.query.action === 'callback') {
+    // Step 2: Handle OAuth callback
+    if (req.method === 'GET' && req.query.action === 'callback') {
     const { code, state } = req.query;
 
     if (!code) {
@@ -137,8 +130,8 @@ export default async function handler(req, res) {
       };
 
       // Create signed JWT tokens
-      const accessToken = createAccessToken(userInfo, JWT_SECRET);
-      const refreshToken = createRefreshToken(userInfo, JWT_SECRET);
+      const jwtAccessToken = createAccessToken(userInfo, JWT_SECRET);
+      const jwtRefreshToken = createRefreshToken(userInfo, JWT_SECRET);
 
       // Set httpOnly cookies (secure, httpOnly, sameSite)
       const cookieOptions = {
@@ -159,8 +152,8 @@ export default async function handler(req, res) {
 
       // Set cookies
       res.setHeader('Set-Cookie', [
-        `auth_token=${accessToken}; ${Object.entries(cookieOptions).map(([k, v]) => `${k}=${v}`).join('; ')}`,
-        `refresh_token=${refreshToken}; ${Object.entries(refreshCookieOptions).map(([k, v]) => `${k}=${v}`).join('; ')}`
+        `auth_token=${jwtAccessToken}; ${Object.entries(cookieOptions).map(([k, v]) => `${k}=${v}`).join('; ')}`,
+        `refresh_token=${jwtRefreshToken}; ${Object.entries(refreshCookieOptions).map(([k, v]) => `${k}=${v}`).join('; ')}`
       ]);
 
       // Clean redirect URL (no tokens in URL)
@@ -182,8 +175,8 @@ export default async function handler(req, res) {
     }
   }
 
-  // Step 3: Verify session token (from cookie or body)
-  if (req.method === 'POST' && req.query.action === 'verify') {
+    // Step 3: Verify session token (from cookie or body)
+    if (req.method === 'POST' && req.query.action === 'verify') {
     try {
       // Try to get token from cookie first, then from body (for backward compatibility)
       let token = req.cookies?.auth_token || req.body?.token;
@@ -215,8 +208,8 @@ export default async function handler(req, res) {
     }
   }
 
-  // Step 4: Refresh access token
-  if (req.method === 'POST' && req.query.action === 'refresh') {
+    // Step 4: Refresh access token
+    if (req.method === 'POST' && req.query.action === 'refresh') {
     try {
       const refreshToken = req.cookies?.refresh_token || req.body?.refresh_token;
 
@@ -261,8 +254,8 @@ export default async function handler(req, res) {
     }
   }
 
-  // Step 5: Logout (clear cookies)
-  if (req.method === 'POST' && req.query.action === 'logout') {
+    // Step 5: Logout (clear cookies)
+    if (req.method === 'POST' && req.query.action === 'logout') {
     // Clear cookies by setting them to expire
     res.setHeader('Set-Cookie', [
       'auth_token=; httpOnly=true; secure=true; sameSite=lax; maxAge=0; path=/',
@@ -271,8 +264,8 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, message: 'Logged out' });
   }
 
-  return res.status(405).json({ error: 'Method not allowed' });
-  
+    return res.status(405).json({ error: 'Method not allowed' });
+    
   } catch (error) {
     console.error('Unhandled error in auth-google:', error);
     console.error('Error stack:', error.stack);

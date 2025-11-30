@@ -281,7 +281,8 @@
                     <button class="btn btn-secondary" onclick="refreshSubscribers()">🔄 Refresh</button>
                     <button class="btn btn-secondary" onclick="downloadAllSubscribers()">📥 Download JSON</button>
                     <button class="btn" onclick="showAddSubscriberForm()">➕ Add Subscriber</button>
-                    <button class="btn btn-secondary" onclick="showSyncFromEmailJS()">🔄 Sync from EmailJS</button>
+                    <button class="btn btn-secondary" onclick="showSyncFromEmailJS()">🔄 Sync from EmailJS CSV</button>
+                    <button class="btn" onclick="syncFromEmailJSAPI()">🔌 Sync from EmailJS API</button>
                     <div class="selected-count" id="selected-count">0 selected</div>
                 </div>
                 
@@ -1002,6 +1003,22 @@
         function hideSyncFromEmailJS() {
             document.getElementById('sync-emailjs-form').style.display = 'none';
             document.getElementById('emailjs-csv-file').value = '';
+        }
+
+        async function syncFromEmailJSAPI() {
+            log('🔌 Attempting to sync from EmailJS API...');
+            log('⚠️  EmailJS API requires backend/serverless function');
+            log('💡 EmailJS doesn\'t expose contacts via public client-side API');
+            log('📋 Current options:');
+            log('   1. Use CSV export method (via "Sync from EmailJS CSV" button)');
+            log('   2. Set up GitHub Actions with EMAILJS_PRIVATE_KEY secret');
+            log('   3. Use serverless function to fetch from EmailJS API');
+            log('');
+            log('🔄 For now, please use the CSV import method');
+            log('   Or check GitHub Actions → "Sync EmailJS Contacts" workflow');
+            log('   It will automatically sync from API if credentials are configured');
+            
+            alert('EmailJS API sync requires backend access.\n\n✅ Automatic sync is available via GitHub Actions!\n\n📋 To enable:\n1. Go to GitHub → Settings → Secrets → Actions\n2. Add EMAILJS_PRIVATE_KEY (get from EmailJS Dashboard)\n3. Add EMAILJS_PUBLIC_KEY (your public key)\n4. GitHub Actions will automatically sync every 6 hours\n\n💡 Or use CSV import method for immediate sync.');
         }
 
         function importFromEmailJSCSV() {

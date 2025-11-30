@@ -35,30 +35,99 @@ class EmailJSSync {
   }
 
   /**
-   * Fetch contacts from EmailJS API
-   * Note: EmailJS doesn't have a public REST API for contacts
-   * This is a workaround using their internal API or CSV export
+   * Fetch contacts from EmailJS API using REST API
+   * Requires EmailJS Private Key (accessToken) and User ID (Public Key)
    */
   async fetchContactsFromEmailJS() {
-    console.log('📧 Fetching contacts from EmailJS...');
+    console.log('📧 Fetching contacts from EmailJS API...');
     
     if (!EMAILJS_PRIVATE_KEY) {
-      throw new Error('EMAILJS_PRIVATE_KEY environment variable is required');
+      throw new Error('EMAILJS_PRIVATE_KEY (Private Key/Access Token) is required');
+    }
+
+    // Get User ID from Public Key (if available in config)
+    const EMAILJS_USER_ID = process.env.EMAILJS_USER_ID || process.env.EMAILJS_PUBLIC_KEY;
+    if (!EMAILJS_USER_ID) {
+      throw new Error('EMAILJS_USER_ID or EMAILJS_PUBLIC_KEY is required');
     }
 
     try {
-      // Method 1: Try to use EmailJS API (if available)
-      // Note: EmailJS may not expose contacts via REST API
-      // We'll use an alternative approach: parse from CSV export URL
+      // EmailJS API endpoint for contacts
+      // Based on EmailJS API documentation
+      const apiUrl = `${EMAILJS_API_BASE}/contacts?user_id=${EMAILJS_USER_ID}`;
       
-      console.log('⚠️  EmailJS REST API for contacts may not be publicly available.');
-      console.log('📋 Alternative: Use CSV export method (see EMAILJS_SYNC_SETUP.md)');
+      console.log('🔗 Fetching from EmailJS API...');
+      console.log(`   API Base: ${EMAILJS_API_BASE}`);
+      console.log(`   User ID: ${EMAILJS_USER_ID.substring(0, 10)}...`);
       
-      // For now, return empty array - user should use CSV import method
-      return [];
+      return new Promise((resolve, reject) => {
+        const options = {
+          hostname: 'api.emailjs.com',
+          path: `/api/v1.0/contacts?user_id=${EMAILJS_USER_ID}`,
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${EMAILJS_PRIVATE_KEY}`,
+            'Content-Type': 'application/json',
+            'User-Agent': 'Android-Internals-Sync/1.0'
+          }
+        };
+
+        const req = https.request(options, (res) => {
+          let data = '';
+
+          res.on('data', (chunk) => {
+            data += chunk;
+          });
+
+          res.on('end', () => {
+            try {
+              if (res.statusCode === 200) {
+                const response = JSON.parse(data);
+                console.log(`✅ Successfully fetched ${response.data?.length || 0} contacts from EmailJS API`);
+                
+                // Transform EmailJS contact format to our format
+                const contacts = (response.data || []).map(contact => ({
+                  email: contact.email || contact.contact_email,
+                  name: contact.name || contact.contact_name || '',
+                  source: 'emailjs-api'
+                })).filter(c => c.email && c.email.includes('@'));
+                
+                console.log(`✅ Processed ${contacts.length} valid contacts`);
+                resolve(contacts);
+              } else if (res.statusCode === 401) {
+                console.error('❌ Authentication failed - check EMAILJS_PRIVATE_KEY');
+                reject(new Error('EmailJS API authentication failed. Check your private key.'));
+              } else if (res.statusCode === 404) {
+                console.log('⚠️  Contacts API endpoint not found - EmailJS may not support this endpoint');
+                console.log('📋 Falling back to CSV method');
+                resolve([]);
+              } else {
+                console.error(`❌ API Error: ${res.statusCode} - ${data}`);
+                reject(new Error(`EmailJS API error: ${res.statusCode} - ${data.substring(0, 100)}`));
+              }
+            } catch (error) {
+              console.error('❌ Error parsing API response:', error.message);
+              console.error('Response data:', data.substring(0, 200));
+              reject(error);
+            }
+          });
+        });
+
+        req.on('error', (error) => {
+          console.error('❌ Network error fetching from EmailJS API:', error.message);
+          reject(error);
+        });
+
+        req.setTimeout(10000, () => {
+          req.destroy();
+          reject(new Error('EmailJS API request timeout'));
+        });
+
+        req.end();
+      });
       
     } catch (error) {
-      console.error('❌ Error fetching contacts from EmailJS:', error.message);
+      console.error('❌ Error fetching contacts from EmailJS API:', error.message);
       throw error;
     }
   }
@@ -201,23 +270,45 @@ class EmailJSSync {
 
   /**
    * Main sync function
+   * Tries API first, falls back to CSV if API fails
    */
   async sync(csvFilePath = null) {
     try {
       let contacts = [];
       
       if (csvFilePath) {
-        // Sync from CSV file
+        // Sync from CSV file (manual method)
+        console.log('📋 Using CSV file method');
         contacts = await this.syncFromCSV(csvFilePath);
       } else {
-        // Try to fetch from EmailJS API
-        contacts = await this.fetchContactsFromEmailJS();
+        // Try to fetch from EmailJS API first (automatic)
+        console.log('🔌 Attempting to fetch from EmailJS API...');
+        try {
+          contacts = await this.fetchContactsFromEmailJS();
+          
+          if (contacts.length === 0) {
+            console.log('⚠️  No contacts returned from API');
+            console.log('💡 This might mean:');
+            console.log('   1. API endpoint not available (EmailJS may not support contacts API)');
+            console.log('   2. No contacts in EmailJS yet');
+            console.log('   3. Authentication issue - check EMAILJS_PRIVATE_KEY');
+            console.log('');
+            console.log('📋 Alternative: Use CSV export method');
+            console.log('   Export from EmailJS Dashboard → Contacts → Export to CSV');
+            console.log('   Then run: node tools/sync-emailjs-contacts.js path/to/contacts.csv');
+            return;
+          }
+        } catch (apiError) {
+          console.error('❌ EmailJS API fetch failed:', apiError.message);
+          console.log('📋 Falling back to CSV method');
+          console.log('💡 To use API: Set EMAILJS_PRIVATE_KEY and EMAILJS_USER_ID environment variables');
+          console.log('💡 Alternative: Export CSV from EmailJS Dashboard and use CSV method');
+          return;
+        }
       }
       
       if (contacts.length === 0) {
         console.log('⚠️  No contacts to sync');
-        console.log('💡 Tip: Export contacts from EmailJS Dashboard as CSV and use:');
-        console.log('   node tools/sync-emailjs-contacts.js path/to/contacts.csv');
         return;
       }
       

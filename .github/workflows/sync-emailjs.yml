@@ -27,42 +27,64 @@ jobs:
       - name: Install dependencies
         run: npm install
       
-      - name: Check for EmailJS CSV file
+      - name: Try EmailJS API Sync (Automatic)
+        id: api_sync
+        env:
+          EMAILJS_PRIVATE_KEY: ${{ secrets.EMAILJS_PRIVATE_KEY }}
+          EMAILJS_USER_ID: ${{ secrets.EMAILJS_PUBLIC_KEY }}
+          EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
+        run: |
+          echo "🔌 Attempting to sync from EmailJS API (automatic)..."
+          if [ -z "$EMAILJS_PRIVATE_KEY" ] || [ -z "$EMAILJS_USER_ID" ]; then
+            echo "api_available=false" >> $GITHUB_OUTPUT
+            echo "⚠️  EmailJS API credentials not configured"
+            echo "💡 Set EMAILJS_PRIVATE_KEY and EMAILJS_PUBLIC_KEY in GitHub Secrets"
+            echo "   Go to: https://github.com/hemangpandhi/android_internals/settings/secrets/actions"
+          else
+            echo "api_available=true" >> $GITHUB_OUTPUT
+            echo "✅ EmailJS API credentials found - attempting API sync..."
+            node tools/sync-emailjs-contacts.js || echo "api_failed=true" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+      
+      - name: Fallback: Sync from CSV (if API failed)
+        if: steps.api_sync.outputs.api_available != 'true' || steps.api_sync.outputs.api_failed == 'true'
         id: check_csv
         run: |
           if [ -f "emailjs-contacts.csv" ]; then
             echo "csv_exists=true" >> $GITHUB_OUTPUT
-            echo "✅ Found emailjs-contacts.csv - will sync contacts"
+            echo "✅ Found emailjs-contacts.csv - will sync from CSV"
           else
             echo "csv_exists=false" >> $GITHUB_OUTPUT
             echo "⚠️  No CSV file found"
             echo ""
-            echo "📋 To enable automatic sync (EmailJS as single source of truth):"
-            echo "   1. Go to EmailJS Dashboard → Contacts"
-            echo "   2. Click 'Export to CSV'"
-            echo "   3. Save as 'emailjs-contacts.csv' in repository root"
-            echo "   4. Commit and push the file"
-            echo "   5. This workflow will automatically sync every 6 hours"
+            echo "📋 To enable automatic sync:"
+            echo "   Option 1 (Recommended): Set EmailJS API credentials in GitHub Secrets"
+            echo "      - EMAILJS_PRIVATE_KEY (get from EmailJS Dashboard → Account → API Keys)"
+            echo "      - EMAILJS_PUBLIC_KEY (your public key/user ID)"
             echo ""
-            echo "💡 After initial setup, just export CSV periodically and push to repo"
-            echo "   The sync will happen automatically - no recompilation needed!"
+            echo "   Option 2: Use CSV method"
+            echo "      1. Go to EmailJS Dashboard → Contacts"
+            echo "      2. Click 'Export to CSV'"
+            echo "      3. Save as 'emailjs-contacts.csv' in repository root"
+            echo "      4. Commit and push the file"
           fi
       
-      - name: Sync Contacts from EmailJS CSV
-        if: steps.check_csv.outputs.csv_exists == 'true'
+      - name: Sync Contacts from CSV (Fallback)
+        if: (steps.api_sync.outputs.api_available != 'true' || steps.api_sync.outputs.api_failed == 'true') && steps.check_csv.outputs.csv_exists == 'true'
         env:
           EMAILJS_PRIVATE_KEY: ${{ secrets.EMAILJS_PRIVATE_KEY }}
           EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
         run: |
-          echo "🔄 Syncing contacts from EmailJS (single source of truth)..."
+          echo "🔄 Syncing contacts from EmailJS CSV (fallback method)..."
           node tools/sync-emailjs-contacts.js emailjs-contacts.csv
           echo "✅ Sync completed - subscribers.json updated"
       
-      - name: No CSV - Skip sync (normal if CSV not in repo)
-        if: steps.check_csv.outputs.csv_exists == 'false'
+      - name: No sync method available
+        if: (steps.api_sync.outputs.api_available != 'true' || steps.api_sync.outputs.api_failed == 'true') && steps.check_csv.outputs.csv_exists != 'true'
         run: |
-          echo "ℹ️  Skipping sync - emailjs-contacts.csv not found in repository"
-          echo "📝 This is normal if you haven't set up the CSV file yet"
+          echo "ℹ️  No automatic sync method available"
+          echo "📝 Set up EmailJS API credentials OR add emailjs-contacts.csv file"
           echo "💡 Use newsletter admin panel CSV import for manual sync"
       
       - name: Commit and push changes

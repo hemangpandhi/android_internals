@@ -2,7 +2,19 @@
 
 ## Overview
 
-**EmailJS is the single source of truth** for all subscribers. The `subscribers.json` file is automatically synced from EmailJS contacts, so you never need to manually update it or recompile.
+**EmailJS is the single source of truth** for all subscribers. The `subscribers.json` file is automatically synced from EmailJS contacts via API or CSV, so you never need to manually update it or recompile.
+
+### Automatic Sync Methods
+
+1. **EmailJS API (Recommended - Fully Automatic)**
+   - Set up GitHub Secrets with EmailJS credentials
+   - GitHub Actions automatically syncs every 6 hours
+   - No manual intervention needed!
+
+2. **CSV Export (Manual but Immediate)**
+   - Export CSV from EmailJS Dashboard
+   - Import via admin panel or update repository CSV
+   - Works immediately
 
 ## How It Works
 
@@ -37,30 +49,46 @@
    - **Contact Name**: `{{from_name}}`
 6. Save template
 
-### Step 2: Set Up Automatic Sync (One-Time Setup)
+### Step 2: Set Up Automatic Sync (Choose One Method)
+
+#### Method A: EmailJS API (Fully Automatic - Recommended)
+
+1. **Get EmailJS API Credentials:**
+   - Go to [EmailJS Dashboard](https://dashboard.emailjs.com/) → Account → API Keys
+   - Copy your **Private Key** (Access Token)
+   - Copy your **Public Key** (User ID)
+
+2. **Add to GitHub Secrets:**
+   - Go to: `https://github.com/hemangpandhi/android_internals/settings/secrets/actions`
+   - Click **"New repository secret"**
+   - Add `EMAILJS_PRIVATE_KEY` = Your Private Key from EmailJS
+   - Add `EMAILJS_PUBLIC_KEY` = Your Public Key (User ID) from EmailJS
+   - Save secrets
+
+3. **That's it! GitHub Actions will automatically:**
+   - ✅ Fetch contacts directly from EmailJS API every 6 hours
+   - ✅ Update `subscribers.json` automatically
+   - ✅ Deploy changes automatically
+   - ✅ **No manual CSV export needed!**
+   - ✅ **No recompilation needed!**
+
+#### Method B: CSV Export (Manual but Works Immediately)
 
 1. **Initial CSV Export:**
    - Go to EmailJS Dashboard → Contacts
    - Click **"Export to CSV"**
    - Save as `emailjs-contacts.csv` in repository root
-   - Commit and push the file:
-     ```bash
-     git add emailjs-contacts.csv
-     git commit -m "Add EmailJS contacts CSV for automatic sync"
-     git push
-     ```
+   - Commit and push the file
 
-2. **That's it! GitHub Actions will automatically:**
+2. **GitHub Actions will automatically:**
    - ✅ Sync every 6 hours from EmailJS CSV
    - ✅ Update `subscribers.json` automatically
    - ✅ Deploy changes automatically
-   - ✅ **No recompilation needed!**
 
 3. **When New Subscribers Join:**
-   - They automatically save to EmailJS (if "Save Contacts" enabled)
-   - Export CSV from EmailJS Dashboard (when you want to sync)
+   - Export CSV from EmailJS Dashboard
    - Update `emailjs-contacts.csv` in repository
-   - Push to trigger sync (or wait for next 6-hour sync)
+   - Push to trigger sync
    - **No recompilation needed!**
 
 ### Step 3: Verify Sync

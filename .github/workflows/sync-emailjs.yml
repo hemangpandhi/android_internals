@@ -49,25 +49,31 @@ jobs:
       
       - name: Fallback: Check for CSV file
         id: check_csv
-        if: always() && (steps.api_sync.outcome == 'failure' || steps.api_sync.outputs.api_available == 'false' || steps.api_sync.outputs.api_failed == 'true')
+        if: always()
         run: |
-          if [ -f "emailjs-contacts.csv" ]; then
-            echo "csv_exists=true" >> $GITHUB_OUTPUT
-            echo "✅ Found emailjs-contacts.csv - will sync from CSV"
+          # Check if API sync failed or wasn't available
+          if [ "${{ steps.api_sync.outcome }}" == "failure" ] || [ "${{ steps.api_sync.outputs.api_available }}" != "true" ] || [ "${{ steps.api_sync.outputs.api_failed }}" == "true" ]; then
+            if [ -f "emailjs-contacts.csv" ]; then
+              echo "csv_exists=true" >> $GITHUB_OUTPUT
+              echo "✅ Found emailjs-contacts.csv - will sync from CSV"
+            else
+              echo "csv_exists=false" >> $GITHUB_OUTPUT
+              echo "⚠️  No CSV file found"
+              echo ""
+              echo "📋 To enable automatic sync:"
+              echo "   Option 1 (Recommended): Set EmailJS API credentials in GitHub Secrets"
+              echo "      - EMAILJS_PRIVATE_KEY (get from EmailJS Dashboard → Account → API Keys)"
+              echo "      - EMAILJS_PUBLIC_KEY (your public key/user ID)"
+              echo ""
+              echo "   Option 2: Use CSV method"
+              echo "      1. Go to EmailJS Dashboard → Contacts"
+              echo "      2. Click 'Export to CSV'"
+              echo "      3. Save as 'emailjs-contacts.csv' in repository root"
+              echo "      4. Commit and push the file"
+            fi
           else
             echo "csv_exists=false" >> $GITHUB_OUTPUT
-            echo "⚠️  No CSV file found"
-            echo ""
-            echo "📋 To enable automatic sync:"
-            echo "   Option 1 (Recommended): Set EmailJS API credentials in GitHub Secrets"
-            echo "      - EMAILJS_PRIVATE_KEY (get from EmailJS Dashboard → Account → API Keys)"
-            echo "      - EMAILJS_PUBLIC_KEY (your public key/user ID)"
-            echo ""
-            echo "   Option 2: Use CSV method"
-            echo "      1. Go to EmailJS Dashboard → Contacts"
-            echo "      2. Click 'Export to CSV'"
-            echo "      3. Save as 'emailjs-contacts.csv' in repository root"
-            echo "      4. Commit and push the file"
+            echo "✅ API sync succeeded - no CSV fallback needed"
           fi
       
       - name: Sync Contacts from CSV (Fallback)

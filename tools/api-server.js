@@ -48,6 +48,8 @@ class APIServer {
           this.handleGetSubscribers(req, res);
         } else if (pathname === '/api/subscribers/count' && method === 'GET') {
           this.handleGetSubscriberCount(req, res);
+        } else if (pathname === '/api/sync-emailjs' && method === 'POST') {
+          this.handleSyncEmailJS(req, res, data);
         } else {
           this.sendResponse(res, 404, { error: 'Not Found' });
         }
@@ -149,6 +151,34 @@ class APIServer {
     }
   }
 
+  handleSyncEmailJS(req, res, data) {
+    try {
+      const EmailJSSync = require('./sync-emailjs-contacts');
+      const sync = new EmailJSSync();
+      const csvPath = data.csvPath;
+      
+      sync.sync(csvPath)
+        .then(result => {
+          this.sendResponse(res, 200, {
+            success: true,
+            message: 'Contacts synced successfully',
+            result: result
+          });
+        })
+        .catch(error => {
+          this.sendResponse(res, 500, {
+            success: false,
+            error: error.message
+          });
+        });
+    } catch (error) {
+      this.sendResponse(res, 500, {
+        success: false,
+        error: 'Failed to sync contacts: ' + error.message
+      });
+    }
+  }
+
   sendResponse(res, statusCode, data) {
     res.writeHead(statusCode, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(data));
@@ -166,6 +196,7 @@ class APIServer {
       console.log(`   POST /api/unsubscribe - Remove subscriber`);
       console.log(`   GET /api/subscribers - Get all subscribers`);
       console.log(`   GET /api/subscribers/count - Get subscriber count`);
+      console.log(`   POST /api/sync-emailjs - Sync contacts from EmailJS CSV`);
     });
 
     return server;

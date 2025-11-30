@@ -17,7 +17,8 @@
     "newsletter:add": "node tools/newsletter-manager.js add",
     "newsletter:list": "node tools/newsletter-manager.js list",
     "newsletter:count": "node tools/newsletter-manager.js count",
-    "newsletter:export": "node tools/newsletter-manager.js export"
+    "newsletter:export": "node tools/newsletter-manager.js export",
+    "sync:emailjs": "node tools/sync-emailjs-contacts.js"
   },
   "keywords": [
     "android",

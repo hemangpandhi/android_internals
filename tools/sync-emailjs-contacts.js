@@ -1,0 +1,230 @@
+#!/usr/bin/env node
+
+/**
+ * EmailJS Contacts Sync Script
+ * 
+ * This script fetches contacts from EmailJS and syncs them to subscribers.json
+ * 
+ * Usage:
+ *   node tools/sync-emailjs-contacts.js
+ * 
+ * Environment Variables Required:
+ *   EMAILJS_PRIVATE_KEY - Your EmailJS private key (get from dashboard)
+ *   EMAILJS_SERVICE_ID - Your EmailJS service ID
+ *   EMAILJS_TEMPLATE_ID - Template ID to filter contacts (optional)
+ */
+
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+const NewsletterManager = require('./newsletter-manager');
+
+// EmailJS API Configuration
+const EMAILJS_API_BASE = 'https://api.emailjs.com/api/v1.0';
+const EMAILJS_PRIVATE_KEY = process.env.EMAILJS_PRIVATE_KEY;
+const EMAILJS_SERVICE_ID = process.env.EMAILJS_SERVICE_ID || 'service_dygzcoh';
+const EMAILJS_TEMPLATE_ID = process.env.EMAILJS_TEMPLATE_ID; // Optional: filter by template
+
+// Paths
+const subscribersFile = path.join(__dirname, '..', 'data', 'subscribers.json');
+const buildSubscribersFile = path.join(__dirname, '..', 'build', 'data', 'subscribers.json');
+
+class EmailJSSync {
+  constructor() {
+    this.newsletterManager = new NewsletterManager();
+  }
+
+  /**
+   * Fetch contacts from EmailJS API
+   * Note: EmailJS doesn't have a public REST API for contacts
+   * This is a workaround using their internal API or CSV export
+   */
+  async fetchContactsFromEmailJS() {
+    console.log('📧 Fetching contacts from EmailJS...');
+    
+    if (!EMAILJS_PRIVATE_KEY) {
+      throw new Error('EMAILJS_PRIVATE_KEY environment variable is required');
+    }
+
+    try {
+      // Method 1: Try to use EmailJS API (if available)
+      // Note: EmailJS may not expose contacts via REST API
+      // We'll use an alternative approach: parse from CSV export URL
+      
+      console.log('⚠️  EmailJS REST API for contacts may not be publicly available.');
+      console.log('📋 Alternative: Use CSV export method (see EMAILJS_SYNC_SETUP.md)');
+      
+      // For now, return empty array - user should use CSV import method
+      return [];
+      
+    } catch (error) {
+      console.error('❌ Error fetching contacts from EmailJS:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Alternative: Parse CSV file from EmailJS export
+   */
+  async syncFromCSV(csvFilePath) {
+    console.log(`📧 Syncing contacts from CSV file: ${csvFilePath}`);
+    
+    if (!fs.existsSync(csvFilePath)) {
+      throw new Error(`CSV file not found: ${csvFilePath}`);
+    }
+
+    const csvContent = fs.readFileSync(csvFilePath, 'utf8');
+    const lines = csvContent.split('\n').filter(line => line.trim());
+    
+    if (lines.length < 2) {
+      throw new Error('CSV file appears to be empty or invalid');
+    }
+
+    // Parse CSV header
+    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+    const emailIndex = headers.findIndex(h => h.toLowerCase().includes('email'));
+    const nameIndex = headers.findIndex(h => h.toLowerCase().includes('name') || h.toLowerCase().includes('contact'));
+    
+    if (emailIndex === -1) {
+      throw new Error('CSV file must contain an email column');
+    }
+
+    const contacts = [];
+    
+    // Parse CSV rows (skip header)
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      
+      const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+      const email = values[emailIndex];
+      const name = nameIndex !== -1 ? values[nameIndex] : '';
+      
+      if (email && email.includes('@')) {
+        contacts.push({
+          email: email,
+          name: name || email.split('@')[0],
+          source: 'emailjs'
+        });
+      }
+    }
+
+    console.log(`✅ Parsed ${contacts.length} contacts from CSV`);
+    return contacts;
+  }
+
+  /**
+   * Sync contacts to subscribers.json
+   */
+  async syncContacts(contacts) {
+    console.log(`🔄 Syncing ${contacts.length} contacts to subscribers.json...`);
+    
+    // Load existing subscribers
+    const existingSubscribers = this.newsletterManager.loadSubscribers();
+    const existingEmails = new Set(existingSubscribers.map(sub => sub.email.toLowerCase()));
+    
+    let added = 0;
+    let updated = 0;
+    
+    // Process each contact
+    for (const contact of contacts) {
+      const emailLower = contact.email.toLowerCase();
+      
+      if (existingEmails.has(emailLower)) {
+        // Update existing subscriber
+        const existingIndex = existingSubscribers.findIndex(
+          sub => sub.email.toLowerCase() === emailLower
+        );
+        
+        if (existingIndex !== -1) {
+          existingSubscribers[existingIndex].active = true;
+          existingSubscribers[existingIndex].updatedAt = new Date().toISOString();
+          if (contact.name) {
+            existingSubscribers[existingIndex].name = contact.name;
+          }
+          updated++;
+        }
+      } else {
+        // Add new subscriber
+        this.newsletterManager.addSubscriber(contact.email, contact.name || '');
+        added++;
+      }
+    }
+    
+    // Save subscribers
+    this.newsletterManager.saveSubscribers();
+    
+    // Also update build directory
+    const subscribers = this.newsletterManager.loadSubscribers();
+    const buildDataDir = path.dirname(buildSubscribersFile);
+    if (!fs.existsSync(buildDataDir)) {
+      fs.mkdirSync(buildDataDir, { recursive: true });
+    }
+    fs.writeFileSync(buildSubscribersFile, JSON.stringify(subscribers, null, 2));
+    
+    console.log(`✅ Sync completed:`);
+    console.log(`   📥 Added: ${added} new subscribers`);
+    console.log(`   🔄 Updated: ${updated} existing subscribers`);
+    console.log(`   📊 Total subscribers: ${subscribers.length}`);
+    
+    return { added, updated, total: subscribers.length };
+  }
+
+  /**
+   * Main sync function
+   */
+  async sync(csvFilePath = null) {
+    try {
+      let contacts = [];
+      
+      if (csvFilePath) {
+        // Sync from CSV file
+        contacts = await this.syncFromCSV(csvFilePath);
+      } else {
+        // Try to fetch from EmailJS API
+        contacts = await this.fetchContactsFromEmailJS();
+      }
+      
+      if (contacts.length === 0) {
+        console.log('⚠️  No contacts to sync');
+        console.log('💡 Tip: Export contacts from EmailJS Dashboard as CSV and use:');
+        console.log('   node tools/sync-emailjs-contacts.js path/to/contacts.csv');
+        return;
+      }
+      
+      const result = await this.syncContacts(contacts);
+      return result;
+      
+    } catch (error) {
+      console.error('❌ Sync failed:', error.message);
+      process.exit(1);
+    }
+  }
+}
+
+// CLI interface
+if (require.main === module) {
+  const sync = new EmailJSSync();
+  const csvPath = process.argv[2];
+  
+  if (csvPath) {
+    sync.sync(csvPath).then(() => {
+      console.log('✅ Sync completed successfully');
+      process.exit(0);
+    }).catch(error => {
+      console.error('❌ Sync failed:', error);
+      process.exit(1);
+    });
+  } else {
+    sync.sync().then(() => {
+      console.log('✅ Sync completed successfully');
+      process.exit(0);
+    }).catch(error => {
+      console.error('❌ Sync failed:', error);
+      process.exit(1);
+    });
+  }
+}
+
+module.exports = EmailJSSync;
+

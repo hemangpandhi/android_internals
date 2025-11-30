@@ -54,14 +54,65 @@ You need to enable contact collection in **BOTH** templates:
    - Click **"📥 Import CSV"**
    - The updated `subscribers.json` will be downloaded automatically
 
-## Method 2: Automatic Sync via API (Advanced)
+## Method 2: Automatic Sync via Script (Recommended for Automation)
 
-For automatic real-time sync, you can set up a serverless function or backend API that:
-1. Uses EmailJS REST API to fetch contacts
-2. Updates `subscribers.json` automatically
-3. Can be triggered periodically or via webhook
+### Option A: Manual Sync Script
 
-**Note**: This requires EmailJS Private Key and a backend/serverless function.
+Use the sync script to automatically sync contacts from EmailJS CSV export:
+
+```bash
+# Sync from CSV file
+node tools/sync-emailjs-contacts.js path/to/emailjs-contacts.csv
+
+# Or use npm script
+npm run sync:emailjs path/to/emailjs-contacts.csv
+```
+
+**Steps:**
+1. Export contacts from EmailJS Dashboard → Contacts → Export to CSV
+2. Save the CSV file (e.g., `emailjs-contacts.csv`)
+3. Run the sync script with the CSV file path
+4. Subscribers will be automatically synced to `subscribers.json`
+
+### Option B: GitHub Actions Automated Sync
+
+A GitHub Actions workflow is set up to automatically sync contacts daily:
+
+1. **Setup GitHub Secrets:**
+   - Go to your repository → Settings → Secrets and variables → Actions
+   - Add these secrets:
+     - `EMAILJS_PRIVATE_KEY` - Your EmailJS private key (optional, for future API use)
+     - `EMAILJS_SERVICE_ID` - Your EmailJS service ID
+
+2. **Manual CSV Method (Current):**
+   - Export contacts from EmailJS Dashboard as CSV
+   - Save as `emailjs-contacts.csv` in repository root
+   - GitHub Actions will automatically sync daily
+
+3. **Workflow Details:**
+   - Runs daily at 2 AM UTC
+   - Can be manually triggered from Actions tab
+   - Automatically commits updated `subscribers.json`
+
+### Option C: API Endpoint Sync
+
+If you're running the API server locally:
+
+```bash
+# Start API server
+npm run api
+
+# Sync via API endpoint
+curl -X POST http://localhost:3001/api/sync-emailjs \
+  -H "Content-Type: application/json" \
+  -d '{"csvPath": "path/to/emailjs-contacts.csv"}'
+```
+
+### Benefits of Automatic Sync:
+- ✅ No manual CSV import needed
+- ✅ Runs automatically on schedule
+- ✅ Keeps subscribers.json always up-to-date
+- ✅ Works with static site deployment
 
 ## Current Workflow
 

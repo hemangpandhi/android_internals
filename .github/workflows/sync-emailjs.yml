@@ -1,0 +1,61 @@
+name: Sync EmailJS Contacts
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC (adjust timezone as needed)
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual trigger
+  push:
+    paths:
+      - 'tools/sync-emailjs-contacts.js'
+      - '.github/workflows/sync-emailjs.yml'
+
+jobs:
+  sync-contacts:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Download EmailJS Contacts CSV
+        run: |
+          echo "📥 To sync contacts, you need to:"
+          echo "1. Export contacts from EmailJS Dashboard as CSV"
+          echo "2. Save the CSV file in the repository"
+          echo "3. Update this workflow to use the CSV file"
+          echo ""
+          echo "Or use the manual sync method in newsletter-admin.html"
+        continue-on-error: true
+      
+      - name: Sync Contacts (if CSV available)
+        env:
+          EMAILJS_PRIVATE_KEY: ${{ secrets.EMAILJS_PRIVATE_KEY }}
+          EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
+        run: |
+          if [ -f "emailjs-contacts.csv" ]; then
+            node tools/sync-emailjs-contacts.js emailjs-contacts.csv
+          else
+            echo "⚠️  No CSV file found. Skipping sync."
+            echo "💡 Export contacts from EmailJS Dashboard and save as emailjs-contacts.csv"
+          fi
+        continue-on-error: true
+      
+      - name: Commit and push changes
+        if: success()
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/subscribers.json build/data/subscribers.json
+          git diff --staged --quiet || git commit -m "Auto-sync: Update subscribers from EmailJS contacts [skip ci]"
+          git push
+        continue-on-error: true
+

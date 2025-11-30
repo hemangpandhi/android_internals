@@ -861,8 +861,12 @@ window.onclick = function(event) {
   // ===== USER AUTHENTICATION UI =====
   function initUserAuthUI() {
     const userAuth = window.userAuth;
-    if (!userAuth) return;
+    if (!userAuth) {
+      console.log('initUserAuthUI: userAuth not available yet');
+      return;
+    }
 
+    console.log('initUserAuthUI: Initializing user auth UI');
     const btnLogin = document.getElementById('btnLogin');
     const loginModal = document.getElementById('loginModal');
     const loginModalClose = document.getElementById('loginModalClose');
@@ -875,26 +879,34 @@ window.onclick = function(event) {
     const menuLogout = document.getElementById('menuLogout');
 
     function updateUserUI() {
+      console.log('updateUserUI: Checking auth status');
       if (userAuth.isAuthenticated()) {
         const user = userAuth.getUser();
-        userMenuLoggedOut.style.display = 'none';
-        userMenuLoggedIn.style.display = 'block';
+        console.log('updateUserUI: User is authenticated:', user);
         
-        if (user.picture || user.avatar) {
-          userAvatarImg.src = user.picture || user.avatar;
-          userAvatarImg.style.display = 'block';
-          userAvatarInitial.style.display = 'none';
+        if (userMenuLoggedOut) userMenuLoggedOut.style.display = 'none';
+        if (userMenuLoggedIn) userMenuLoggedIn.style.display = 'block';
+        
+        if (user && (user.picture || user.avatar)) {
+          if (userAvatarImg) {
+            userAvatarImg.src = user.picture || user.avatar;
+            userAvatarImg.style.display = 'block';
+          }
+          if (userAvatarInitial) userAvatarInitial.style.display = 'none';
         } else {
-          userAvatarImg.style.display = 'none';
-          userAvatarInitial.style.display = 'block';
-          userAvatarInitial.textContent = (user.name || user.email || 'U').charAt(0).toUpperCase();
+          if (userAvatarImg) userAvatarImg.style.display = 'none';
+          if (userAvatarInitial) {
+            userAvatarInitial.style.display = 'block';
+            userAvatarInitial.textContent = (user?.name || user?.email || 'U').charAt(0).toUpperCase();
+          }
         }
         
-        userName.textContent = user.name || user.email || 'User';
-        userEmail.textContent = user.email || '';
+        if (userName) userName.textContent = user?.name || user?.email || 'User';
+        if (userEmail) userEmail.textContent = user?.email || '';
       } else {
-        userMenuLoggedOut.style.display = 'block';
-        userMenuLoggedIn.style.display = 'none';
+        console.log('updateUserUI: User is not authenticated');
+        if (userMenuLoggedOut) userMenuLoggedOut.style.display = 'block';
+        if (userMenuLoggedIn) userMenuLoggedIn.style.display = 'none';
       }
     }
 
@@ -989,16 +1001,39 @@ window.onclick = function(event) {
   // Initialize user auth UI - wait for user-auth.js to be ready
   function waitForUserAuth() {
     if (window.userAuth) {
+      console.log('userAuth found, initializing UI');
       initUserAuthUI();
     } else {
+      console.log('userAuth not found, waiting...');
       // Wait for userAuthReady event
-      window.addEventListener('userAuthReady', initUserAuthUI, { once: true });
-      // Fallback: try again after a short delay
+      window.addEventListener('userAuthReady', () => {
+        console.log('userAuthReady event received, initializing UI');
+        initUserAuthUI();
+      }, { once: true });
+      
+      // Also listen for userAuthChange event (fired after auth)
+      window.addEventListener('userAuthChange', () => {
+        console.log('userAuthChange event received');
+        if (window.userAuth && !document.getElementById('btnLogin')?.hasAttribute('data-initialized')) {
+          console.log('Initializing UI from userAuthChange event');
+          initUserAuthUI();
+        }
+      });
+      
+      // Fallback: try again after delays
       setTimeout(() => {
         if (window.userAuth && !document.getElementById('btnLogin')?.hasAttribute('data-initialized')) {
+          console.log('Fallback: Initializing UI after delay');
           initUserAuthUI();
         }
       }, 100);
+      
+      setTimeout(() => {
+        if (window.userAuth && !document.getElementById('btnLogin')?.hasAttribute('data-initialized')) {
+          console.log('Fallback 2: Initializing UI after longer delay');
+          initUserAuthUI();
+        }
+      }, 500);
     }
   }
 

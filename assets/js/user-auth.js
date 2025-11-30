@@ -39,14 +39,23 @@ class UserAuth {
 
     async handleAuthCallback(token, provider) {
         try {
+            console.log('Handling auth callback for provider:', provider);
             const apiUrl = provider === 'google' ? this.googleAuthApiUrl : this.authApiUrl;
+            console.log('Verifying token with:', apiUrl);
+            
             const response = await fetch(`${apiUrl}?action=verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token })
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
+            console.log('Auth verification response:', data);
+            
             if (data.authenticated && data.user) {
                 this.currentUser = {
                     ...data.user,
@@ -56,9 +65,14 @@ class UserAuth {
                     avatar: data.user.avatar || data.user.picture,
                     picture: data.user.picture || data.user.avatar
                 };
+                console.log('User authenticated:', this.currentUser);
                 this.saveUserSession();
                 this.onUserChange();
-                console.log('Authentication successful:', this.currentUser);
+                // Force UI update after a short delay to ensure scripts are ready
+                setTimeout(() => {
+                    this.onUserChange();
+                    window.dispatchEvent(new CustomEvent('userAuthReady'));
+                }, 100);
                 return true;
             } else {
                 console.error('Authentication failed:', data.error || 'Unknown error');
@@ -77,12 +91,16 @@ class UserAuth {
         if (stored) {
             try {
                 const session = JSON.parse(stored);
+                console.log('Loading session:', session);
                 // Check if session is still valid (24 hours)
                 if (session.exp && session.exp > Date.now()) {
                     this.currentUser = session.user;
+                    console.log('Session loaded, user:', this.currentUser);
+                    this.onUserChange();
                     return true;
                 } else {
                     // Session expired
+                    console.log('Session expired, removing');
                     localStorage.removeItem('user_session');
                     this.currentUser = null;
                 }
@@ -91,6 +109,7 @@ class UserAuth {
                 this.currentUser = null;
             }
         } else {
+            console.log('No stored session found');
             this.currentUser = null;
         }
         return this.currentUser !== null;
@@ -103,6 +122,9 @@ class UserAuth {
                 exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
             };
             localStorage.setItem('user_session', JSON.stringify(session));
+            console.log('Session saved:', session);
+        } else {
+            console.log('No user to save in session');
         }
     }
 

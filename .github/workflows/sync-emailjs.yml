@@ -29,6 +29,7 @@ jobs:
       
       - name: Try EmailJS API Sync (Automatic)
         id: api_sync
+        continue-on-error: true
         env:
           EMAILJS_PRIVATE_KEY: ${{ secrets.EMAILJS_PRIVATE_KEY }}
           EMAILJS_USER_ID: ${{ secrets.EMAILJS_PUBLIC_KEY }}
@@ -45,7 +46,6 @@ jobs:
             echo "✅ EmailJS API credentials found - attempting API sync..."
             node tools/sync-emailjs-contacts.js || echo "api_failed=true" >> $GITHUB_OUTPUT
           fi
-        continue-on-error: true
       
       - name: Fallback: Check for CSV file
         id: check_csv

@@ -857,8 +857,10 @@ window.onclick = function(event) {
       declineBtn.addEventListener('click', declineCookies);
     }
   });
-})(); 
-  // ===== USER AUTHENTICATION UI =====
+})();
+
+// ===== USER AUTHENTICATION UI =====
+(function() {
   function initUserAuthUI() {
     const userAuth = window.userAuth;
     if (!userAuth) {
@@ -1042,6 +1044,7 @@ window.onclick = function(event) {
   } else {
     waitForUserAuth();
   }
+})();
 
   // ===== PREFERENCES MODAL =====
   function showPreferencesModal() {

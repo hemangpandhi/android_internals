@@ -102,9 +102,22 @@ export default async function handler(req, res) {
       })).toString('base64');
 
       // Redirect to original page with token
-      const returnUrl = `${redirectTo}${redirectTo.includes('?') ? '&' : '?'}token=${sessionToken}&provider=google`;
-      
-      return res.redirect(returnUrl);
+      // Parse URL to avoid appending multiple tokens
+      try {
+        const url = new URL(redirectTo);
+        // Remove existing token and provider params
+        url.searchParams.delete('token');
+        url.searchParams.delete('provider');
+        // Add new token and provider
+        url.searchParams.set('token', sessionToken);
+        url.searchParams.set('provider', 'google');
+        return res.redirect(url.toString());
+      } catch (e) {
+        // Fallback if URL parsing fails
+        const cleanUrl = redirectTo.split('?')[0].split('#')[0];
+        const returnUrl = `${cleanUrl}?token=${sessionToken}&provider=google`;
+        return res.redirect(returnUrl);
+      }
 
     } catch (error) {
       console.error('OAuth error:', error);

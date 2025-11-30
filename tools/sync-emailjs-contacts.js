@@ -120,7 +120,8 @@ class EmailJSSync {
     console.log(`🔄 Syncing ${contacts.length} contacts to subscribers.json...`);
     
     // Load existing subscribers
-    const existingSubscribers = this.newsletterManager.loadSubscribers();
+    this.newsletterManager.loadSubscribers();
+    const existingSubscribers = this.newsletterManager.subscribers || [];
     const existingEmails = new Set(existingSubscribers.map(sub => sub.email.toLowerCase()));
     
     let added = 0;

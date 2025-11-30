@@ -1024,8 +1024,30 @@
                     let imported = 0;
                     let updated = 0;
                     let skipped = 0;
+                    let removed = 0;
                     
-                    // Parse CSV rows (skip header)
+                    // Get emails from CSV to determine which subscribers to keep
+                    const csvEmails = new Set();
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (!line) continue;
+                        const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+                        const email = values[emailIndex];
+                        if (email && email.includes('@')) {
+                            csvEmails.add(email.toLowerCase());
+                        }
+                    }
+                    
+                    // Mark subscribers not in CSV as inactive (EmailJS is source of truth)
+                    allSubscribers.forEach(sub => {
+                        if (!csvEmails.has(sub.email.toLowerCase()) && sub.active !== false) {
+                            sub.active = false;
+                            sub.updatedAt = new Date().toISOString();
+                            removed++;
+                        }
+                    });
+                    
+                    // Parse CSV rows (skip header) and add/update subscribers
                     for (let i = 1; i < lines.length; i++) {
                         const line = lines[i].trim();
                         if (!line) continue;

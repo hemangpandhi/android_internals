@@ -453,7 +453,50 @@
         // Load newsletter queue
         async function loadNewsletterQueue() {
             try {
-                const response = await fetch('/data/newsletter-queue.json');
+                // Try multiple paths for different deployment setups
+                let response = null;
+                let queue = null;
+                
+                // Try build directory path (GitHub Pages)
+                try {
+                    response = await fetch('./data/newsletter-queue.json');
+                    if (response.ok) {
+                        queue = await response.json();
+                    }
+                } catch (e) {
+                    console.log('Failed to load from ./data/newsletter-queue.json');
+                }
+                
+                // Try root path
+                if (!queue) {
+                    try {
+                        response = await fetch('/data/newsletter-queue.json');
+                        if (response.ok) {
+                            queue = await response.json();
+                        }
+                    } catch (e) {
+                        console.log('Failed to load from /data/newsletter-queue.json');
+                    }
+                }
+                
+                // Try absolute path
+                if (!queue) {
+                    try {
+                        const baseUrl = window.location.origin;
+                        response = await fetch(`${baseUrl}/data/newsletter-queue.json`);
+                        if (response.ok) {
+                            queue = await response.json();
+                        }
+                    } catch (e) {
+                        console.log('Failed to load from absolute path');
+                    }
+                }
+                
+                if (!queue) {
+                    throw new Error('No newsletter queue found');
+                }
+                
+                const response = { ok: true, json: () => Promise.resolve(queue) };
                 if (!response.ok) {
                     throw new Error('No newsletter queue found');
                 }
@@ -501,25 +544,40 @@
                 let response = null;
                 let subscribers = [];
                 
-                // Try build directory first (production)
+                // Try relative path first (works for GitHub Pages and local)
                 try {
-                    response = await fetch('/data/subscribers.json');
+                    response = await fetch('./data/subscribers.json');
                     if (response.ok) {
                         subscribers = await response.json();
+                        console.log('✅ Loaded from ./data/subscribers.json');
                     }
                 } catch (e) {
-                    console.log('Failed to load from /data/subscribers.json, trying alternative paths...');
+                    console.log('Failed to load from ./data/subscribers.json:', e);
                 }
                 
-                // If that failed, try root data directory (local dev)
+                // If that failed, try root path (production)
+                if (!subscribers || subscribers.length === 0) {
+                    try {
+                        response = await fetch('/data/subscribers.json');
+                        if (response.ok) {
+                            subscribers = await response.json();
+                            console.log('✅ Loaded from /data/subscribers.json');
+                        }
+                    } catch (e) {
+                        console.log('Failed to load from /data/subscribers.json:', e);
+                    }
+                }
+                
+                // If still no data, try without leading slash (local dev)
                 if (!subscribers || subscribers.length === 0) {
                     try {
                         response = await fetch('data/subscribers.json');
                         if (response.ok) {
                             subscribers = await response.json();
+                            console.log('✅ Loaded from data/subscribers.json');
                         }
                     } catch (e) {
-                        console.log('Failed to load from data/subscribers.json');
+                        console.log('Failed to load from data/subscribers.json:', e);
                     }
                 }
                 
@@ -530,9 +588,10 @@
                         response = await fetch(`${baseUrl}/data/subscribers.json`);
                         if (response.ok) {
                             subscribers = await response.json();
+                            console.log('✅ Loaded from absolute path');
                         }
                     } catch (e) {
-                        console.log('Failed to load subscribers from all paths');
+                        console.log('Failed to load subscribers from absolute path:', e);
                     }
                 }
                 

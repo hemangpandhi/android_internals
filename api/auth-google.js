@@ -2,8 +2,7 @@
 // Handles Google SSO login for website users
 // Uses signed JWT tokens and httpOnly cookies for security
 
-const jwtUtils = require('./jwt-utils');
-const { createAccessToken, createRefreshToken, verifyToken } = jwtUtils;
+import { createAccessToken, createRefreshToken, verifyToken } from './jwt-utils.js';
 
 // Parse cookies from request
 function parseCookies(cookieHeader) {

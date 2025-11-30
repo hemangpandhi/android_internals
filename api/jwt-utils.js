@@ -1,7 +1,7 @@
 // JWT Token Utilities for Secure Authentication
 // Uses HMAC-SHA256 for signing tokens
 
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 /**
  * Sign a JWT token with HMAC-SHA256
@@ -114,7 +114,7 @@ function createRefreshToken(userData, secret) {
   return signToken(payload, secret);
 }
 
-module.exports = {
+export {
   signToken,
   verifyToken,
   createAccessToken,

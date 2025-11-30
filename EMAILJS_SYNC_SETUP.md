@@ -14,13 +14,17 @@ You need to enable contact collection in **BOTH** templates:
 
 #### A. Contact Form Template (for newsletter subscriptions)
 1. Go to your [EmailJS Dashboard](https://dashboard.emailjs.com/)
-2. Navigate to **Email Templates** → Select your **Contact Template** (`template_7bzhk1x`)
-3. Click on the **Contacts** tab (or look for "Collecting contacts" section)
-4. Enable **"Save Contacts"** or **"Collecting contacts"** option
-5. Configure the contact fields:
-   - **Contact Email**: Map to `{{from_email}}` or `{{email}}` (the subscriber's email)
-   - **Contact Name**: Map to `{{from_name}}` or `{{name}}` (optional)
-6. Save the template
+2. Navigate to **Email Templates** → Select your **Contact Template** (`template_7bzhk1x` - "Contact Us")
+3. Click on the **Contacts** tab
+4. **Enable the "Save Contacts" checkbox**
+5. Configure the contact fields with these exact values:
+   - **Contact Email** (required): `{{from_email}}` or `{{email}}`
+     - This captures the subscriber's email address
+   - **Contact Name**: `{{from_name}}` or `{{name}}`
+     - This captures the subscriber's name (if provided)
+   - **Contact Address**: Leave empty (not used for newsletter subscriptions)
+   - **Contact Phone**: Leave empty (not used for newsletter subscriptions)
+6. Click **"Save"** button (top right)
 
 #### B. Newsletter Template (for sending newsletters)
 1. Navigate to **Email Templates** → Select your **Newsletter Template** (`template_uwh1kil`)

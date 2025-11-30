@@ -158,13 +158,34 @@ class UserAuth {
         window.location.href = `${googleAuthApiUrl}?action=login&redirect_to=${redirectTo}`;
     }
 
-    logout() {
-        this.currentUser = null;
-        localStorage.removeItem('user_session');
-        localStorage.removeItem('user_preferences');
-        this.onUserChange();
-        // Reload to clear any user-specific state
-        window.location.reload();
+    async logout() {
+        if (confirm('Are you sure you want to sign out?')) {
+            console.log('🔐 [AUTH] Logging out...');
+            
+            // Call logout endpoint to clear cookies
+            try {
+                const apiUrl = this.authApiUrl;
+                await fetch(`${apiUrl}?action=logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include' // Include cookies
+                });
+            } catch (error) {
+                console.error('🔐 [AUTH] Logout API call failed:', error);
+            }
+            
+            // Clear local storage
+            this.currentUser = null;
+            localStorage.removeItem('user_session');
+            // Keep preferences (user might want them after re-login)
+            // localStorage.removeItem('user_preferences');
+            
+            this.onUserChange();
+            // Reload to clear any user-specific state
+            window.location.href = window.location.pathname;
+        }
     }
 
     isAuthenticated() {

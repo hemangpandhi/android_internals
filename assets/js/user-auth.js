@@ -353,10 +353,26 @@ class UserAuth {
     }
 
     updateTheme(theme) {
+        console.log('🎨 [THEME] Updating theme to:', theme);
         const prefs = this.getPreferences();
         prefs.theme = theme;
         this.savePreferences(prefs);
-        document.documentElement.setAttribute('data-theme', theme);
+        
+        // Apply theme immediately
+        if (theme === 'auto') {
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const actualTheme = prefersDark ? 'dark' : 'light';
+            console.log('🎨 [THEME] Auto theme detected:', actualTheme);
+            document.documentElement.setAttribute('data-theme', actualTheme);
+        } else {
+            console.log('🎨 [THEME] Setting theme to:', theme);
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+        
+        // Dispatch event for other components
+        window.dispatchEvent(new CustomEvent('themeChange', { 
+            detail: { theme: theme, appliedTheme: theme === 'auto' ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme }
+        }));
     }
 
     addBookmark(articleId, articleTitle, articleUrl) {

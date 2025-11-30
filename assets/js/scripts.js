@@ -1086,10 +1086,26 @@ function showPreferencesModal() {
 
     // Save function
     window.savePreferences = function() {
-      const theme = document.getElementById('themeSelect').value;
+      const themeSelect = document.getElementById('themeSelect');
+      if (!themeSelect) {
+        console.error('Theme select not found');
+        return;
+      }
+      const theme = themeSelect.value;
+      console.log('💾 [PREFERENCES] Saving theme:', theme);
       userAuth.updateTheme(theme);
       modal.remove();
-      alert('Preferences saved!');
+      console.log('💾 [PREFERENCES] Preferences saved!');
+      // Show success message without alert (less intrusive)
+      const successMsg = document.createElement('div');
+      successMsg.textContent = 'Preferences saved!';
+      successMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #3ddc84; color: #0d1117; padding: 1rem 1.5rem; border-radius: 8px; z-index: 10001; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-weight: 600;';
+      document.body.appendChild(successMsg);
+      setTimeout(() => {
+        successMsg.style.opacity = '0';
+        successMsg.style.transition = 'opacity 0.3s';
+        setTimeout(() => successMsg.remove(), 300);
+      }, 2000);
     };
   }
 

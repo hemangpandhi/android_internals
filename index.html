@@ -8,28 +8,44 @@
   <meta name="author" content="Android Internals">
   <meta name="robots" content="index, follow">
   
-      <!-- EmailJS Integration - Load synchronously to ensure it's available -->
+      <!-- EmailJS Integration - Load directly from CDN -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script type="text/javascript">
-      // Load EmailJS library dynamically with error handling
-      (function() {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
-        script.integrity = 'sha384-8X4b8l4K2lI8v5vp3S2Q7zXWf+7F1oYFv4QyU8j8fwpdkO5GFvQq0s1hqTqA1hQy';
-        script.crossOrigin = 'anonymous';
-        script.onerror = function() {
-          console.error('❌ Failed to load EmailJS library from CDN');
-          console.error('Check network tab for blocked requests or CSP violations');
-        };
-        script.onload = function() {
-          console.log('✅ EmailJS library loaded successfully');
-        };
-        document.head.appendChild(script);
-      })();
+      // Fallback to unpkg if jsdelivr fails
+      window.addEventListener('load', function() {
+        if (typeof emailjs === 'undefined') {
+          console.warn('EmailJS not loaded from jsdelivr, trying unpkg fallback...');
+          const fallbackScript = document.createElement('script');
+          fallbackScript.src = 'https://unpkg.com/@emailjs/browser@4/dist/email.min.js';
+          fallbackScript.onload = function() {
+            console.log('✅ EmailJS loaded from unpkg fallback');
+            initializeEmailJS();
+          };
+          fallbackScript.onerror = function() {
+            console.error('❌ EmailJS failed to load from both CDNs');
+            console.error('Check browser Network tab for blocked requests or CSP violations');
+          };
+          document.head.appendChild(fallbackScript);
+        } else {
+          console.log('✅ EmailJS loaded from jsdelivr');
+          initializeEmailJS();
+        }
+      });
+      
+      function initializeEmailJS() {
+        if (window.EMAILJS_CONFIG && window.EMAILJS_CONFIG.publicKey && typeof emailjs !== 'undefined') {
+          if (!window.EMAILJS_CONFIG.publicKey.includes('YOUR_EMAILJS') && 
+              !window.EMAILJS_CONFIG.publicKey.includes('HERE')) {
+            emailjs.init(window.EMAILJS_CONFIG.publicKey);
+            console.log('✅ EmailJS initialized with public key');
+          }
+        }
+      }
     </script>
     <script type="text/javascript" src="config.js" onerror="console.error('Failed to load config.js')"></script>
   
   <!-- Security Headers -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://api.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.emailjs.com https://cdn.jsdelivr.net; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; media-src 'self'; worker-src 'self' blob:; manifest-src 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://api.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.emailjs.com https://cdn.jsdelivr.net https://unpkg.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; media-src 'self'; worker-src 'self' blob:; manifest-src 'self';">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">

@@ -383,69 +383,82 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
       
-      // Check if EmailJS library is loaded
-      if (typeof emailjs === 'undefined') {
-        console.error('EmailJS library is not loaded. Please refresh the page.');
-        toast.error('Email Service Error', 'Email service is not available. Please refresh the page and try again.');
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-        return;
+      // Check if EmailJS library is loaded - wait and retry if needed
+      function attemptSend() {
+        if (typeof emailjs === 'undefined') {
+          console.warn('EmailJS not loaded yet, waiting...');
+          setTimeout(function() {
+            if (typeof emailjs === 'undefined') {
+              console.error('EmailJS library is not loaded after waiting.');
+              toast.error('Email Service Error', 'Email service is not available. Please refresh the page and try again.');
+              submitBtn.textContent = originalText;
+              submitBtn.disabled = false;
+              return;
+            } else {
+              attemptSend(); // Retry now that it's loaded
+            }
+          }, 1000);
+          return;
+        }
+        
+        // EmailJS is loaded, proceed with sending
+        const emailPromise = emailjs.send(window.EMAILJS_CONFIG.serviceId, window.EMAILJS_CONFIG.newsletterTemplate, templateParams);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('EmailJS timeout')), 10000)
+        );
+        
+        Promise.race([emailPromise, timeoutPromise])
+          .then(function(response) {
+            console.log('Newsletter subscription email sent:', response);
+            
+            // Success - EmailJS worked, so subscription is successful
+            toast.success('Subscription Successful!', 'You\'ll receive updates when new articles are published.');
+            newsletterForm.reset();
+            
+            // Try to add to local API if available (for development)
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+              fetch('http://localhost:3001/api/subscribe', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: email })
+              })
+              .then(response => response.json())
+              .then(data => {
+                console.log('Local API response:', data);
+              })
+              .catch(error => {
+                console.log('Local API not available (expected on production)');
+              });
+            }
+          })
+          .catch(function(error) {
+            console.error('Newsletter subscription email failed:', error);
+            console.error('Error details:', error);
+            
+            if (error.message === 'EmailJS timeout') {
+              toast.error('Subscription Timeout', 'The request took too long. Please try again later.');
+            } else if (error.status === 0) {
+              toast.error('Network Error', 'Please check your internet connection and try again.');
+            } else if (error.status === 403) {
+              toast.error('Access Denied', 'Email service temporarily unavailable. Please try again later.');
+            } else if (error.status === 422) {
+              console.error('EmailJS template parameter error:', error.text);
+              toast.error('Template Error', 'Email template configuration issue. Please contact support.');
+            } else {
+              toast.error('Subscription Failed', 'Please try again later or contact us for assistance.');
+            }
+          })
+          .finally(function() {
+            // Reset button state
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+          });
       }
       
-      // Create a promise with timeout
-      const emailPromise = emailjs.send(window.EMAILJS_CONFIG.serviceId, window.EMAILJS_CONFIG.newsletterTemplate, templateParams);
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('EmailJS timeout')), 10000)
-      );
-      
-      Promise.race([emailPromise, timeoutPromise])
-        .then(function(response) {
-          console.log('Newsletter subscription email sent:', response);
-          
-          // Success - EmailJS worked, so subscription is successful
-          toast.success('Subscription Successful!', 'You\'ll receive updates when new articles are published.');
-          newsletterForm.reset();
-          
-          // Try to add to local API if available (for development)
-          if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            fetch('http://localhost:3001/api/subscribe', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ email: email })
-            })
-            .then(response => response.json())
-            .then(data => {
-              console.log('Local API response:', data);
-            })
-            .catch(error => {
-              console.log('Local API not available (expected on production)');
-            });
-          }
-        })
-        .catch(function(error) {
-          console.error('Newsletter subscription email failed:', error);
-          console.error('Error details:', error);
-          
-          if (error.message === 'EmailJS timeout') {
-            toast.error('Subscription Timeout', 'The request took too long. Please try again later.');
-          } else if (error.status === 0) {
-            toast.error('Network Error', 'Please check your internet connection and try again.');
-          } else if (error.status === 403) {
-            toast.error('Access Denied', 'Email service temporarily unavailable. Please try again later.');
-          } else if (error.status === 422) {
-            console.error('EmailJS template parameter error:', error.text);
-            toast.error('Template Error', 'Email template configuration issue. Please contact support.');
-          } else {
-            toast.error('Subscription Failed', 'Please try again later or contact us for assistance.');
-          }
-        })
-        .finally(function() {
-          // Reset button state
-          submitBtn.textContent = originalText;
-          submitBtn.disabled = false;
-        });
+      // Start the send attempt
+      attemptSend();
     });
   }
 

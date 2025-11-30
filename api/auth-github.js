@@ -101,11 +101,10 @@ export default async function handler(req, res) {
       })).toString('base64');
 
       // Redirect to admin panel with token
-      // Get the origin from referer or use default site URL
-      const siteOrigin = req.headers.referer 
-        ? new URL(req.headers.referer).origin 
-        : (req.headers.origin || 'https://www.hemangpandhi.com');
-      const adminUrl = `${siteOrigin}/newsletter-admin.html?token=${sessionToken}`;
+      // Always use production site URL (not from headers, which might be GitHub)
+      // Can be overridden with SITE_URL environment variable
+      const siteUrl = process.env.SITE_URL || 'https://www.hemangpandhi.com';
+      const adminUrl = `${siteUrl}/newsletter-admin.html?token=${sessionToken}`;
       
       return res.redirect(adminUrl);
 

@@ -948,7 +948,7 @@
                     // Download updated file
                     downloadAllSubscribers();
                     
-                    alert(`✅ Import completed!\n\n📊 Imported: ${imported} new\n🔄 Updated: ${updated} existing\n⏭️ Skipped: ${skipped} invalid\n\n📥 Updated subscribers.json has been downloaded.`);
+                    alert(`✅ Sync completed!\n\n📊 Imported: ${imported} new\n🔄 Updated: ${updated} existing\n🗑️  Removed: ${removed} not in EmailJS\n⏭️ Skipped: ${skipped} invalid\n📊 Total active: ${allSubscribers.length}\n\n📥 Updated subscribers.json has been downloaded.\n\nNote: Only subscribers from EmailJS contacts are kept.`);
                 } catch (error) {
                     console.error('CSV import error:', error);
                     alert('Error importing CSV file: ' + error.message);

@@ -115,61 +115,88 @@ class EmailJSSync {
 
   /**
    * Sync contacts to subscribers.json
+   * Only keeps subscribers that exist in EmailJS contacts (removes others)
    */
   async syncContacts(contacts) {
     console.log(`🔄 Syncing ${contacts.length} contacts to subscribers.json...`);
+    console.log(`📋 Will only keep subscribers that exist in EmailJS contacts`);
     
     // Load existing subscribers
     this.newsletterManager.loadSubscribers();
     const existingSubscribers = this.newsletterManager.subscribers || [];
     const existingEmails = new Set(existingSubscribers.map(sub => sub.email.toLowerCase()));
     
+    // Create set of EmailJS contact emails (source of truth)
+    const emailjsEmails = new Set(contacts.map(c => c.email.toLowerCase()));
+    
     let added = 0;
     let updated = 0;
+    let removed = 0;
     
-    // Process each contact
+    // Build new subscribers list - only from EmailJS contacts
+    const newSubscribers = [];
+    const processedEmails = new Set();
+    
+    // Process each contact from EmailJS
     for (const contact of contacts) {
       const emailLower = contact.email.toLowerCase();
+      processedEmails.add(emailLower);
       
-      if (existingEmails.has(emailLower)) {
+      // Find existing subscriber if it exists
+      const existingSubscriber = existingSubscribers.find(
+        sub => sub.email.toLowerCase() === emailLower
+      );
+      
+      if (existingSubscriber) {
         // Update existing subscriber
-        const existingIndex = existingSubscribers.findIndex(
-          sub => sub.email.toLowerCase() === emailLower
-        );
-        
-        if (existingIndex !== -1) {
-          existingSubscribers[existingIndex].active = true;
-          existingSubscribers[existingIndex].updatedAt = new Date().toISOString();
-          if (contact.name) {
-            existingSubscribers[existingIndex].name = contact.name;
-          }
-          updated++;
-        }
+        newSubscribers.push({
+          email: contact.email,
+          name: contact.name || existingSubscriber.name || contact.email.split('@')[0],
+          subscribedAt: existingSubscriber.subscribedAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          active: true
+        });
+        updated++;
       } else {
         // Add new subscriber
-        this.newsletterManager.addSubscriber(contact.email, contact.name || '');
+        newSubscribers.push({
+          email: contact.email,
+          name: contact.name || contact.email.split('@')[0],
+          subscribedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          active: true
+        });
         added++;
       }
     }
     
-    // Save subscribers
+    // Count removed subscribers (those not in EmailJS contacts)
+    for (const existing of existingSubscribers) {
+      const emailLower = existing.email.toLowerCase();
+      if (!emailjsEmails.has(emailLower)) {
+        removed++;
+        console.log(`   🗑️  Removing subscriber not in EmailJS: ${existing.email}`);
+      }
+    }
+    
+    // Replace subscribers with only EmailJS contacts
+    this.newsletterManager.subscribers = newSubscribers;
     this.newsletterManager.saveSubscribers();
     
     // Also update build directory
-    this.newsletterManager.loadSubscribers();
-    const subscribers = this.newsletterManager.subscribers || [];
     const buildDataDir = path.dirname(buildSubscribersFile);
     if (!fs.existsSync(buildDataDir)) {
       fs.mkdirSync(buildDataDir, { recursive: true });
     }
-    fs.writeFileSync(buildSubscribersFile, JSON.stringify(subscribers, null, 2));
+    fs.writeFileSync(buildSubscribersFile, JSON.stringify(newSubscribers, null, 2));
     
     console.log(`✅ Sync completed:`);
     console.log(`   📥 Added: ${added} new subscribers`);
     console.log(`   🔄 Updated: ${updated} existing subscribers`);
-    console.log(`   📊 Total subscribers: ${subscribers.length}`);
+    console.log(`   🗑️  Removed: ${removed} subscribers not in EmailJS`);
+    console.log(`   📊 Total active subscribers: ${newSubscribers.length}`);
     
-    return { added, updated, total: subscribers.length };
+    return { added, updated, removed, total: newSubscribers.length };
   }
 
   /**

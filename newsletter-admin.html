@@ -1011,13 +1011,23 @@
                         return;
                     }
                     
-                    // Parse CSV header
-                    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-                    const emailIndex = headers.findIndex(h => h.toLowerCase().includes('email'));
-                    const nameIndex = headers.findIndex(h => h.toLowerCase().includes('name') || h.toLowerCase().includes('contact'));
+                    // Parse CSV header - handle quoted fields and different separators
+                    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+                    const emailIndex = headers.findIndex(h => {
+                        const lower = h.toLowerCase();
+                        return lower.includes('email') || lower.includes('contact_email') || lower.includes('e-mail');
+                    });
+                    const nameIndex = headers.findIndex(h => {
+                        const lower = h.toLowerCase();
+                        return (lower.includes('name') || lower.includes('contact_name') || lower.includes('contact name')) && !lower.includes('email');
+                    });
+                    
+                    console.log('CSV Headers:', headers);
+                    console.log('Email column index:', emailIndex);
+                    console.log('Name column index:', nameIndex);
                     
                     if (emailIndex === -1) {
-                        alert('CSV file must contain an email column');
+                        alert('CSV file must contain an email column. Found columns: ' + headers.join(', '));
                         return;
                     }
                     
@@ -1031,12 +1041,35 @@
                     for (let i = 1; i < lines.length; i++) {
                         const line = lines[i].trim();
                         if (!line) continue;
-                        const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+                        
+                        // Handle CSV with quoted fields properly
+                        const values = [];
+                        let current = '';
+                        let inQuotes = false;
+                        for (let j = 0; j < line.length; j++) {
+                            const char = line[j];
+                            if (char === '"') {
+                                inQuotes = !inQuotes;
+                            } else if (char === ',' && !inQuotes) {
+                                values.push(current.trim().replace(/^"|"$/g, ''));
+                                current = '';
+                            } else {
+                                current += char;
+                            }
+                        }
+                        values.push(current.trim().replace(/^"|"$/g, ''));
+                        
                         const email = values[emailIndex];
-                        if (email && email.includes('@')) {
+                        if (email && email.includes('@') && email.includes('.')) {
                             csvEmails.add(email.toLowerCase());
+                            console.log('Found email in CSV:', email);
+                        } else {
+                            console.log('Skipped invalid email:', email, 'from line:', line);
                         }
                     }
+                    
+                    console.log('Total valid emails in CSV:', csvEmails.size);
+                    console.log('CSV emails:', Array.from(csvEmails));
                     
                     // Mark subscribers not in CSV as inactive (EmailJS is source of truth)
                     allSubscribers.forEach(sub => {
@@ -1052,11 +1085,30 @@
                         const line = lines[i].trim();
                         if (!line) continue;
                         
-                        const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+                        // Handle CSV with quoted fields properly
+                        const values = [];
+                        let current = '';
+                        let inQuotes = false;
+                        for (let j = 0; j < line.length; j++) {
+                            const char = line[j];
+                            if (char === '"') {
+                                inQuotes = !inQuotes;
+                            } else if (char === ',' && !inQuotes) {
+                                values.push(current.trim().replace(/^"|"$/g, ''));
+                                current = '';
+                            } else {
+                                current += char;
+                            }
+                        }
+                        values.push(current.trim().replace(/^"|"$/g, ''));
+                        
                         const email = values[emailIndex];
                         const name = nameIndex !== -1 ? values[nameIndex] : '';
                         
-                        if (!email || !email.includes('@')) {
+                        // Validate email format
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!email || !emailRegex.test(email)) {
+                            console.log('Skipped invalid email:', email, 'from values:', values);
                             skipped++;
                             continue;
                         }

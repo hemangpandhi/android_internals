@@ -194,7 +194,7 @@
             </div>
 
             <div id="send-section" style="display: none;">
-                <button id="test-btn" class="btn" style="margin-right: 1rem;">Test EmailJS</button>
+                <button id="test-btn" class="btn" style="margin-right: 1rem;">Test Newsletter Template</button>
             <button id="send-btn" class="btn">Send Newsletters</button>
                 
                 <div class="progress" id="progress" style="display: none;">
@@ -225,31 +225,54 @@
         let newsletterQueue = null;
         let emailStatuses = {};
 
-        // Test EmailJS connection
+        // Test EmailJS connection with newsletter template variables
         async function testEmailJS() {
             try {
-                log('🧪 Testing EmailJS connection...');
+                log('🧪 Testing Newsletter Template with article variables...');
                 
-                // Test with comprehensive parameters (including all possible recipient field names)
+                // Prompt for test email
+                const testEmail = prompt('Enter your email address to test the newsletter template:', 'your-email@example.com');
+                if (!testEmail) {
+                    log('❌ Test cancelled - no email provided');
+                    return false;
+                }
+                
+                // Extract name from email
+                const toName = testEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                
+                // Test with full newsletter template parameters including article variables
                 const testParams = {
-                    from_name: 'Test Sender',
-                    from_email: 'info@hemangpandhi.com',
-                    message: 'This is a test message from the newsletter admin panel.',
-                    to_email: 'info@hemangpandhi.com',
-                    to_name: 'Hemang Pandhi',
-                    subject: 'Test Newsletter - EmailJS Connection',
-                    reply_to: 'info@hemangpandhi.com',
-                    // Alternative parameter names that EmailJS might expect
-                    email: 'info@hemangpandhi.com',
-                    name: 'Hemang Pandhi',
-                    contact_email: 'info@hemangpandhi.com',
-                    contact_name: 'Hemang Pandhi',
-                    to: 'info@hemangpandhi.com',
-                    recipient: 'info@hemangpandhi.com',
-                    recipient_email: 'info@hemangpandhi.com',
-                    recipient_name: 'Hemang Pandhi'
+                    // Recipient info
+                    to_email: testEmail,
+                    to_name: toName,
+                    
+                    // Sender info
+                    from_name: 'Android Internals Newsletter',
+                    from_email: 'noreply@hemangpandhi.com',
+                    
+                    // Newsletter content
+                    subject: 'Test Newsletter: Android System Server Deep Dive',
+                    message: 'Hi ' + toName + ',\n\nWe\'ve just published a new article on Android Internals. Check it out!\n\nBest regards,\nAndroid Internals Team',
+                    reply_to: 'noreply@hemangpandhi.com',
+                    
+                    // Article variables (for newsletter template)
+                    articleTitle: 'Android System Server Deep Dive',
+                    articleDescription: 'Comprehensive guide to understanding Android System Server architecture, services, and internals. Learn about ActivityManager, WindowManager, and other core system components.',
+                    articleUrl: 'https://www.hemangpandhi.com/articles/android-system-server-deep-dive.html',
+                    articleDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                    unsubscribeUrl: `https://www.hemangpandhi.com/unsubscribe?email=${encodeURIComponent(testEmail)}`,
+                    
+                    // Alternative parameter names for compatibility
+                    email: testEmail,
+                    name: toName,
+                    recipient_email: testEmail,
+                    recipient_name: toName,
+                    to: testEmail,
+                    recipient: testEmail
                 };
                 
+                log(`📧 Sending test newsletter to: ${testEmail}`);
+                log(`📋 Article: ${testParams.articleTitle}`);
                 log(`Test params: ${JSON.stringify(testParams, null, 2)}`);
                 
                 const response = await emailjs.send(
@@ -258,11 +281,16 @@
                     testParams
                 );
                 
-                log('✅ EmailJS test successful!');
+                log('✅ Newsletter template test successful!');
+                log(`✅ Email sent! Status: ${response.status}`);
+                log(`📧 Check your inbox at: ${testEmail}`);
                 return true;
             } catch (error) {
-                log(`❌ EmailJS test failed: ${error.message}`);
+                log(`❌ Newsletter template test failed: ${error.message}`);
                 log(`Error details: ${JSON.stringify(error, null, 2)}`);
+                if (error.text) {
+                    log(`Error text: ${error.text}`);
+                }
                 return false;
             }
         }

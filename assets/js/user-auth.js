@@ -53,9 +53,11 @@ class UserAuth {
 
     async handleAuthCallback(token, provider) {
         try {
-            console.log('Handling auth callback for provider:', provider);
+            console.log('🔐 [AUTH] Handling auth callback for provider:', provider);
+            console.log('🔐 [AUTH] Token (first 50 chars):', token ? token.substring(0, 50) + '...' : 'MISSING');
+            
             const apiUrl = provider === 'google' ? this.googleAuthApiUrl : this.authApiUrl;
-            console.log('Verifying token with:', apiUrl);
+            console.log('🔐 [AUTH] Verifying token with API:', apiUrl);
             
             const response = await fetch(`${apiUrl}?action=verify`, {
                 method: 'POST',
@@ -63,14 +65,21 @@ class UserAuth {
                 body: JSON.stringify({ token })
             });
 
+            console.log('🔐 [AUTH] Response status:', response.status, response.statusText);
+
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorText = await response.text();
+                console.error('🔐 [AUTH] HTTP error response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
             }
 
             const data = await response.json();
-            console.log('Auth verification response:', data);
+            console.log('🔐 [AUTH] Auth verification response:', JSON.stringify(data, null, 2));
             
             if (data.authenticated && data.user) {
+                console.log('🔐 [AUTH] ✅ Authentication successful!');
+                console.log('🔐 [AUTH] User data from API:', JSON.stringify(data.user, null, 2));
+                
                 this.currentUser = {
                     ...data.user,
                     provider: provider,
@@ -79,22 +88,42 @@ class UserAuth {
                     avatar: data.user.avatar || data.user.picture,
                     picture: data.user.picture || data.user.avatar
                 };
-                console.log('User authenticated:', this.currentUser);
+                
+                console.log('🔐 [AUTH] Final user object:', JSON.stringify(this.currentUser, null, 2));
+                console.log('🔐 [AUTH] Avatar URL:', this.currentUser.avatar);
+                console.log('🔐 [AUTH] Picture URL:', this.currentUser.picture);
+                
                 this.saveUserSession();
+                console.log('🔐 [AUTH] Session saved, triggering UI update...');
                 this.onUserChange();
-                // Force UI update after a short delay to ensure scripts are ready
+                
+                // Force UI update after delays to ensure scripts are ready
                 setTimeout(() => {
+                    console.log('🔐 [AUTH] Delayed UI update (100ms)');
                     this.onUserChange();
                     window.dispatchEvent(new CustomEvent('userAuthReady'));
                 }, 100);
+                
+                setTimeout(() => {
+                    console.log('🔐 [AUTH] Delayed UI update (500ms)');
+                    this.onUserChange();
+                }, 500);
+                
+                setTimeout(() => {
+                    console.log('🔐 [AUTH] Delayed UI update (1000ms)');
+                    this.onUserChange();
+                }, 1000);
+                
                 return true;
             } else {
-                console.error('Authentication failed:', data.error || 'Unknown error');
+                console.error('🔐 [AUTH] ❌ Authentication failed - no user data');
+                console.error('🔐 [AUTH] Response data:', data);
                 alert('Authentication failed. Please try again.');
             }
         } catch (error) {
-            console.error('Auth verification failed:', error);
-            alert('Network error during authentication. Please try again.');
+            console.error('🔐 [AUTH] ❌ Auth verification failed:', error);
+            console.error('🔐 [AUTH] Error stack:', error.stack);
+            alert('Network error during authentication. Please check console for details.');
         }
         this.onUserChange(); // Update UI even on failure
         return false;
@@ -175,7 +204,12 @@ class UserAuth {
 
     onUserChange() {
         // Dispatch custom event for other components to listen
-        console.log('onUserChange: Dispatching userAuthChange event, authenticated:', this.isAuthenticated(), 'user:', this.currentUser);
+        console.log('🔄 [UI] onUserChange called');
+        console.log('🔄 [UI] Authenticated:', this.isAuthenticated());
+        console.log('🔄 [UI] Current user:', this.currentUser);
+        console.log('🔄 [UI] User avatar:', this.currentUser?.avatar);
+        console.log('🔄 [UI] User picture:', this.currentUser?.picture);
+        
         window.dispatchEvent(new CustomEvent('userAuthChange', {
             detail: { user: this.currentUser, authenticated: this.isAuthenticated() }
         }));
@@ -184,41 +218,83 @@ class UserAuth {
         if (typeof window !== 'undefined') {
             // Force a re-check after a short delay
             setTimeout(() => {
-                if (window.userAuth && document.getElementById('userMenuLoggedIn')) {
+                console.log('🔄 [UI] Manual UI update attempt (300ms delay)');
+                const userMenuLoggedOut = document.getElementById('userMenuLoggedOut');
+                const userMenuLoggedIn = document.getElementById('userMenuLoggedIn');
+                const userAvatarImg = document.getElementById('userAvatarImg');
+                const userAvatarInitial = document.getElementById('userAvatarInitial');
+                const userName = document.getElementById('userName');
+                const userEmail = document.getElementById('userEmail');
+                
+                console.log('🔄 [UI] DOM elements found:');
+                console.log('  - userMenuLoggedOut:', !!userMenuLoggedOut);
+                console.log('  - userMenuLoggedIn:', !!userMenuLoggedIn);
+                console.log('  - userAvatarImg:', !!userAvatarImg);
+                console.log('  - userAvatarInitial:', !!userAvatarInitial);
+                console.log('  - userName:', !!userName);
+                console.log('  - userEmail:', !!userEmail);
+                
+                if (window.userAuth && userMenuLoggedIn) {
                     const user = this.currentUser;
-                    const userMenuLoggedOut = document.getElementById('userMenuLoggedOut');
-                    const userMenuLoggedIn = document.getElementById('userMenuLoggedIn');
-                    const userAvatarImg = document.getElementById('userAvatarImg');
-                    const userAvatarInitial = document.getElementById('userAvatarInitial');
-                    const userName = document.getElementById('userName');
-                    const userEmail = document.getElementById('userEmail');
                     
                     if (this.isAuthenticated() && user) {
-                        console.log('Manual UI update: User is authenticated');
-                        if (userMenuLoggedOut) userMenuLoggedOut.style.display = 'none';
-                        if (userMenuLoggedIn) userMenuLoggedIn.style.display = 'block';
+                        console.log('🔄 [UI] ✅ User is authenticated, updating UI');
+                        console.log('🔄 [UI] User data:', user);
                         
-                        if (user.picture || user.avatar) {
+                        if (userMenuLoggedOut) {
+                            userMenuLoggedOut.style.display = 'none';
+                            console.log('🔄 [UI] Hidden logged-out menu');
+                        }
+                        if (userMenuLoggedIn) {
+                            userMenuLoggedIn.style.display = 'block';
+                            console.log('🔄 [UI] Showing logged-in menu');
+                        }
+                        
+                        const avatarUrl = user.picture || user.avatar;
+                        console.log('🔄 [UI] Avatar URL:', avatarUrl);
+                        
+                        if (avatarUrl) {
                             if (userAvatarImg) {
-                                userAvatarImg.src = user.picture || user.avatar;
+                                console.log('🔄 [UI] Setting avatar image src to:', avatarUrl);
+                                userAvatarImg.src = avatarUrl;
                                 userAvatarImg.style.display = 'block';
+                                userAvatarImg.onerror = function() {
+                                    console.error('🔄 [UI] ❌ Avatar image failed to load:', avatarUrl);
+                                };
+                                userAvatarImg.onload = function() {
+                                    console.log('🔄 [UI] ✅ Avatar image loaded successfully');
+                                };
                             }
-                            if (userAvatarInitial) userAvatarInitial.style.display = 'none';
+                            if (userAvatarInitial) {
+                                userAvatarInitial.style.display = 'none';
+                                console.log('🔄 [UI] Hidden avatar initial');
+                            }
                         } else {
+                            console.log('🔄 [UI] No avatar URL, showing initial');
                             if (userAvatarImg) userAvatarImg.style.display = 'none';
                             if (userAvatarInitial) {
                                 userAvatarInitial.style.display = 'block';
-                                userAvatarInitial.textContent = (user.name || user.email || 'U').charAt(0).toUpperCase();
+                                const initial = (user.name || user.email || 'U').charAt(0).toUpperCase();
+                                userAvatarInitial.textContent = initial;
+                                console.log('🔄 [UI] Set avatar initial to:', initial);
                             }
                         }
                         
-                        if (userName) userName.textContent = user.name || user.email || 'User';
-                        if (userEmail) userEmail.textContent = user.email || '';
+                        if (userName) {
+                            userName.textContent = user.name || user.email || 'User';
+                            console.log('🔄 [UI] Set user name to:', userName.textContent);
+                        }
+                        if (userEmail) {
+                            userEmail.textContent = user.email || '';
+                            console.log('🔄 [UI] Set user email to:', userEmail.textContent);
+                        }
                     } else {
-                        console.log('Manual UI update: User is not authenticated');
+                        console.log('🔄 [UI] ❌ User is not authenticated');
                         if (userMenuLoggedOut) userMenuLoggedOut.style.display = 'block';
                         if (userMenuLoggedIn) userMenuLoggedIn.style.display = 'none';
                     }
+                } else {
+                    console.log('🔄 [UI] ⚠️ DOM elements not ready yet');
                 }
             }, 300);
         }

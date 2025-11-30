@@ -22,7 +22,14 @@ export default async function handler(req, res) {
 
   // Step 1: Initiate OAuth flow (redirect to GitHub)
   if (req.method === 'GET' && req.query.action === 'login') {
-    const redirectUri = `${req.headers.origin || 'https://www.hemangpandhi.com'}/api/auth-github?action=callback`;
+    // Use Vercel URL for callback (must match GitHub OAuth app callback URL)
+    // Vercel provides VERCEL_URL or we can construct from request
+    const vercelUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : (req.headers.host 
+          ? `https://${req.headers.host}` 
+          : 'https://android-internals.vercel.app');
+    const redirectUri = `${vercelUrl}/api/auth-github?action=callback`;
     const scope = 'read:user';
     const state = req.query.state || Math.random().toString(36).substring(7);
     
@@ -95,7 +102,11 @@ export default async function handler(req, res) {
       })).toString('base64');
 
       // Redirect to admin panel with token
-      const adminUrl = `${req.headers.origin || 'https://www.hemangpandhi.com'}/newsletter-admin.html?token=${sessionToken}`;
+      // Get the origin from referer or use default site URL
+      const siteOrigin = req.headers.referer 
+        ? new URL(req.headers.referer).origin 
+        : (req.headers.origin || 'https://www.hemangpandhi.com');
+      const adminUrl = `${siteOrigin}/newsletter-admin.html?token=${sessionToken}`;
       
       return res.redirect(adminUrl);
 

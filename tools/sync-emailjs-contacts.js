@@ -45,15 +45,14 @@ class EmailJSSync {
       throw new Error('EMAILJS_PRIVATE_KEY (Private Key/Access Token) is required');
     }
 
-    // Get User ID from Public Key (if available in config)
-    // Note: For EmailJS API, User ID is typically the same as Public Key
-    // But check EmailJS Dashboard → Account → General to find your User ID
+    // Get User ID - In EmailJS, User ID is the same as Public Key
+    // Since there's no separate User ID field, we use the Public Key as User ID
     const EMAILJS_USER_ID = process.env.EMAILJS_USER_ID || process.env.EMAILJS_PUBLIC_KEY;
     if (!EMAILJS_USER_ID) {
-      throw new Error('EMAILJS_USER_ID or EMAILJS_PUBLIC_KEY is required');
+      throw new Error('EMAILJS_USER_ID or EMAILJS_PUBLIC_KEY is required (use your Public Key value)');
     }
     
-    console.log(`   Using User ID: ${EMAILJS_USER_ID.substring(0, 10)}... (from EMAILJS_USER_ID or EMAILJS_PUBLIC_KEY)`);
+    console.log(`   Using User ID (Public Key): ${EMAILJS_USER_ID.substring(0, 10)}...`);
 
     try {
       // EmailJS API endpoint for contacts

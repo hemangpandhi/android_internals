@@ -51,9 +51,9 @@ Set these secrets in: `https://github.com/hemangpandhi/android_internals/setting
    - Example: `abc123def456...` (long string)
 
 2. **`EMAILJS_PUBLIC_KEY`** (used as User ID)
-   - Value: Your **User ID** (usually same as Public Key)
-   - Location: EmailJS Dashboard → Account → General → **User ID**
-   - **Important**: Use the User ID, not the Public Key if they're different
+   - Value: Your **Public Key** (this IS the User ID - they're the same)
+   - Location: EmailJS Dashboard → Account → General → **Public Key**
+   - **Important**: In EmailJS, User ID = Public Key (same value)
    - Example: `LMsUX_rrpIYPFa76a`
 
 3. **`EMAILJS_SERVICE_ID`** (optional, for filtering)
@@ -77,16 +77,17 @@ Set these secrets in: `https://github.com/hemangpandhi/android_internals/setting
    # Copy the Private Key (Access Token)
    ```
 
-2. **Check User ID:**
+2. **Check Public Key (User ID):**
    ```bash
    # In EmailJS Dashboard → Account → General
-   # Copy the User ID (not Public Key if different)
+   # Copy the Public Key (this IS your User ID - they're the same)
    ```
 
 3. **Test API Call:**
    ```bash
+   # Use Public Key as user_id (they are the same)
    curl -H "Authorization: Bearer YOUR_PRIVATE_KEY" \
-        "https://api.emailjs.com/api/v1.0/contacts?user_id=YOUR_USER_ID"
+        "https://api.emailjs.com/api/v1.0/contacts?user_id=YOUR_PUBLIC_KEY"
    ```
 
 ## Troubleshooting
@@ -94,14 +95,16 @@ Set these secrets in: `https://github.com/hemangpandhi/android_internals/setting
 ### Error: "403 - The private key is wrong"
 
 **Possible causes:**
-1. Private Key is incorrect → Check EmailJS Dashboard → API Keys
-2. User ID is incorrect → Check EmailJS Dashboard → General → User ID
-3. Private Key and User ID don't match → Ensure both from same account
+1. Private Key is incorrect → Check EmailJS Dashboard → Account → API Keys → Private Key
+2. Public Key (User ID) is incorrect → Check EmailJS Dashboard → Account → General → Public Key
+3. Private Key and Public Key don't match → Ensure both from same account
 
 **Solution:**
-1. Verify Private Key in EmailJS Dashboard → Account → API Keys
-2. Verify User ID in EmailJS Dashboard → Account → General
-3. Update GitHub Secrets with correct values
+1. Verify Private Key in EmailJS Dashboard → Account → API Keys → Private Key (Access Token)
+2. Verify Public Key in EmailJS Dashboard → Account → General → Public Key (this is your User ID)
+3. Update GitHub Secrets:
+   - `EMAILJS_PRIVATE_KEY` = Private Key from API Keys
+   - `EMAILJS_PUBLIC_KEY` = Public Key from General (this is used as User ID)
 4. Re-run the workflow
 
 ### Error: "404 - Contacts API endpoint not found"
@@ -136,10 +139,13 @@ If API authentication continues to fail:
 
 | Credential | Location in EmailJS | GitHub Secret Name | Used For |
 |------------|-------------------|-------------------|----------|
-| Public Key | Account → General → Public Key | (config.js) | Client-side EmailJS |
+| Public Key | Account → General → Public Key | `EMAILJS_PUBLIC_KEY` | Client-side EmailJS + API user_id |
 | Private Key | Account → API Keys → Private Key | `EMAILJS_PRIVATE_KEY` | API Authentication |
-| User ID | Account → General → User ID | `EMAILJS_PUBLIC_KEY` | API user_id parameter |
 | Service ID | Email Services → Service ID | `EMAILJS_SERVICE_ID` | Service filtering |
 
-**Note**: The workflow uses `EMAILJS_PUBLIC_KEY` secret to store the User ID (confusing name, but it's used for compatibility with existing code).
+**Important Note**: 
+- In EmailJS, **User ID = Public Key** (they are the same value)
+- There is no separate "User ID" field
+- Use your **Public Key** value for both client-side EmailJS and API `user_id` parameter
+- The workflow uses `EMAILJS_PUBLIC_KEY` secret for both purposes
 

@@ -48,8 +48,8 @@ jobs:
           fi
       
       - name: Fallback: Check for CSV file
-        id: check_csv
         if: always()
+        id: check_csv
         run: |
           # Check if API sync failed or wasn't available
           if [ "${{ steps.api_sync.outcome }}" == "failure" ] || [ "${{ steps.api_sync.outputs.api_available }}" != "true" ] || [ "${{ steps.api_sync.outputs.api_failed }}" == "true" ]; then

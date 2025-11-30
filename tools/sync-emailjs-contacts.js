@@ -46,10 +46,14 @@ class EmailJSSync {
     }
 
     // Get User ID from Public Key (if available in config)
+    // Note: For EmailJS API, User ID is typically the same as Public Key
+    // But check EmailJS Dashboard → Account → General to find your User ID
     const EMAILJS_USER_ID = process.env.EMAILJS_USER_ID || process.env.EMAILJS_PUBLIC_KEY;
     if (!EMAILJS_USER_ID) {
       throw new Error('EMAILJS_USER_ID or EMAILJS_PUBLIC_KEY is required');
     }
+    
+    console.log(`   Using User ID: ${EMAILJS_USER_ID.substring(0, 10)}... (from EMAILJS_USER_ID or EMAILJS_PUBLIC_KEY)`);
 
     try {
       // EmailJS API endpoint for contacts
@@ -61,6 +65,9 @@ class EmailJSSync {
       console.log(`   User ID: ${EMAILJS_USER_ID.substring(0, 10)}...`);
       
       return new Promise((resolve, reject) => {
+        // EmailJS API endpoint for contacts
+        // Note: The user_id parameter should match your EmailJS account User ID
+        // This is typically the same as your Public Key, but verify in EmailJS Dashboard
         const options = {
           hostname: 'api.emailjs.com',
           path: `/api/v1.0/contacts?user_id=${EMAILJS_USER_ID}`,
@@ -71,6 +78,9 @@ class EmailJSSync {
             'User-Agent': 'Android-Internals-Sync/1.0'
           }
         };
+        
+        console.log(`   API Path: ${options.path}`);
+        console.log(`   Authorization: Bearer ${EMAILJS_PRIVATE_KEY.substring(0, 10)}...`);
 
         const req = https.request(options, (res) => {
           let data = '';

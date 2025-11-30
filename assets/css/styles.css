@@ -1271,7 +1271,7 @@ main {
   margin: 0 auto;
   font-size: 1.1rem;
   line-height: 1.7;
-  color: #64748b;
+  color: var(--text-card-body);
 }
 
 /* ===== ABOUT ME SECTION - Modern Professional Design ===== */

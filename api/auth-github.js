@@ -2,7 +2,8 @@
 // Handles GitHub SSO login for admin panel
 // Uses signed JWT tokens and httpOnly cookies for security
 
-const { createAccessToken, createRefreshToken, verifyToken } = require('./jwt-utils');
+const jwtUtils = require('./jwt-utils');
+const { createAccessToken, createRefreshToken, verifyToken } = jwtUtils;
 
 export default async function handler(req, res) {
   // Enable CORS

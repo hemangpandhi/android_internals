@@ -611,6 +611,19 @@
           window.location.href = 'https://android-internals.vercel.app/api/auth-google?action=login&redirect_to=' + redirectTo;
         }
       };
+      
+      // Check for token in URL immediately and store it for processing
+      (function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const provider = urlParams.get('provider');
+        if (token && provider) {
+          console.log('Token found in URL, will be processed by user-auth.js');
+          // Store in sessionStorage as backup
+          sessionStorage.setItem('pending_auth_token', token);
+          sessionStorage.setItem('pending_auth_provider', provider);
+        }
+      })();
     </script>
     
     <script src="assets/js/user-auth.js" defer></script>

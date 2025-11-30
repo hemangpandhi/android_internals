@@ -12,9 +12,20 @@ class UserAuth {
     init() {
         // Check for token in URL (from OAuth callback)
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token');
-        const provider = urlParams.get('provider') || 'github';
+        let token = urlParams.get('token');
+        let provider = urlParams.get('provider') || 'github';
         const error = urlParams.get('error');
+
+        // Also check sessionStorage as backup (in case URL was already cleaned)
+        if (!token) {
+            token = sessionStorage.getItem('pending_auth_token');
+            provider = sessionStorage.getItem('pending_auth_provider') || provider;
+            if (token) {
+                console.log('Found token in sessionStorage');
+                sessionStorage.removeItem('pending_auth_token');
+                sessionStorage.removeItem('pending_auth_provider');
+            }
+        }
 
         if (error) {
             console.error('OAuth error:', error);
@@ -26,11 +37,14 @@ class UserAuth {
         }
 
         if (token) {
-            this.handleAuthCallback(token, provider);
-            // Clean URL
-            window.history.replaceState({}, document.title, window.location.pathname);
+            console.log('Token found, processing authentication...');
+            this.handleAuthCallback(token, provider).then(() => {
+                // Clean URL after processing
+                window.history.replaceState({}, document.title, window.location.pathname);
+            });
         } else {
             // Check for existing session
+            console.log('No token in URL, checking for existing session...');
             this.loadUserSession();
             // Update UI even if no session
             this.onUserChange();

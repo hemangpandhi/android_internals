@@ -458,62 +458,37 @@
                 let response = null;
                 let queue = null;
                 
-                // Try relative path first (works for GitHub Pages)
-                try {
-                    response = await fetch('./data/newsletter-queue.json');
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data && data.article) {
-                            queue = data;
-                            console.log('✅ Loaded newsletter queue from ./data/newsletter-queue.json');
-                        } else {
-                            console.log('⚠️ Response from ./data/newsletter-queue.json is empty or invalid');
-                        }
-                    } else {
-                        console.log(`⚠️ Response from ./data/newsletter-queue.json not OK: ${response.status}`);
-                    }
-                } catch (e) {
-                    console.log('❌ Failed to load from ./data/newsletter-queue.json:', e.message);
-                }
+                // Try multiple paths in order of preference (silently handle 404s)
+                const queuePaths = [
+                    '/data/newsletter-queue.json',  // GitHub Pages absolute path (most reliable)
+                    './data/newsletter-queue.json', // Relative path
+                    'data/newsletter-queue.json',   // No leading slash
+                    `${window.location.origin}/data/newsletter-queue.json` // Full absolute URL
+                ];
                 
-                // Try root path
-                if (!queue) {
+                for (const path of queuePaths) {
                     try {
-                        response = await fetch('/data/newsletter-queue.json');
+                        response = await fetch(path);
                         if (response.ok) {
                             const data = await response.json();
-                            if (data && data.article) {
+                            // Check if queue has valid article data
+                            if (data && data.article && data.article.title) {
                                 queue = data;
-                                console.log('✅ Loaded newsletter queue from /data/newsletter-queue.json');
+                                console.log(`✅ Loaded newsletter queue from ${path}`);
+                                break; // Success, stop trying other paths
                             } else {
-                                console.log('⚠️ Response from /data/newsletter-queue.json is empty or invalid');
+                                // Empty queue is valid - no article queued
+                                console.log(`ℹ️ Newsletter queue exists but no article queued (from ${path})`);
+                                queue = data; // Store empty queue
+                                break;
                             }
-                        } else {
-                            console.log(`⚠️ Response from /data/newsletter-queue.json not OK: ${response.status}`);
+                        } else if (response.status === 404) {
+                            // 404 is expected if file doesn't exist - try next path silently
+                            continue;
                         }
                     } catch (e) {
-                        console.log('❌ Failed to load from /data/newsletter-queue.json:', e.message);
-                    }
-                }
-                
-                // Try absolute path
-                if (!queue) {
-                    try {
-                        const baseUrl = window.location.origin;
-                        response = await fetch(`${baseUrl}/data/newsletter-queue.json`);
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data && data.article) {
-                                queue = data;
-                                console.log('✅ Loaded newsletter queue from absolute path');
-                            } else {
-                                console.log('⚠️ Response from absolute path is empty or invalid');
-                            }
-                        } else {
-                            console.log(`⚠️ Response from absolute path not OK: ${response.status} ${response.statusText}`);
-                        }
-                    } catch (e) {
-                        console.log('❌ Failed to load from absolute path:', e.message);
+                        // Network errors are expected - try next path silently
+                        continue;
                     }
                 }
                 
@@ -526,19 +501,22 @@
                 }
                 
                 newsletterQueue = queue;
-                displayNewsletterInfo();
-                log('✅ Newsletter queue loaded successfully');
-            } catch (error) {
-                // No newsletter queue is normal - don't show as error
-                if (error.message === 'No newsletter queue found') {
+                
+                // Only display if there's a valid article
+                if (newsletterQueue && newsletterQueue.article && newsletterQueue.article.title) {
+                    displayNewsletterInfo();
+                    log('✅ Newsletter queue loaded successfully');
+                } else {
                     document.getElementById('status').innerHTML = 'ℹ️ No pending newsletters';
                     document.getElementById('status').className = 'status pending';
                     log('ℹ️ No newsletter queue found (this is normal if no articles are queued)');
-                } else {
-                    document.getElementById('status').innerHTML = '❌ Error loading newsletter queue';
-                    document.getElementById('status').className = 'status error';
-                    log('⚠️ Error loading newsletter queue: ' + error.message);
                 }
+            } catch (error) {
+                // No newsletter queue is normal - don't show as error
+                console.log('ℹ️ No newsletter queue (this is normal):', error.message);
+                document.getElementById('status').innerHTML = 'ℹ️ No pending newsletters';
+                document.getElementById('status').className = 'status pending';
+                log('ℹ️ No newsletter queue found (this is normal if no articles are queued)');
             }
         }
 
@@ -546,6 +524,15 @@
             const status = document.getElementById('status');
             const articleInfo = document.getElementById('article-info');
             const sendSection = document.getElementById('send-section');
+
+            // Check if newsletter queue has valid article
+            if (!newsletterQueue || !newsletterQueue.article || !newsletterQueue.article.title) {
+                status.innerHTML = 'ℹ️ No pending newsletters';
+                status.className = 'status pending';
+                articleInfo.style.display = 'none';
+                sendSection.style.display = 'none';
+                return;
+            }
 
             // Update status
             status.innerHTML = `📧 Newsletter ready to send`;

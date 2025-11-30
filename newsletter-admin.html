@@ -497,16 +497,51 @@
             
             try {
                 // Try to load from JSON file directly
-                const response = await fetch('/data/subscribers.json');
+                // Try multiple paths in case of different deployment setups
+                let response = null;
+                let subscribers = [];
                 
-                if (!response.ok) {
-                    throw new Error('Failed to load subscribers.json');
+                // Try build directory first (production)
+                try {
+                    response = await fetch('/data/subscribers.json');
+                    if (response.ok) {
+                        subscribers = await response.json();
+                    }
+                } catch (e) {
+                    console.log('Failed to load from /data/subscribers.json, trying alternative paths...');
                 }
                 
-                const subscribers = await response.json();
+                // If that failed, try root data directory (local dev)
+                if (!subscribers || subscribers.length === 0) {
+                    try {
+                        response = await fetch('data/subscribers.json');
+                        if (response.ok) {
+                            subscribers = await response.json();
+                        }
+                    } catch (e) {
+                        console.log('Failed to load from data/subscribers.json');
+                    }
+                }
+                
+                // If still no data, try absolute path
+                if (!subscribers || subscribers.length === 0) {
+                    try {
+                        const baseUrl = window.location.origin;
+                        response = await fetch(`${baseUrl}/data/subscribers.json`);
+                        if (response.ok) {
+                            subscribers = await response.json();
+                        }
+                    } catch (e) {
+                        console.log('Failed to load subscribers from all paths');
+                    }
+                }
+                
+                if (!subscribers || subscribers.length === 0) {
+                    throw new Error('No subscribers found or file not accessible');
+                }
                 
                 // Store all subscribers (including inactive for management)
-                allSubscribers = subscribers;
+                allSubscribers = Array.isArray(subscribers) ? subscribers : [];
                 
                 if (allSubscribers.length === 0) {
                     statsElement.innerHTML = '📊 No active subscribers found';

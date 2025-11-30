@@ -19,7 +19,7 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
         }
@@ -82,6 +82,8 @@
             cursor: pointer;
             font-weight: 600;
             transition: background 0.2s;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
         }
 
         .btn:hover {
@@ -93,18 +95,80 @@
             cursor: not-allowed;
         }
 
+        .btn-secondary {
+            background: #30363d;
+            color: #f0f6fc;
+        }
+
+        .btn-secondary:hover {
+            background: #484f58;
+        }
+
+        .btn-danger {
+            background: #da3633;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #b62324;
+        }
+
         .email-list {
             margin-top: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
         }
 
         .email-item {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 0.5rem;
+            padding: 0.75rem;
             border: 1px solid #30363d;
             border-radius: 4px;
             margin-bottom: 0.5rem;
+            background: #0d1117;
+            transition: background 0.2s;
+        }
+
+        .email-item:hover {
+            background: #161b22;
+        }
+
+        .email-item input[type="checkbox"] {
+            margin-right: 1rem;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .email-item .email-info {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .email-item .email {
+            font-weight: 600;
+            color: #3ddc84;
+            min-width: 200px;
+        }
+
+        .email-item .name {
+            color: #8b949e;
+            min-width: 150px;
+        }
+
+        .email-item .date {
+            color: #6e7681;
+            font-size: 0.9rem;
+            min-width: 100px;
+        }
+
+        .email-item .actions {
+            display: flex;
+            gap: 0.5rem;
         }
 
         .email-status {
@@ -157,6 +221,42 @@
             overflow-y: auto;
             font-family: 'Courier New', monospace;
             font-size: 0.9rem;
+            white-space: pre-wrap;
+        }
+
+        .subscriber-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .subscriber-controls .btn {
+            margin-bottom: 0;
+        }
+
+        .selected-count {
+            padding: 0.5rem 1rem;
+            background: #30363d;
+            border-radius: 4px;
+            color: #3ddc84;
+            font-weight: 600;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 968px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .article-section {
+            grid-column: 1 / -1;
         }
     </style>
 </head>
@@ -164,50 +264,60 @@
     <div class="container">
         <div class="header">
             <h1>📧 Newsletter Admin</h1>
-            <p>Send newsletter emails to subscribers</p>
+            <p>Manage subscribers and send newsletter emails</p>
         </div>
 
-        <!-- Subscriber Management Section -->
-        <div class="card">
-            <h3>👥 Subscriber Management</h3>
-            <div id="subscriber-stats" class="status pending">
-                📊 Loading subscriber data...
-            </div>
-            <div id="subscriber-list" class="email-list" style="display: none;">
-                <!-- Subscribers will be populated here -->
-            </div>
-            <button class="btn" onclick="refreshSubscribers()" style="margin-top: 1rem;">
-                🔄 Refresh Subscribers
-            </button>
-        </div>
-
-        <div class="card">
-            <div id="status" class="status pending">
-                📧 Loading newsletter queue...
-            </div>
-
-            <div id="article-info" style="display: none;">
-                <h3>Article Details</h3>
-                <p><strong>Title:</strong> <span id="article-title"></span></p>
-                <p><strong>Description:</strong> <span id="article-description"></span></p>
-                <p><strong>Date:</strong> <span id="article-date"></span></p>
-            </div>
-
-            <div id="send-section" style="display: none;">
-                <button id="test-btn" class="btn" style="margin-right: 1rem;">Test Newsletter Template</button>
-            <button id="send-btn" class="btn">Send Newsletters</button>
+        <div class="grid-layout">
+            <!-- Subscriber Management Section -->
+            <div class="card">
+                <h3>👥 Subscriber Management</h3>
+                <div id="subscriber-stats" class="status pending">
+                    📊 Loading subscriber data...
+                </div>
                 
-                <div class="progress" id="progress" style="display: none;">
-                    <p>Sending emails... <span id="progress-text">0/0</span></p>
-                    <div class="progress-bar">
-                        <div id="progress-fill" class="progress-fill"></div>
-                    </div>
+                <div class="subscriber-controls">
+                    <button class="btn btn-secondary" onclick="selectAllSubscribers()">✅ Select All</button>
+                    <button class="btn btn-secondary" onclick="deselectAllSubscribers()">❌ Deselect All</button>
+                    <button class="btn btn-secondary" onclick="refreshSubscribers()">🔄 Refresh</button>
+                    <div class="selected-count" id="selected-count">0 selected</div>
+                </div>
+                
+                <div id="subscriber-list" class="email-list" style="display: none;">
+                    <!-- Subscribers will be populated here -->
                 </div>
             </div>
 
-            <div id="email-list" class="email-list" style="display: none;">
-                <h4>Subscribers</h4>
-                <div id="emails"></div>
+            <!-- Article & Send Section -->
+            <div class="card article-section">
+                <div id="status" class="status pending">
+                    📧 Loading newsletter queue...
+                </div>
+
+                <div id="article-info" style="display: none;">
+                    <h3>Article Details</h3>
+                    <p><strong>Title:</strong> <span id="article-title"></span></p>
+                    <p><strong>Description:</strong> <span id="article-description"></span></p>
+                    <p><strong>Date:</strong> <span id="article-date"></span></p>
+                </div>
+
+                <div id="send-section" style="display: none;">
+                    <div style="margin: 1rem 0;">
+                        <button id="test-btn" class="btn">🧪 Test Newsletter Template</button>
+                        <button id="send-btn" class="btn">📧 Send to Selected Subscribers</button>
+                    </div>
+                    
+                    <div class="progress" id="progress" style="display: none;">
+                        <p>Sending emails... <span id="progress-text">0/0</span></p>
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="email-list" class="email-list" style="display: none;">
+                    <h4>Selected Recipients</h4>
+                    <div id="emails"></div>
+                </div>
             </div>
         </div>
 
@@ -224,6 +334,14 @@
         
         let newsletterQueue = null;
         let emailStatuses = {};
+        let allSubscribers = [];
+        let selectedSubscribers = new Set();
+
+        // Initialize EmailJS
+        if (typeof emailjs !== 'undefined' && window.EMAILJS_CONFIG && window.EMAILJS_CONFIG.publicKey) {
+            emailjs.init(window.EMAILJS_CONFIG.publicKey);
+            log('✅ EmailJS initialized');
+        }
 
         // Test EmailJS connection with newsletter template variables
         async function testEmailJS() {
@@ -240,6 +358,12 @@
                 // Extract name from email
                 const toName = testEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 
+                // Get article info from queue or use defaults
+                const articleTitle = newsletterQueue ? newsletterQueue.article.title : 'Android System Server Deep Dive';
+                const articleDescription = newsletterQueue ? newsletterQueue.article.description : 'Comprehensive guide to understanding Android System Server architecture';
+                const articleUrl = newsletterQueue ? newsletterQueue.article.url : 'https://www.hemangpandhi.com/articles/android-system-server-deep-dive.html';
+                const articleDate = newsletterQueue ? newsletterQueue.article.date : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                
                 // Test with full newsletter template parameters including article variables
                 const testParams = {
                     // Recipient info
@@ -247,19 +371,19 @@
                     to_name: toName,
                     
                     // Sender info
-                    from_name: 'Android Internals Newsletter',
-                    from_email: 'noreply@hemangpandhi.com',
+                    from_name: window.EMAILJS_CONFIG.newsletterFromName || 'Android Internals Newsletter',
+                    from_email: window.EMAILJS_CONFIG.newsletterFromEmail || 'noreply@hemangpandhi.com',
                     
                     // Newsletter content
-                    subject: 'Test Newsletter: Android System Server Deep Dive',
-                    message: 'Hi ' + toName + ',\n\nWe\'ve just published a new article on Android Internals. Check it out!\n\nBest regards,\nAndroid Internals Team',
-                    reply_to: 'noreply@hemangpandhi.com',
+                    subject: `New Article: ${articleTitle}`,
+                    message: `Hi ${toName},\n\nWe've just published a new article on Android Internals. Check it out!\n\nBest regards,\nAndroid Internals Team`,
+                    reply_to: window.EMAILJS_CONFIG.newsletterFromEmail || 'noreply@hemangpandhi.com',
                     
                     // Article variables (for newsletter template)
-                    articleTitle: 'Android System Server Deep Dive',
-                    articleDescription: 'Comprehensive guide to understanding Android System Server architecture, services, and internals. Learn about ActivityManager, WindowManager, and other core system components.',
-                    articleUrl: 'https://www.hemangpandhi.com/articles/android-system-server-deep-dive.html',
-                    articleDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                    articleTitle: articleTitle,
+                    articleDescription: articleDescription,
+                    articleUrl: articleUrl,
+                    articleDate: articleDate,
                     unsubscribeUrl: `https://www.hemangpandhi.com/unsubscribe?email=${encodeURIComponent(testEmail)}`,
                     
                     // Alternative parameter names for compatibility
@@ -273,7 +397,6 @@
                 
                 log(`📧 Sending test newsletter to: ${testEmail}`);
                 log(`📋 Article: ${testParams.articleTitle}`);
-                log(`Test params: ${JSON.stringify(testParams, null, 2)}`);
                 
                 const response = await emailjs.send(
                     window.EMAILJS_CONFIG.serviceId,
@@ -287,7 +410,6 @@
                 return true;
             } catch (error) {
                 log(`❌ Newsletter template test failed: ${error.message}`);
-                log(`Error details: ${JSON.stringify(error, null, 2)}`);
                 if (error.text) {
                     log(`Error text: ${error.text}`);
                 }
@@ -295,7 +417,7 @@
             }
         }
 
-        // Load newsletter queue and test EmailJS
+        // Load newsletter queue
         async function loadNewsletterQueue() {
             try {
                 const response = await fetch('/data/newsletter-queue.json');
@@ -305,11 +427,11 @@
                 
                 newsletterQueue = await response.json();
                 displayNewsletterInfo();
-                log('Newsletter queue loaded successfully');
+                log('✅ Newsletter queue loaded successfully');
             } catch (error) {
                 document.getElementById('status').innerHTML = '❌ No pending newsletters found';
                 document.getElementById('status').className = 'status error';
-                log('Error: ' + error.message);
+                log('⚠️ No newsletter queue found: ' + error.message);
             }
         }
 
@@ -317,10 +439,9 @@
             const status = document.getElementById('status');
             const articleInfo = document.getElementById('article-info');
             const sendSection = document.getElementById('send-section');
-            const emailList = document.getElementById('email-list');
 
             // Update status
-            status.innerHTML = `📧 Newsletter ready to send to ${newsletterQueue.emails.length} subscribers`;
+            status.innerHTML = `📧 Newsletter ready to send`;
             status.className = 'status pending';
 
             // Show article info
@@ -331,26 +452,217 @@
 
             // Show send section
             sendSection.style.display = 'block';
+        }
 
-            // Show email list
-            const emailsContainer = document.getElementById('emails');
-            emailsContainer.innerHTML = '';
+        // Load subscribers from JSON file directly
+        async function loadSubscribers() {
+            const statsElement = document.getElementById('subscriber-stats');
+            const listElement = document.getElementById('subscriber-list');
             
-            newsletterQueue.emails.forEach((email, index) => {
-                const emailItem = document.createElement('div');
-                emailItem.className = 'email-item';
-                emailItem.innerHTML = `
-                    <span>${email.to_email}</span>
-                    <span id="status-${index}" class="email-status pending">Pending</span>
+            statsElement.innerHTML = '📊 Loading subscriber data...';
+            statsElement.className = 'status pending';
+            
+            try {
+                // Try to load from JSON file directly
+                const response = await fetch('/data/subscribers.json');
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load subscribers.json');
+                }
+                
+                const subscribers = await response.json();
+                
+                // Filter only active subscribers
+                allSubscribers = subscribers.filter(sub => sub.active !== false);
+                
+                if (allSubscribers.length === 0) {
+                    statsElement.innerHTML = '📊 No active subscribers found';
+                    statsElement.className = 'status pending';
+                    listElement.innerHTML = '<p style="color: #8b949e; text-align: center; padding: 1rem;">No subscribers found</p>';
+                    listElement.style.display = 'block';
+                    updateSelectedCount();
+                    return;
+                }
+                
+                statsElement.innerHTML = `📊 ${allSubscribers.length} active subscribers`;
+                statsElement.className = 'status completed';
+                
+                // Render subscriber list with checkboxes
+                renderSubscriberList();
+                
+            } catch (error) {
+                console.error('Error loading subscribers:', error);
+                statsElement.innerHTML = '❌ Error loading subscribers: ' + error.message;
+                statsElement.className = 'status error';
+                listElement.innerHTML = `
+                    <div style="padding: 1rem; text-align: center; color: #8b949e;">
+                        <p>Error loading subscribers from /data/subscribers.json</p>
+                        <p>Make sure the file exists and is accessible.</p>
+                    </div>
                 `;
-                emailsContainer.appendChild(emailItem);
-                emailStatuses[index] = 'pending';
+                listElement.style.display = 'block';
+            }
+        }
+
+        function renderSubscriberList() {
+            const listElement = document.getElementById('subscriber-list');
+            
+            if (allSubscribers.length === 0) {
+                listElement.innerHTML = '<p style="color: #8b949e; text-align: center; padding: 1rem;">No subscribers found</p>';
+                listElement.style.display = 'block';
+                return;
+            }
+            
+            listElement.innerHTML = allSubscribers.map((sub, index) => {
+                const isSelected = selectedSubscribers.has(sub.email);
+                const subscribedDate = new Date(sub.subscribedAt).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+                
+                return `
+                    <div class="email-item">
+                        <input 
+                            type="checkbox" 
+                            id="subscriber-${index}" 
+                            ${isSelected ? 'checked' : ''}
+                            onchange="toggleSubscriber('${sub.email}', ${index})"
+                        >
+                        <div class="email-info">
+                            <span class="email">${sub.email}</span>
+                            <span class="name">${sub.name || 'No name'}</span>
+                            <span class="date">${subscribedDate}</span>
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn-danger" onclick="removeSubscriber('${sub.email}')" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                🗑️ Remove
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            listElement.style.display = 'block';
+            updateSelectedCount();
+            updateEmailList();
+        }
+
+        function toggleSubscriber(email, index) {
+            const checkbox = document.getElementById(`subscriber-${index}`);
+            if (checkbox.checked) {
+                selectedSubscribers.add(email);
+            } else {
+                selectedSubscribers.delete(email);
+            }
+            updateSelectedCount();
+            updateEmailList();
+        }
+
+        function selectAllSubscribers() {
+            allSubscribers.forEach(sub => {
+                selectedSubscribers.add(sub.email);
+            });
+            renderSubscriberList();
+        }
+
+        function deselectAllSubscribers() {
+            selectedSubscribers.clear();
+            renderSubscriberList();
+        }
+
+        function updateSelectedCount() {
+            const countElement = document.getElementById('selected-count');
+            const count = selectedSubscribers.size;
+            countElement.textContent = `${count} selected`;
+        }
+
+        function updateEmailList() {
+            const emailList = document.getElementById('email-list');
+            const emailsContainer = document.getElementById('emails');
+            
+            if (selectedSubscribers.size === 0) {
+                emailList.style.display = 'none';
+                return;
+            }
+            
+            emailsContainer.innerHTML = '';
+            let index = 0;
+            
+            selectedSubscribers.forEach(email => {
+                const subscriber = allSubscribers.find(sub => sub.email === email);
+                if (subscriber) {
+                    const emailItem = document.createElement('div');
+                    emailItem.className = 'email-item';
+                    emailItem.innerHTML = `
+                        <span>${subscriber.email} (${subscriber.name || 'No name'})</span>
+                        <span id="status-${index}" class="email-status pending">Pending</span>
+                    `;
+                    emailsContainer.appendChild(emailItem);
+                    emailStatuses[index] = 'pending';
+                    index++;
+                }
             });
             
             emailList.style.display = 'block';
         }
 
+        function refreshSubscribers() {
+            selectedSubscribers.clear();
+            loadSubscribers();
+        }
+
+        async function removeSubscriber(email) {
+            if (!confirm(`Are you sure you want to remove ${email} from the subscriber list?`)) {
+                return;
+            }
+            
+            try {
+                // Try to update the JSON file via API if available
+                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocal ? 'http://localhost:3001/api/unsubscribe' : '/api/unsubscribe';
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        log(`✅ Subscriber ${email} removed successfully`);
+                        selectedSubscribers.delete(email);
+                        loadSubscribers();
+                        return;
+                    }
+                }
+            } catch (error) {
+                log(`⚠️ API not available, subscriber removal via API failed: ${error.message}`);
+            }
+            
+            // Fallback: Just remove from UI (file will need manual update)
+            alert('Subscriber removal requires API access. Please update /data/subscribers.json manually or ensure the API server is running.');
+            log(`⚠️ Subscriber ${email} removal requested but API is not available`);
+        }
+
         async function sendNewsletters() {
+            if (selectedSubscribers.size === 0) {
+                alert('Please select at least one subscriber to send the newsletter to.');
+                return;
+            }
+            
+            if (!newsletterQueue) {
+                alert('No newsletter queue found. Please create a newsletter first.');
+                return;
+            }
+            
+            if (!confirm(`Send newsletter to ${selectedSubscribers.size} selected subscriber(s)?`)) {
+                return;
+            }
+            
             const sendBtn = document.getElementById('send-btn');
             const progress = document.getElementById('progress');
             const progressFill = document.getElementById('progress-fill');
@@ -360,40 +672,62 @@
             sendBtn.disabled = true;
             sendBtn.textContent = 'Sending...';
             progress.style.display = 'block';
-            status.innerHTML = '📧 Sending newsletters...';
+            status.innerHTML = `📧 Sending newsletters to ${selectedSubscribers.size} subscriber(s)...`;
             status.className = 'status sending';
 
             let sent = 0;
             let failed = 0;
-            const total = newsletterQueue.emails.length;
+            const selectedEmails = Array.from(selectedSubscribers);
+            const total = selectedEmails.length;
+
+            log(`📧 Starting newsletter campaign to ${total} subscriber(s)...`);
 
             for (let i = 0; i < total; i++) {
-                const emailData = newsletterQueue.emails[i];
+                const email = selectedEmails[i];
+                const subscriber = allSubscribers.find(sub => sub.email === email);
+                
+                if (!subscriber) {
+                    log(`⚠️ Subscriber ${email} not found, skipping...`);
+                    failed++;
+                    continue;
+                }
                 
                 try {
-                    log(`Sending email ${i + 1}/${total} to ${emailData.to_email}...`);
-                    log(`Email data: ${JSON.stringify(emailData, null, 2)}`);
+                    log(`📧 Sending email ${i + 1}/${total} to ${email}...`);
                     
-                    // Use the correct parameter structure for your EmailJS template
+                    // Prepare template parameters
+                    const toName = subscriber.name || email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    const unsubscribeUrl = `${window.EMAILJS_CONFIG.siteDomain || 'https://www.hemangpandhi.com'}/unsubscribe?email=${encodeURIComponent(email)}`;
+                    
                     const templateParams = {
-                        from_name: emailData.from_name,
-                        from_email: emailData.from_email,
-                        message: emailData.message,
-                        // Add recipient email for EmailJS to send to
-                        to_email: emailData.to_email,
-                        to_name: emailData.to_name,
-                        subject: emailData.subject,
-                        reply_to: emailData.reply_to,
-                        // Alternative parameter names that EmailJS might expect
-                        email: emailData.to_email,
-                        name: emailData.to_name,
-                        contact_email: emailData.to_email,
-                        contact_name: emailData.to_name,
-                        to: emailData.to_email,
-                        recipient: emailData.to_email
+                        // Recipient info
+                        to_email: email,
+                        to_name: toName,
+                        
+                        // Sender info
+                        from_name: window.EMAILJS_CONFIG.newsletterFromName || 'Android Internals Newsletter',
+                        from_email: window.EMAILJS_CONFIG.newsletterFromEmail || 'noreply@hemangpandhi.com',
+                        
+                        // Newsletter content
+                        subject: `New Article: ${newsletterQueue.article.title}`,
+                        message: newsletterQueue.article.message || `Hi ${toName},\n\nWe've just published a new article on Android Internals. Check it out!\n\nBest regards,\nAndroid Internals Team`,
+                        reply_to: window.EMAILJS_CONFIG.newsletterFromEmail || 'noreply@hemangpandhi.com',
+                        
+                        // Article variables (for newsletter template)
+                        articleTitle: newsletterQueue.article.title,
+                        articleDescription: newsletterQueue.article.description,
+                        articleUrl: newsletterQueue.article.url || `${window.EMAILJS_CONFIG.siteDomain || 'https://www.hemangpandhi.com'}/articles/${newsletterQueue.article.slug || 'article'}.html`,
+                        articleDate: newsletterQueue.article.date,
+                        unsubscribeUrl: unsubscribeUrl,
+                        
+                        // Alternative parameter names for compatibility
+                        email: email,
+                        name: toName,
+                        recipient_email: email,
+                        recipient_name: toName,
+                        to: email,
+                        recipient: email
                     };
-                    
-                    log(`Template params: ${JSON.stringify(templateParams, null, 2)}`);
                     
                     const response = await emailjs.send(
                         window.EMAILJS_CONFIG.serviceId,
@@ -406,19 +740,22 @@
                     emailStatuses[i] = 'sent';
                     sent++;
                     
-                    log(`✅ Email sent to ${emailData.to_email}`);
+                    log(`✅ Email sent to ${email} (Status: ${response.status})`);
                 } catch (error) {
                     document.getElementById(`status-${i}`).textContent = 'Failed';
                     document.getElementById(`status-${i}`).className = 'email-status failed';
                     emailStatuses[i] = 'failed';
                     failed++;
                     
-                    log(`❌ Failed to send email to ${emailData.to_email}: ${error.message}`);
+                    log(`❌ Failed to send email to ${email}: ${error.message}`);
+                    if (error.text) {
+                        log(`   Error details: ${error.text}`);
+                    }
                 }
 
                 // Update progress
-                const progress = ((i + 1) / total) * 100;
-                progressFill.style.width = `${progress}%`;
+                const progressPercent = ((i + 1) / total) * 100;
+                progressFill.style.width = `${progressPercent}%`;
                 progressText.textContent = `${i + 1}/${total}`;
 
                 // Add delay between emails to avoid rate limiting
@@ -429,12 +766,12 @@
 
             // Final status
             sendBtn.disabled = false;
-            sendBtn.textContent = 'Send Complete';
+            sendBtn.textContent = '📧 Send to Selected Subscribers';
             
             if (failed === 0) {
                 status.innerHTML = `✅ All ${sent} newsletters sent successfully!`;
                 status.className = 'status completed';
-                log(`🎉 Newsletter campaign completed! ${sent} emails sent, ${failed} failed.`);
+                log(`🎉 Newsletter campaign completed! ${sent} emails sent successfully.`);
             } else {
                 status.innerHTML = `⚠️ Campaign completed: ${sent} sent, ${failed} failed`;
                 status.className = 'status error';
@@ -445,114 +782,8 @@
         function log(message) {
             const logElement = document.getElementById('log');
             const timestamp = new Date().toLocaleTimeString();
-            logElement.innerHTML += `[${timestamp}] ${message}\n`;
+            logElement.textContent += `[${timestamp}] ${message}\n`;
             logElement.scrollTop = logElement.scrollHeight;
-        }
-
-        // Subscriber Management Functions
-        function loadSubscribers() {
-            const statsElement = document.getElementById('subscriber-stats');
-            const listElement = document.getElementById('subscriber-list');
-            
-            // Check if we're in production or local development
-            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const apiUrl = isLocal ? 'http://localhost:3001/api/subscribers' : '/api/subscribers';
-            
-            fetch(apiUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('API not available');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        const subscribers = data.subscribers;
-                        statsElement.innerHTML = `📊 ${subscribers.length} active subscribers`;
-                        statsElement.className = 'status completed';
-                        
-                        if (subscribers.length > 0) {
-                            listElement.innerHTML = subscribers.map(sub => `
-                                <div class="email-item">
-                                    <span class="email">${sub.email}</span>
-                                    <span class="name">${sub.name || 'No name'}</span>
-                                    <span class="date">${new Date(sub.subscribedAt).toLocaleDateString()}</span>
-                                    <button class="btn" onclick="removeSubscriber('${sub.email}')" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
-                                        🗑️ Remove
-                                    </button>
-                                </div>
-                            `).join('');
-                            listElement.style.display = 'block';
-                        } else {
-                            listElement.innerHTML = '<p style="color: #8b949e; text-align: center; padding: 1rem;">No subscribers found</p>';
-                            listElement.style.display = 'block';
-                        }
-                    } else {
-                        statsElement.innerHTML = '❌ Error loading subscribers';
-                        statsElement.className = 'status error';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading subscribers:', error);
-                    // Show production message when API is not available
-                    if (isLocal) {
-                        statsElement.innerHTML = '❌ Error loading subscribers';
-                        statsElement.className = 'status error';
-                    } else {
-                        statsElement.innerHTML = '📊 Production Mode - Subscriber management via EmailJS';
-                        statsElement.className = 'status pending';
-                        listElement.innerHTML = `
-                            <div style="padding: 1rem; text-align: center; color: #8b949e;">
-                                <p>In production mode, subscribers are managed through EmailJS.</p>
-                                <p>New subscribers are automatically added when they subscribe via the website.</p>
-                                <p>You can view subscriber emails in your EmailJS dashboard.</p>
-                            </div>
-                        `;
-                        listElement.style.display = 'block';
-                    }
-                });
-        }
-
-        function refreshSubscribers() {
-            loadSubscribers();
-        }
-
-        function removeSubscriber(email) {
-            if (confirm(`Are you sure you want to remove ${email} from the subscriber list?`)) {
-                // Check if we're in production or local development
-                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                const apiUrl = isLocal ? 'http://localhost:3001/api/unsubscribe' : '/api/unsubscribe';
-                
-                fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email: email })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('API not available');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        alert('Subscriber removed successfully!');
-                        loadSubscribers(); // Refresh the list
-                    } else {
-                        alert('Error removing subscriber: ' + data.error);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error removing subscriber:', error);
-                    if (isLocal) {
-                        alert('Error removing subscriber');
-                    } else {
-                        alert('Subscriber management is handled through EmailJS in production mode.');
-                    }
-                });
-            }
         }
 
         // Event listeners
@@ -561,6 +792,7 @@
 
         // Load newsletter queue and subscribers on page load
         window.addEventListener('load', function() {
+            log('🚀 Newsletter Admin loaded');
             loadNewsletterQueue();
             loadSubscribers();
         });

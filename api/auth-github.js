@@ -22,13 +22,12 @@ export default async function handler(req, res) {
 
   // Step 1: Initiate OAuth flow (redirect to GitHub)
   if (req.method === 'GET' && req.query.action === 'login') {
-    // Use Vercel URL for callback (must match GitHub OAuth app callback URL)
-    // Vercel provides VERCEL_URL or we can construct from request
-    const vercelUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : (req.headers.host 
-          ? `https://${req.headers.host}` 
-          : 'https://android-internals.vercel.app');
+    // Use production Vercel URL for callback (must match GitHub OAuth app callback URL)
+    // Always use production URL to avoid preview URL mismatches
+    // Can be overridden with GITHUB_CALLBACK_URL environment variable
+    const vercelUrl = process.env.GITHUB_CALLBACK_URL 
+      ? process.env.GITHUB_CALLBACK_URL.replace('/api/auth-github?action=callback', '')
+      : 'https://android-internals.vercel.app';
     const redirectUri = `${vercelUrl}/api/auth-github?action=callback`;
     const scope = 'read:user';
     const state = req.query.state || Math.random().toString(36).substring(7);

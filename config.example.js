@@ -32,7 +32,13 @@ window.EMAILJS_CONFIG = {
   
   // Development Settings
   debugMode: false,
-  logLevel: 'error' // 'debug', 'info', 'warn', 'error'
+  logLevel: 'error', // 'debug', 'info', 'warn', 'error'
+  
+  // Admin Panel Security
+  // ⚠️ IMPORTANT: Set a strong password for the admin panel
+  // For production, use URL parameter: ?pwd=your_secure_password
+  // This prevents the password from being in the code
+  adminPassword: 'YOUR_SECURE_ADMIN_PASSWORD_HERE'
 };
 
 // Initialize EmailJS

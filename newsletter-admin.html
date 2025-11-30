@@ -258,13 +258,81 @@
         .article-section {
             grid-column: 1 / -1;
         }
+        /* Password Protection Styles */
+        #password-protection {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0d1117;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+        
+        #password-form {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 2rem;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        #password-form h2 {
+            color: #3ddc84;
+            margin-bottom: 1rem;
+        }
+        
+        #password-form input {
+            width: 100%;
+            padding: 0.75rem;
+            margin: 1rem 0;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            background: #0d1117;
+            color: #f0f6fc;
+            font-size: 1rem;
+        }
+        
+        #password-form input:focus {
+            outline: none;
+            border-color: #3ddc84;
+        }
+        
+        #password-error {
+            color: #f85149;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Password Protection Screen -->
+    <div id="password-protection">
+        <div id="password-form">
+            <h2>🔒 Admin Access Required</h2>
+            <p style="color: #8b949e; margin-bottom: 1.5rem;">Enter the admin password to access the newsletter admin panel.</p>
+            <input type="password" id="admin-password" placeholder="Enter admin password" autocomplete="off" autofocus>
+            <div id="password-error">❌ Incorrect password. Please try again.</div>
+            <button class="btn" onclick="checkPassword()" style="width: 100%; margin-top: 1rem;">🔓 Unlock Admin Panel</button>
+            <p style="color: #8b949e; margin-top: 1rem; font-size: 0.85rem;">Press Enter to submit</p>
+        </div>
+    </div>
+    
+    <div class="container hidden" id="admin-content">
         <div class="header">
             <h1>📧 Newsletter Admin</h1>
             <p>Manage subscribers and send newsletter emails</p>
+            <button class="btn btn-secondary" onclick="logout()" style="margin-top: 1rem; font-size: 0.9rem;">🚪 Logout</button>
         </div>
 
         <div class="grid-layout">
@@ -366,6 +434,62 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script type="text/javascript" src="config.js"></script>
     <script type="text/javascript">
+        
+        // Password Protection
+        const ADMIN_PASSWORD = window.EMAILJS_CONFIG?.adminPassword || 
+                              new URLSearchParams(window.location.search).get('pwd') ||
+                              'CHANGE_THIS_PASSWORD_IN_PRODUCTION';
+        
+        // Check if already authenticated
+        function isAuthenticated() {
+            return sessionStorage.getItem('admin_authenticated') === 'true';
+        }
+        
+        // Check password and authenticate
+        function checkPassword() {
+            const passwordInput = document.getElementById('admin-password');
+            const password = passwordInput.value;
+            const errorDiv = document.getElementById('password-error');
+            
+            // Simple password check (in production, use proper hashing)
+            if (password === ADMIN_PASSWORD) {
+                sessionStorage.setItem('admin_authenticated', 'true');
+                showAdminPanel();
+            } else {
+                errorDiv.style.display = 'block';
+                passwordInput.value = '';
+                passwordInput.focus();
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // Show admin panel
+        function showAdminPanel() {
+            document.getElementById('password-protection').classList.add('hidden');
+            document.getElementById('admin-content').classList.remove('hidden');
+        }
+        
+        // Logout
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                sessionStorage.removeItem('admin_authenticated');
+                location.reload();
+            }
+        }
+        
+        // Check authentication on page load
+        if (isAuthenticated()) {
+            showAdminPanel();
+        } else {
+            // Allow Enter key to submit password
+            document.getElementById('admin-password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkPassword();
+                }
+            });
+        }
         
         let newsletterQueue = null;
         let emailStatuses = {};

@@ -32,6 +32,39 @@ const CONFIG = {
     }
 };
 
+// EmailJS Configuration
+// IMPORTANT: Replace these placeholder values with your actual EmailJS credentials
+// Get your credentials from: https://dashboard.emailjs.com/admin
+window.EMAILJS_CONFIG = {
+    // EmailJS Configuration
+    publicKey: 'LMsUX_rrpIYPFa76a',
+    serviceId: 'service_dygzcoh',
+    newsletterTemplate: 'template_uwh1kil',
+    contactTemplate: 'template_7bzhk1x',
+    
+    // Site Configuration
+    siteDomain: 'https://www.hemangpandhi.com',
+    newsletterFromEmail: 'noreply@hemangpandhi.com',
+    newsletterFromName: 'Android Internals Newsletter',
+    apiServer: 'https://your-api-server.com',
+    
+    // Feature Flags
+    enableNewsletter: true,
+    enableContactForm: true,
+    enableAnalytics: false,
+    
+    // Development Settings
+    debugMode: false,
+    logLevel: 'error' // 'debug', 'info', 'warn', 'error'
+};
+
+// Initialize EmailJS if publicKey is provided
+if (typeof window !== 'undefined' && window.EMAILJS_CONFIG && window.EMAILJS_CONFIG.publicKey && window.EMAILJS_CONFIG.publicKey !== 'YOUR_EMAILJS_PUBLIC_KEY_HERE') {
+    if (typeof emailjs !== 'undefined') {
+        emailjs.init(window.EMAILJS_CONFIG.publicKey);
+    }
+}
+
 // Export for use in other scripts
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = CONFIG;

@@ -325,7 +325,7 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 2rem;
+  padding: 0.5rem 1.5rem 0.5rem 1rem;
   max-width: 1200px;
   margin: 0 auto;
   height: 80px;
@@ -343,6 +343,7 @@ main {
   position: relative;
   border-radius: var(--radius-md);
   padding: var(--space-sm);
+  margin-left: -0.5rem;
 }
 
 .nav-logo-link:hover {
@@ -386,8 +387,9 @@ main {
 
 .nav-links {
   display: flex;
-  gap: var(--space-lg);
+  gap: var(--space-md);
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .nav-link {
@@ -2031,7 +2033,13 @@ main {
   }
   
   .nav-links {
-    gap: 1rem;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+  }
+  
+  .nav-link {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.85rem;
   }
   
   .nav-link {

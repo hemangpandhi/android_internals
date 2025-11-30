@@ -1,0 +1,2634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Server: Advanced Q&A - Android Internals</title>
+  <meta name="description" content="Comprehensive Q&A covering 25+ deep questions about Android System Server architecture, services, communication, debugging, and advanced topics.">
+  <meta name="keywords" content="Android, Internals, System Architecture, development, programming">
+  <link rel="stylesheet" href="../assets/css/styles.css?v=17">
+  <link rel="icon" href="../assets/images/android_logo.PNG" type="image/png">
+  <link rel="manifest" href="../assets/manifest.json">
+  <meta name="theme-color" content="#3ddc84">
+  
+  <!-- Mermaid.js for diagram rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+  <style>
+    .mermaid-diagram {
+      margin: 1rem 0;
+      padding: 0.75rem 1rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+      position: relative;
+      overflow: visible !important;
+      z-index: 1;
+      /* Scroll margin to account for fixed navigation bar (80px height) */
+      scroll-margin-top: 100px;
+      /* Ensure container can expand to show full diagram - no height constraints */
+      min-height: auto !important;
+      height: auto !important;
+      max-height: none !important;
+      /* Ensure content is not clipped */
+      overflow-x: visible;
+      overflow-y: visible;
+    }
+    
+    .mermaid-diagram.zoomed {
+      /* Ensure zoomed diagrams can scroll horizontally and vertically */
+      overflow-x: auto !important;
+      overflow-y: auto !important;
+      max-width: 100%;
+      z-index: 1040 !important;
+      position: relative;
+    }
+    
+    .mermaid {
+      text-align: center;
+      display: block;
+      width: 100%;
+      min-height: auto;
+      height: auto;
+      transition: transform 0.3s ease;
+      cursor: grab;
+      margin: 0;
+      padding: 0;
+      display: block;
+    }
+    
+    .mermaid svg {
+      display: block !important;
+      margin: 0 auto !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: auto !important;
+      max-height: none !important;
+      /* Ensure SVG can expand to show full content - critical for Mermaid 10.7.0 */
+      overflow: visible !important;
+      /* Remove any height constraints that might clip content */
+      box-sizing: border-box;
+    }
+    
+    /* Specific styling for sequence diagrams to reduce vertical spacing */
+    .mermaid-diagram.sequence-diagram-container {
+      padding: 0.4rem 1rem !important;
+    }
+    
+    /* Alternative CSS selector for sequence diagrams */
+    .mermaid-diagram:has(svg g.actor),
+    .mermaid-diagram:has(svg g.note),
+    .mermaid-diagram:has(svg g.activation) {
+      padding: 0.4rem 1rem;
+    }
+    
+    .mermaid:active {
+      cursor: grabbing;
+    }
+    
+    /* Zoom controls */
+    .mermaid-zoom-controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 5px;
+      z-index: 1050;
+    }
+    
+    .zoom-btn {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      color: #333;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      min-width: 32px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
+    
+    .zoom-btn:hover {
+      background: #f0f0f0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .zoom-reset {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+    
+    .zoom-reset:hover {
+      background: #0056b3;
+      border-color: #0056b3;
+    }
+    
+    .fullscreen-btn {
+      background: #28a745;
+      color: white;
+      border-color: #28a745;
+    }
+    
+    .fullscreen-btn:hover {
+      background: #1e7e34;
+      border-color: #1e7e34;
+    }
+    
+    /* Zoom indicator */
+    .zoom-indicator {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: monospace;
+    }
+    
+    /* Fullscreen mode for Mermaid diagrams */
+    .mermaid-diagram.fullscreen {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 99999 !important;
+      background: white !important;
+      padding: 20px !important;
+      margin: 0 !important;
+      border: none !important;
+      overflow: auto !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    
+    .mermaid-diagram.fullscreen .mermaid {
+      max-width: 90vw !important;
+      max-height: 90vh !important;
+      width: auto !important;
+      height: auto !important;
+      display: block !important;
+    }
+    
+    .mermaid-diagram.fullscreen .mermaid svg {
+      max-width: 100% !important;
+      max-height: 100% !important;
+      width: auto !important;
+      height: auto !important;
+    }
+    
+    .mermaid-diagram.fullscreen .mermaid-zoom-controls {
+      display: none !important;
+    }
+    
+    .mermaid-diagram.fullscreen .zoom-indicator {
+      display: none !important;
+    }
+    
+    body.fullscreen-mode {
+      overflow: hidden !important;
+      background: white !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    /* Hide navigation bar when diagram is in fullscreen mode - especially important for mobile */
+    body.fullscreen-mode .main-nav {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+    }
+    
+    .fullscreen-hidden {
+      display: none !important;
+    }
+    
+    /* Mobile responsive styles for Mermaid diagrams */
+    @media (max-width: 768px) {
+      .mermaid-diagram {
+        margin: 0.75rem 0;
+        padding: 0.5rem 0.75rem;
+        /* Scroll margin to account for fixed navigation bar */
+        scroll-margin-top: 100px;
+        /* Remove max-height constraint to allow natural dimensions */
+      }
+      
+      .mermaid-zoom-controls {
+        top: 5px;
+        right: 5px;
+        gap: 3px;
+      }
+      
+      .zoom-btn {
+        padding: 4px 6px;
+        font-size: 10px;
+        min-width: 28px;
+        height: 24px;
+      }
+      
+      .zoom-indicator {
+        bottom: 5px;
+        left: 5px;
+        padding: 2px 6px;
+        font-size: 10px;
+      }
+      
+      /* Fullscreen mobile adjustments */
+      .mermaid-diagram.fullscreen {
+        padding: 10px !important;
+        /* Ensure fullscreen starts from very top on mobile */
+        top: 0 !important;
+      }
+      
+      .mermaid-diagram.fullscreen .mermaid {
+        max-width: 95vw !important;
+        max-height: 95vh !important;
+      }
+      
+      /* Hide navigation bar on mobile when diagram is fullscreen */
+      body.fullscreen-mode .main-nav {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        transform: translateY(-100%) !important;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .mermaid-diagram {
+        margin: 0.5rem 0;
+        padding: 0.4rem 0.6rem;
+        /* Scroll margin to account for fixed navigation bar */
+        scroll-margin-top: 100px;
+        /* Remove max-height constraint to allow natural dimensions */
+      }
+      
+      .mermaid-zoom-controls {
+        top: 3px;
+        right: 3px;
+        gap: 2px;
+      }
+      
+      .zoom-btn {
+        padding: 3px 5px;
+        font-size: 9px;
+        min-width: 24px;
+        height: 20px;
+      }
+      
+      .zoom-indicator {
+        bottom: 3px;
+        left: 3px;
+        padding: 1px 4px;
+        font-size: 9px;
+      }
+      
+      /* Fullscreen mobile adjustments for very small screens */
+      .mermaid-diagram.fullscreen {
+        padding: 5px !important;
+        /* Ensure fullscreen starts from very top on small mobile */
+        top: 0 !important;
+      }
+      
+      .mermaid-diagram.fullscreen .mermaid {
+        max-width: 98vw !important;
+        max-height: 98vh !important;
+      }
+      
+      /* Hide navigation bar on small mobile when diagram is fullscreen */
+      body.fullscreen-mode .main-nav {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        transform: translateY(-100%) !important;
+      }
+    }
+  </style>
+  
+  <!-- Security Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+      <!-- X-Frame-Options should be set via HTTP headers, not meta tags -->
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="System Server: Advanced Q&A">
+  <meta property="og:description" content="Comprehensive Q&A covering 25+ deep questions about Android System Server architecture, services, communication, debugging, and advanced topics.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.hemangpandhi.com/articles/android-system-server-qa.html">
+  <meta property="og:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="System Server: Advanced Q&A">
+  <meta name="twitter:description" content="Comprehensive Q&A covering 25+ deep questions about Android System Server architecture, services, communication, debugging, and advanced topics.">
+  <meta name="twitter:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="main-nav">
+    <div class="nav-container">
+      <a href="../index.html" class="nav-logo-link">
+        <img src="../assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="../index.html" class="nav-link">Home</a>
+        <a href="../index.html#topics" class="nav-link">Topics</a>
+        <a href="../index.html#blogs" class="nav-link">Blogs</a>
+        <a href="../index.html#about" class="nav-link">About</a>
+        <a href="../books.html" class="nav-link">Reference Books</a>
+        <a href="../videos.html" class="nav-link">Reference Videos</a>
+      </div>
+      <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle mobile menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Article Header -->
+  <header class="article-header">
+    <div class="container">
+      <div class="article-hero">
+        <div class="article-meta">
+          <span class="article-category">System Architecture</span>
+          <span class="article-date">2025-10-04</span>
+          <span class="article-read-time">5 min read</span>
+        </div>
+        <h1 class="article-title">System Server: Advanced Q&A</h1>
+        <p class="article-subtitle">Comprehensive Q&A covering 25+ deep questions about Android System Server architecture, services, communication, debugging, and advanced topics.</p>
+        <div class="article-author">
+          <img src="../assets/images/android_logo.PNG" alt="Author" class="author-avatar">
+          <div class="author-info">
+            <span class="author-name">Android Internals Team</span>
+            <span class="author-title">Android Internals Expert</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="article-content">
+    <!-- Reading Mode Toggle -->
+    <div class="reading-mode-controls">
+      <button id="toggleReadingMode" class="reading-mode-btn">
+        <span class="reading-mode-icon">📖</span>
+        <span class="reading-mode-text">Full Screen</span>
+      </button>
+      <button id="toggleSidebar" class="sidebar-toggle-btn">
+        <span class="sidebar-icon">📋</span>
+        <span class="sidebar-text">Sidebar</span>
+      </button>
+    </div>
+
+    <div class="container">
+      <div class="article-layout" id="articleLayout">
+        <!-- Article Body -->
+        <article class="article-body" id="articleBody">
+          <div class="article-intro">
+            <p class="lead-text">Comprehensive Q&A covering 25+ deep questions about Android System Server architecture, services, communication, debugging, and advanced topics.</p>
+          </div>
+          
+          <div class="article-content-wrapper">
+            <h1 id="-system--server--advanced--qa">System Server: Advanced Q&A</h1>
+
+
+<h2 id="-learning--objectives">Learning Objectives</h2>
+
+<blockquote class="article-quote"><p><strong>Part 6 of 6</strong> in the <a href="./android-system-server-series.html" class="article-link">Android System Server Deep Dive</a> series</p><p></p><p><strong>Previous</strong>: <a href="./android-system-server-best-practices.html" class="article-link">Part 5: Best Practices and Optimization</a>  </p><p><strong>Next</strong>: None (End of series)  </p><p><strong>Series Index</strong>: <a href="./android-system-server-series.html" class="article-link">View all articles</a></p></blockquote>
+<p class="article-paragraph">This comprehensive Q&A section provides deep answers to common and advanced questions about system_server. You can:</p>
+
+<ul class="article-list"><li class="list-item">Use as a reference for specific topics</li><li class="list-item">Read sequentially for comprehensive understanding</li><li class="list-item">Jump to specific questions as needed</li><li class="list-item">Understand edge cases and advanced scenarios</li></ul>
+<hr class="article-divider">
+
+<h2 id="-advanced--qa--deep--system--server--understanding">Advanced Q&A: Deep System Server Understanding</h2>
+
+<h3 id="-q1--why--does--system_server--exist--as--a--single--monolithic--process--instead--of--separate--processes--for--each--service">Q1. Why does system_server exist as a single, monolithic process instead of separate processes for each service?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">The monolithic design is a fundamental architectural trade-off driven by Android's mobile constraints and performance requirements. Here's the deep reasoning:</p>
+
+<p class="article-paragraph"><strong>Performance Rationale:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Binder IPC Overhead</strong>: Each cross-process call involves ~2-5ms overhead for marshaling/unmarshaling, context switching, and kernel transitions</li><li class="list-item"><strong>Memory Efficiency</strong>: Shared framework classes reduce memory footprint by up to 40% compared to microservice architecture</li><li class="list-item"><strong>Startup Time</strong>: Single process initialization is 5-10x faster than coordinating multiple service processes</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Measure Binder transaction overhead</span>
+adb shell strace -p $(pidof system_server) -e trace=binder_ioctl
+<span class="comment"># Compare in-process vs cross-process service calls</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -E <span class="string">&quot;(ActivityManager|WindowManager)&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/java/com/android/server/SystemServer.java#startBootstrapServices(" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/java/com/android/server/SystemServer.java#startBootstrapServices()&lt;/code&gt;</a>)</li><li class="list-item">Commit: https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/java/com/android/server/SystemServer.java</li></ul>
+<p class="article-paragraph"><strong>Key Insight:</strong> The design prioritizes mobile device constraints (limited memory, battery life, real-time requirements) over fault isolation benefits of microservices.</p>
+
+<h3 id="-q2--how--does--the--system_server--handle--service--dependencies--and--initialization--order">Q2. How does the system_server handle service dependencies and initialization order?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server uses a sophisticated dependency management system with three distinct phases to handle service interdependencies:</p>
+
+<p class="article-paragraph"><strong>Phase-Based Initialization:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/java/com/android/server/SystemServer.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/java/com/android/server/SystemServer.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">private void startBootstrapServices(@NonNull TimingsTraceAndSlog t) {
+    t.traceBegin(&quot;startBootstrapServices&quot;);
+    
+    // Critical services that others depend on
+    mActivityManagerService = mSystemServiceManager.startService(
+            ActivityManagerService.Lifecycle.class).getService();
+    mPowerManagerService = mSystemServiceManager.startService(PowerManagerService.class);
+    
+    t.traceEnd(); // startBootstrapServices
+}
+
+private void startCoreServices(@NonNull TimingsTraceAndSlog t) {
+    t.traceBegin(&quot;startCoreServices&quot;);
+    
+    // Services that depend on bootstrap services
+    mBatteryService = mSystemServiceManager.startService(BatteryService.class);
+    mUsageStatsService = mSystemServiceManager.startService(UsageStatsService.class);
+    
+    t.traceEnd(); // startCoreServices
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Dependency Resolution:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Bootstrap Phase</strong>: ActivityManagerService, PowerManagerService, PackageManagerService</li><li class="list-item"><strong>Core Phase</strong>: BatteryService, UsageStatsService, WebViewUpdateService</li><li class="list-item"><strong>Other Phase</strong>: All remaining services with complex dependencies</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Monitor service startup order</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;SystemServiceManager.*Starting&quot;</span>
+<span class="comment"># Check service dependencies</span>
+adb shell dumpsys activity services | head -20</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/SystemServiceManager.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/SystemServiceManager.java&lt;/code&gt;</a></li><li class="list-item">Service lifecycle management in <code class="inline-code">SystemServiceManager.startService()</code></li></ul>
+<h3 id="-q3--what--happens--when--a--critical--service--like--activitymanagerservice--crashes--within--system_server">Q3. What happens when a critical service like ActivityManagerService crashes within system_server?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">A crash in ActivityManagerService triggers a cascading failure that brings down the entire system_server process, requiring a complete system restart:</p>
+
+<p class="article-paragraph"><strong>Crash Propagation:</strong></p>
+
+
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/Watchdog.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/Watchdog.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// Simplified illustration of Watchdog monitoring concept
+
+public class Watchdog extends Thread {
+    private static final long DEFAULT_TIMEOUT = 60_000;
+    
+    // Simplified illustration: Actual Watchdog uses HandlerChecker mechanism
+    public void run() {
+        while (true) {
+            // Actual implementation monitors handler threads and detects timeouts
+            if (checkForTimeout()) {
+                // AMS crash detected - trigger system restart (i.e., system_server death)
+                // Actual implementation: Calls doSysRq(&#x27;c&#x27;) to trigger kernel panic
+                doSysRq(&#x27;c&#x27;); // Triggers kernel panic for system recovery
+            }
+        }
+    }
+}</code></pre>
+          </div>
+
+<blockquote class="article-quote"><p><strong>Note:</strong> The code example below is a simplified illustration. The actual <a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/Watchdog.java" class="article-link" target="_blank" rel="noopener noreferrer">Watchdog.java</a> implementation uses <code class="inline-code">HandlerChecker</code> to monitor service handlers and detects timeouts when handlers don't respond.</p></blockquote>
+<p class="article-paragraph"><strong>Recovery Sequence:</strong></p>
+
+<ol class="article-list"><li class="list-item"><strong>Watchdog Detection</strong>: 60-second timeout triggers watchdog</li><li class="list-item"><strong>Process Termination</strong>: system_server process killed</li><li class="list-item"><strong>Zygote Restart</strong>: Zygote spawns new system_server process</li><li class="list-item"><strong>Service Reinitialization</strong>: All services restart from scratch</li><li class="list-item"><strong>Application Impact</strong>: All running apps receive SIGKILL</li></ol>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Simulate AMS crash (DANGER - causes reboot)</span>
+adb shell kill -9 $(pidof system_server)
+<span class="comment"># Monitor recovery</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;(Watchdog|SystemServer|ActivityManager)&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/Watchdog.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/Watchdog.java&lt;/code&gt;</a></li><li class="list-item">Recovery logic: Watchdog calls <code class="inline-code">doSysRq(&#x27;c&#x27;)</code> to trigger kernel panic for system recovery</li></ul>
+<h3 id="-q4--how--does--binder--ipc--work--between--system_server--and--application--processes">Q4. How does Binder IPC work between system_server and application processes?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">Binder IPC uses a sophisticated kernel-level message passing system with optimizations for Android's mobile constraints:</p>
+
+<p class="article-paragraph"><strong>Binder Architecture:</strong></p>
+<div class="mermaid-diagram" id="diagram-mermaid-60g3fkb2k">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-60g3fkb2k', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-60g3fkb2k')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-60g3fkb2k', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-60g3fkb2k')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-60g3fkb2k">graph TD
+    A[App Process] --> B[Binder Proxy]
+    B --> C[Binder Driver /dev/binder]
+    C -->|"Kernel Space<br/>Cross-Process Boundary"| D[Binder Stub in system_server]
+    D --> E[Service Implementation]
+    E --> F[Response Marshaling]
+    F --> C
+    C -->|"Kernel Space<br/>Cross-Process Boundary"| B
+    B --> A</div>
+            <div class="zoom-indicator" id="zoom-mermaid-60g3fkb2k">100%</div>
+          </div>
+
+<p class="article-paragraph"><strong>Transaction Lifecycle:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/android/os/Binder.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/core/java/android/os/Binder.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public boolean transact(int code, Parcel data, Parcel reply, int flags) {
+    // 1. Marshal arguments into Parcel
+    data.writeInterfaceToken(descriptor);
+    
+    // 2. Send to kernel driver
+    boolean result = transactNative(code, data, reply, flags);
+    
+    // 3. Unmarshal response
+    if (reply != null) {
+        reply.setDataPosition(0);
+    }
+    return result;
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Performance Optimizations:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Scatter-Gather I/O</strong>: Reduces data copying for large transactions</li><li class="list-item"><strong>Binder Domains</strong>: Separate domains for framework-app vs framework-HAL communication</li><li class="list-item"><strong>Transaction Batching</strong>: Multiple calls batched in single kernel transition</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Monitor Binder transactions</span>
+adb shell strace -p $(pidof system_server) -e trace=binder_ioctl
+<span class="comment"># Check Binder statistics</span>
+adb shell cat /proc/binder/stats
+<span class="comment"># Monitor transaction latency</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -A5 <span class="string">&quot;Binder&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/android/os/Binder.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/core/java/android/os/Binder.java&lt;/code&gt;</a></li><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0<em>r3/core/jni/android</em>util_Binder.cpp" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/core/jni/android&amp;lt;em&amp;gt;util&amp;lt;/em&amp;gt;Binder.cpp&lt;/code&gt;</a></li><li class="list-item">Kernel driver: <code class="inline-code">drivers/android/binder.c</code></li></ul>
+<h3 id="-q5--how--does--system_server--manage--memory--and--prevent--memory--leaks">Q5. How does system_server manage memory and prevent memory leaks?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server implements sophisticated memory management strategies to handle the long-running nature of system services:</p>
+
+<p class="article-paragraph"><strong>Memory Management Strategies:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/am/ActivityManagerService.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/am/ActivityManagerService.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class ActivityManagerService {
+    // Memory pressure monitoring
+    private void updateMemoryPressureState() {
+        long totalMem = Process.getTotalMemory();
+        long availMem = Process.getFreeMemory();
+        
+        if (availMem &lt; totalMem * 0.1) {
+            // Trigger low memory cleanup
+            trimApplications();
+        }
+    }
+    
+    // Proactive memory cleanup
+    private void trimApplications() {
+        // Kill background processes
+        // Clear caches
+        // Force garbage collection
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Memory Monitoring:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Monitor system_server memory usage</span>
+adb shell dumpsys meminfo system_server
+<span class="comment"># Check for memory leaks</span>
+adb shell dumpsys meminfo system_server | <span class="keyword">grep</span> -E <span class="string">&quot;(Native|Java|Unknown)&quot;</span>
+<span class="comment"># Monitor memory pressure</span>
+adb shell cat /proc/meminfo</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Leak Prevention Techniques:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Weak References</strong>: Use WeakHashMap for caches</li><li class="list-item"><strong>Event Listener Cleanup</strong>: Unregister listeners in onDestroy()</li><li class="list-item"><strong>Native Memory Tracking</strong>: Monitor JNI allocations</li><li class="list-item"><strong>Periodic Cleanup</strong>: Scheduled garbage collection</li></ul>
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/am/ActivityManagerService.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/am/ActivityManagerService.java&lt;/code&gt;</a></li><li class="list-item">Memory management in <code class="inline-code">ActivityManagerService.trimApplications()</code></li></ul>
+<h3 id="-q6--what--is--the--relationship--between--system_server--and--zygote--and--why--is--this--important">Q6. What is the relationship between system_server and Zygote, and why is this important?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">The system_server-Zygote relationship is fundamental to Android's process model and application lifecycle:</p>
+
+<p class="article-paragraph"><strong>Architectural Relationship:</strong></p>
+<div class="mermaid-diagram" id="diagram-mermaid-ke639bvjz">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-ke639bvjz', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-ke639bvjz')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-ke639bvjz', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-ke639bvjz')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-ke639bvjz">graph TD
+    A[Init Process] --> B[Zygote Process]
+    B --> C[System Server]
+    B --> D[App Process 1]
+    B --> E[App Process 2]
+    B --> F[App Process N]
+    C --> G[ActivityManagerService]
+    G --> H[App Lifecycle Management]
+    H --> D
+    H --> E
+    H --> F</div>
+            <div class="zoom-indicator" id="zoom-mermaid-ke639bvjz">100%</div>
+          </div>
+
+<p class="article-paragraph"><strong>Critical Dependencies:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Process Creation</strong>: Zygote forks all app processes, including system_server</li><li class="list-item"><strong>Framework Sharing</strong>: All processes inherit pre-loaded framework classes</li><li class="list-item"><strong>Memory Efficiency</strong>: Copy-on-Write optimization for shared framework code</li><li class="list-item"><strong>Lifecycle Coordination</strong>: system_server manages app process lifecycle through Zygote</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check Zygote process tree</span>
+adb shell pstree | <span class="keyword">grep</span> -E <span class="string">&quot;(zygote|system_server)&quot;</span>
+<span class="comment"># Monitor process creation</span>
+adb shell strace -p $(pidof zygote) -e trace=clone
+<span class="comment"># Check framework sharing</span>
+adb shell dumpsys meminfo zygote
+adb shell dumpsys meminfo system_server</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/com/android/internal/os/ZygoteInit.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/core/java/com/android/internal/os/ZygoteInit.java&lt;/code&gt;</a></li><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/java/com/android/server/SystemServer.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/java/com/android/server/SystemServer.java&lt;/code&gt;</a></li><li class="list-item">Process creation in <code class="inline-code">Zygote.forkSystemServer()</code></li></ul>
+<h3 id="-q7--how--does--system_server--handle--selinux--security--policies--and--what--are--the--implications">Q7. How does system_server handle SELinux security policies and what are the implications?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server operates under strict SELinux policies that provide service-level isolation and privilege separation:</p>
+
+<p class="article-paragraph"><strong>SELinux Context:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check system_server SELinux context</span>
+adb shell <span class="keyword">ls</span> -Z /system/bin/system_server
+<span class="comment"># system_server:system_server:s0:c512,c768</span>
+
+<span class="comment"># Check service-specific contexts</span>
+adb shell <span class="keyword">ls</span> -Z /system/bin/ | <span class="keyword">grep</span> system_server</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Security Implications:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Privilege Separation</strong>: Each service operates with minimal required privileges</li><li class="list-item"><strong>Access Control</strong>: SELinux policies restrict service-to-service communication</li><li class="list-item"><strong>Attack Surface</strong>: Limited attack surface through mandatory access control</li><li class="list-item"><strong>Service Isolation</strong>: Prevents privilege escalation between services</li></ul>
+<p class="article-paragraph"><strong>Policy Enforcement:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Monitor SELinux denials</span>
+adb logcat | <span class="keyword">grep</span> <span class="string">&quot;avc: denied&quot;</span>
+<span class="comment"># Check service permissions</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -A5 <span class="string">&quot;Permission&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item">SELinux policies in <a href="https://android.googlesource.com/platform/system/+/refs/tags/android-16.0.0_r3/sepolicy/" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;system/sepolicy/&lt;/code&gt;</a></li><li class="list-item">Service contexts in <a href="https://android.googlesource.com/platform/system/+/refs/tags/android-16.0.0</em>r3/sepolicy/private/system_server.te" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;system/sepolicy/private/system&amp;lt;em&amp;gt;server.te&lt;/code&gt;</a></li></ul>
+<h3 id="-q8--how--does--system_server--handle--thermal--management--and--power--optimization">Q8. How does system_server handle thermal management and power optimization?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server implements sophisticated thermal and power management through multiple coordinated services:</p>
+
+<p class="article-paragraph"><strong>Thermal Management:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/power/PowerManagerService.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/power/PowerManagerService.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class PowerManagerService {
+    private void updatePowerStateLocked() {
+        // Thermal state monitoring
+        int thermalState = mThermalService.getCurrentThermalState();
+        
+        if (thermalState == PowerManager.THERMAL_STATE_CRITICAL) {
+            // Reduce CPU frequency
+            // Kill background processes
+            // Disable non-critical services
+        }
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Power Optimization:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>CPU Frequency Scaling</strong>: Dynamic frequency adjustment based on load</li><li class="list-item"><strong>Background Process Management</strong>: Aggressive killing of background apps</li><li class="list-item"><strong>Service Throttling</strong>: Reduce service frequency during low power</li><li class="list-item"><strong>Thermal Throttling</strong>: Prevent overheating through service reduction</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Monitor thermal state</span>
+adb shell dumpsys power | <span class="keyword">grep</span> -i thermal
+<span class="comment"># Check power management</span>
+adb shell dumpsys power | <span class="keyword">grep</span> -i <span class="string">&quot;power.*state&quot;</span>
+<span class="comment"># Monitor CPU frequency</span>
+adb shell cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/power/PowerManagerService.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/power/PowerManagerService.java&lt;/code&gt;</a></li><li class="list-item">Thermal management in <code class="inline-code">PowerManagerService.updatePowerStateLocked()</code></li></ul>
+<h3 id="-q9--how--does--system_server--handle--service--discovery--and--registration">Q9. How does system_server handle service discovery and registration?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server uses a sophisticated service discovery system with both native and Java components:</p>
+
+<p class="article-paragraph"><strong>Service Registration Process:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/SystemServiceManager.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/SystemServiceManager.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public &lt;T extends SystemService&gt; T startService(Class&lt;T&gt; serviceClass) {
+    // Create service instance
+    T service = serviceClass.newInstance();
+    
+    // Register with ServiceManager
+    ServiceManager.addService(serviceName, service);
+    
+    // Start service lifecycle
+    service.onStart();
+    
+    return service;
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Service Discovery:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>ServiceManager</strong>: Native daemon for service registration</li><li class="list-item"><strong>SystemServiceManager</strong>: Java service lifecycle management</li><li class="list-item"><strong>Binder Service Registry</strong>: Cross-process service discovery</li><li class="list-item"><strong>Service Dependencies</strong>: Automatic dependency resolution</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># List all registered services</span>
+adb shell service list
+<span class="comment"># Check service availability</span>
+adb shell service call activity 1
+<span class="comment"># Monitor service registration</span>
+adb logcat | <span class="keyword">grep</span> <span class="string">&quot;ServiceManager&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/SystemServiceManager.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/SystemServiceManager.java&lt;/code&gt;</a></li><li class="list-item">Service registration in <code class="inline-code">SystemServiceManager.startService()</code></li></ul>
+<h3 id="-q10--how--does--system_server--handle--application--lifecycle--management">Q10. How does system_server handle application lifecycle management?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server manages application lifecycle through ActivityManagerService with sophisticated state management:</p>
+
+<p class="article-paragraph"><strong>Application Lifecycle States:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/am/ActivityManagerService.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/am/ActivityManagerService.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class ActivityManagerService {
+    // Application state management
+    private void updateApplicationState(ProcessRecord app, int state) {
+        switch (state) {
+            case ProcessState.PROCESS_STATE_TOP:
+                // App is in foreground
+                break;
+            case ProcessState.PROCESS_STATE_BACKGROUND:
+                // App is in background
+                break;
+            case ProcessState.PROCESS_STATE_CACHED:
+                // App is cached
+                break;
+        }
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Lifecycle Management:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Process Creation</strong>: Fork from Zygote with pre-loaded framework</li><li class="list-item"><strong>State Transitions</strong>: Top → Background → Cached → Killed</li><li class="list-item"><strong>Memory Pressure</strong>: Aggressive killing of background processes</li><li class="list-item"><strong>ANR Detection</strong>: Application Not Responding timeout handling</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Monitor app lifecycle</span>
+adb shell dumpsys activity activities
+<span class="comment"># Check process states</span>
+adb shell dumpsys activity processes
+<span class="comment"># Monitor ANR detection</span>
+adb logcat | <span class="keyword">grep</span> -i anr</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/am/ActivityManagerService.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/am/ActivityManagerService.java&lt;/code&gt;</a></li><li class="list-item">Process management in <code class="inline-code">ActivityManagerService.updateApplicationState()</code></li></ul>
+<h3 id="-q11--how--does--system_server--handle--input--event--processing--and--window--management">Q11. How does system_server handle input event processing and window management?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server processes input events through a sophisticated pipeline involving multiple services:</p>
+
+<p class="article-paragraph"><strong>Input Event Pipeline:</strong></p>
+<div class="mermaid-diagram" id="diagram-mermaid-wl3itm85a">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-wl3itm85a', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-wl3itm85a')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-wl3itm85a', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-wl3itm85a')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-wl3itm85a">graph TD
+    A[Input Device] --> B[Input Reader]
+    B --> C[Input Dispatcher]
+    C --> D[WindowManagerService]
+    D --> E[ActivityManagerService]
+    E --> F[Application Process]
+    F --> G[UI Thread]
+    G --> H[View Hierarchy]</div>
+            <div class="zoom-indicator" id="zoom-mermaid-wl3itm85a">100%</div>
+          </div>
+
+<p class="article-paragraph"><strong>Window Management:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/wm/WindowManagerService.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class WindowManagerService {
+    // Input event processing
+    public void dispatchInputEvent(InputEvent event) {
+        // Find target window
+        WindowState targetWindow = findTargetWindow(event);
+        
+        // Dispatch to application
+        targetWindow.dispatchInputEvent(event);
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Key Components:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>InputReader</strong>: Reads from input devices</li><li class="list-item"><strong>InputDispatcher</strong>: Routes events to correct windows</li><li class="list-item"><strong>WindowManagerService</strong>: Manages window hierarchy</li><li class="list-item"><strong>SurfaceFlinger</strong>: Renders window surfaces</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Monitor input events</span>
+adb shell getevent
+<span class="comment"># Check window hierarchy</span>
+adb shell dumpsys window windows
+<span class="comment"># Monitor input dispatch</span>
+adb logcat | <span class="keyword">grep</span> -i <span class="string">&quot;input.*dispatch&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/wm/WindowManagerService.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java&lt;/code&gt;</a></li><li class="list-item">Input processing in <code class="inline-code">WindowManagerService.dispatchInputEvent()</code></li></ul>
+<h3 id="-q12--how--does--system_server--handle--package--installation--and--management">Q12. How does system_server handle package installation and management?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server manages package installation through PackageManagerService with sophisticated dependency resolution:</p>
+
+<p class="article-paragraph"><strong>Package Installation Process:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/pm/PackageManagerService.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/pm/PackageManagerService.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class PackageManagerService {
+    public void installPackage(String packagePath, int flags) {
+        // Parse package manifest
+        PackageInfo packageInfo = parsePackage(packagePath);
+        
+        // Check dependencies
+        checkDependencies(packageInfo);
+        
+        // Install package
+        installPackageInternal(packageInfo);
+        
+        // Update system state
+        updateSystemState(packageInfo);
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Package Management:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Dependency Resolution</strong>: Automatic dependency installation</li><li class="list-item"><strong>Permission Management</strong>: Grant/revoke permissions</li><li class="list-item"><strong>Component Registration</strong>: Register activities, services, receivers</li><li class="list-item"><strong>Intent Resolution</strong>: Update intent filters</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Monitor package installation</span>
+adb logcat | <span class="keyword">grep</span> -i <span class="string">&quot;package.*install&quot;</span>
+<span class="comment"># Check installed packages</span>
+adb shell pm list packages
+<span class="comment"># Monitor permission changes</span>
+adb logcat | <span class="keyword">grep</span> -i <span class="string">&quot;permission.*grant&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/pm/PackageManagerService.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/pm/PackageManagerService.java&lt;/code&gt;</a></li><li class="list-item">Package installation in <code class="inline-code">PackageManagerService.installPackage()</code></li></ul>
+<h3 id="-q13--how--does--system_server--handle--system--properties--and--configuration--management">Q13. How does system_server handle system properties and configuration management?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server manages system properties through a sophisticated property system with persistence and validation:</p>
+
+<p class="article-paragraph"><strong>Property Management:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/SystemProperties.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/SystemProperties.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class SystemProperties {
+    // Set system property
+    public static void set(String key, String value) {
+        // Validate property
+        validateProperty(key, value);
+        
+        // Set property
+        native_set(key, value);
+        
+        // Notify listeners
+        notifyPropertyChanged(key, value);
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Configuration Management:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Property Persistence</strong>: Properties survive reboots</li><li class="list-item"><strong>Validation</strong>: Type checking and range validation</li><li class="list-item"><strong>Notification</strong>: Property change listeners</li><li class="list-item"><strong>Security</strong>: Restricted property access</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># List system properties</span>
+adb shell getprop
+<span class="comment"># Set system property</span>
+adb shell setprop debug.performance.trace 1
+<span class="comment"># Monitor property changes</span>
+adb logcat | <span class="keyword">grep</span> -i <span class="string">&quot;property.*changed&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/SystemProperties.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/SystemProperties.java&lt;/code&gt;</a></li><li class="list-item">Property management in <code class="inline-code">SystemProperties.set()</code></li></ul>
+<h3 id="-q14--how--does--system_server--handle--device--administration--and--enterprise--features">Q14. How does system_server handle device administration and enterprise features?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server implements device administration through DevicePolicyManagerService with enterprise-grade security:</p>
+
+<p class="article-paragraph"><strong>Device Administration:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/devicepolicy/DevicePolicyManagerService.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/devicepolicy/DevicePolicyManagerService.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class DevicePolicyManagerService {
+    // Enforce device policy
+    public void enforceDevicePolicy(String policy, String value) {
+        // Check policy compliance
+        if (!isPolicyCompliant(policy, value)) {
+            // Take corrective action
+            takeCorrectiveAction(policy);
+        }
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Enterprise Features:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Device Encryption</strong>: Full disk encryption management</li><li class="list-item"><strong>App Restrictions</strong>: Limit app installation/usage</li><li class="list-item"><strong>Network Security</strong>: VPN and certificate management</li><li class="list-item"><strong>Remote Wipe</strong>: Secure device data removal</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check device policy</span>
+adb shell dumpsys device_policy
+<span class="comment"># Monitor policy enforcement</span>
+adb logcat | <span class="keyword">grep</span> -i <span class="string">&quot;device.*policy&quot;</span>
+<span class="comment"># Check encryption status</span>
+adb shell getprop ro.crypto.state</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/devicepolicy/DevicePolicyManagerService.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/devicepolicy/DevicePolicyManagerService.java&lt;/code&gt;</a></li><li class="list-item">Policy enforcement in <code class="inline-code">DevicePolicyManagerService.enforceDevicePolicy()</code></li></ul>
+<h3 id="-q15--how--does--system_server--handle--system--updates--and--ota--management">Q15. How does system_server handle system updates and OTA management?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server manages system updates through RecoverySystemService with sophisticated update mechanisms:</p>
+
+<p class="article-paragraph"><strong>Update Management:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/RecoverySystemService.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/RecoverySystemService.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class RecoverySystemService {
+    // Install system update
+    public void installUpdate(String updatePath) {
+        // Verify update signature
+        verifyUpdateSignature(updatePath);
+        
+        // Prepare recovery
+        prepareRecovery(updatePath);
+        
+        // Reboot to recovery
+        rebootToRecovery();
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Update Process:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Signature Verification</strong>: Cryptographic signature validation</li><li class="list-item"><strong>Recovery Mode</strong>: Boot to recovery for update installation</li><li class="list-item"><strong>Rollback Protection</strong>: Prevent downgrade attacks</li><li class="list-item"><strong>A/B Updates</strong>: Seamless update installation</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check update status</span>
+adb shell dumpsys recovery
+<span class="comment"># Monitor update process</span>
+adb logcat | <span class="keyword">grep</span> -i <span class="string">&quot;recovery.*update&quot;</span>
+<span class="comment"># Check A/B slot status</span>
+adb shell getprop ro.boot.slot_suffix</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/RecoverySystemService.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/RecoverySystemService.java&lt;/code&gt;</a></li><li class="list-item">Update management in <code class="inline-code">RecoverySystemService.installUpdate()</code></li></ul>
+<h3 id="-q16--how--does--system_server--handle--hardware--abstraction--layer--hal--communication">Q16. How does system_server handle hardware abstraction layer (HAL) communication?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server communicates with HAL through HIDL/AIDL interfaces with sophisticated abstraction layers:</p>
+
+<p class="article-paragraph"><strong>HAL Communication:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/hal/HalService.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/hal/HalService.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class HalService {
+    // HAL interface communication
+    public void communicateWithHal(String interfaceName, String method, Object[] args) {
+        // Get HAL interface
+        IHwInterface halInterface = getHalInterface(interfaceName);
+        
+        // Call HAL method
+        Object result = halInterface.callMethod(method, args);
+        
+        // Process result
+        processHalResult(result);
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>HAL Integration:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>HIDL Interfaces</strong>: Hardware Interface Definition Language</li><li class="list-item"><strong>AIDL Services</strong>: Android Interface Definition Language</li><li class="list-item"><strong>Service Discovery</strong>: Automatic HAL service discovery</li><li class="list-item"><strong>Error Handling</strong>: Robust error handling and fallback</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># List HAL services</span>
+adb shell lshal
+<span class="comment"># Monitor HAL communication</span>
+adb logcat | <span class="keyword">grep</span> -i <span class="string">&quot;hal.*service&quot;</span>
+<span class="comment"># Check HAL interfaces</span>
+adb shell dumpsys hardware</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/hal/HalService.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/hal/HalService.java&lt;/code&gt;</a></li><li class="list-item">HAL communication in <code class="inline-code">HalService.communicateWithHal()</code></li></ul>
+<h3 id="-q17--how--does--system_server--handle--system--tracing--and--performance--monitoring">Q17. How does system_server handle system tracing and performance monitoring?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server implements comprehensive tracing and performance monitoring through multiple subsystems:</p>
+
+<p class="article-paragraph"><strong>Performance Monitoring:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/SystemServer.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/SystemServer.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class SystemServer {
+    // Performance monitoring
+    private void startPerformanceMonitoring() {
+        // CPU profiling
+        startCpuProfiling();
+        
+        // Memory monitoring
+        startMemoryMonitoring();
+        
+        // I/O monitoring
+        startIoMonitoring();
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Tracing Systems:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Systrace</strong>: System-wide tracing framework</li><li class="list-item"><strong>Perfetto</strong>: Modern tracing system</li><li class="list-item"><strong>Simpleperf</strong>: CPU profiling tool</li><li class="list-item"><strong>Heapprofd</strong>: Memory profiling</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Capture system trace</span>
+adb shell perfetto -o /data/local/tmp/trace.pbtxt -t 5s
+<span class="comment"># Monitor CPU usage</span>
+adb shell top -t -d 3
+<span class="comment"># Check memory usage</span>
+adb shell dumpsys meminfo system_server</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/SystemServer.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/SystemServer.java&lt;/code&gt;</a></li><li class="list-item">Performance monitoring in <code class="inline-code">SystemServer.startPerformanceMonitoring()</code></li></ul>
+<h3 id="-q18--how--does--system_server--handle--system--security--and--selinux--enforcement">Q18. How does system_server handle system security and SELinux enforcement?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server implements comprehensive security through SELinux policies and security frameworks:</p>
+
+<p class="article-paragraph"><strong>Security Enforcement:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/SecurityService.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/SecurityService.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class SecurityService {
+    // Enforce security policy
+    public void enforceSecurityPolicy(String action, String target) {
+        // Check SELinux policy
+        if (!checkSelinuxPolicy(action, target)) {
+            // Deny action
+            denyAction(action, target);
+        }
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Security Features:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>SELinux Policies</strong>: Mandatory access control</li><li class="list-item"><strong>Permission System</strong>: Android permission framework</li><li class="list-item"><strong>App Sandboxing</strong>: Process isolation</li><li class="list-item"><strong>Security Updates</strong>: Regular security patches</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check SELinux status</span>
+adb shell getenforce
+<span class="comment"># Monitor security violations</span>
+adb logcat | <span class="keyword">grep</span> <span class="string">&quot;avc: denied&quot;</span>
+<span class="comment"># Check app permissions</span>
+adb shell dumpsys package permissions</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/SecurityService.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/SecurityService.java&lt;/code&gt;</a></li><li class="list-item">Security enforcement in <code class="inline-code">SecurityService.enforceSecurityPolicy()</code></li></ul>
+<h3 id="-q19--how--does--system_server--handle--system--backup--and--restore">Q19. How does system_server handle system backup and restore?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server manages system backup through BackupManagerService with sophisticated backup mechanisms:</p>
+
+<p class="article-paragraph"><strong>Backup Management:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/backup/BackupManagerService.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/backup/BackupManagerService.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class BackupManagerService {
+    // Perform system backup
+    public void performBackup(String backupPath) {
+        // Backup system data
+        backupSystemData(backupPath);
+        
+        // Backup app data
+        backupAppData(backupPath);
+        
+        // Verify backup integrity
+        verifyBackupIntegrity(backupPath);
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Backup Features:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>System Data</strong>: Settings, preferences, system state</li><li class="list-item"><strong>App Data</strong>: Application data and preferences</li><li class="list-item"><strong>Incremental Backup</strong>: Only changed data</li><li class="list-item"><strong>Encryption</strong>: Secure backup storage</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check backup status</span>
+adb shell dumpsys backup
+<span class="comment"># Monitor backup process</span>
+adb logcat | <span class="keyword">grep</span> -i <span class="string">&quot;backup.*service&quot;</span>
+<span class="comment"># List backup files</span>
+adb shell <span class="keyword">ls</span> -la /data/backup/</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/backup/BackupManagerService.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/backup/BackupManagerService.java&lt;/code&gt;</a></li><li class="list-item">Backup management in <code class="inline-code">BackupManagerService.performBackup()</code></li></ul>
+<h3 id="-q20--how--does--system_server--handle--system--debugging--and--crash--reporting">Q20. How does system_server handle system debugging and crash reporting?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server implements comprehensive debugging and crash reporting through multiple subsystems:</p>
+
+<p class="article-paragraph"><strong>Crash Reporting:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/CrashReportService.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/CrashReportService.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class CrashReportService {
+    // Handle system crash
+    public void handleSystemCrash(String crashType, String crashData) {
+        // Collect crash information
+        CrashInfo crashInfo = collectCrashInfo(crashType, crashData);
+        
+        // Generate crash report
+        CrashReport report = generateCrashReport(crashInfo);
+        
+        // Send crash report
+        sendCrashReport(report);
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Debugging Features:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Crash Dumps</strong>: Automatic crash dump generation</li><li class="list-item"><strong>ANR Detection</strong>: Application Not Responding detection</li><li class="list-item"><strong>Stack Traces</strong>: Detailed stack trace collection</li><li class="list-item"><strong>Log Analysis</strong>: Comprehensive log analysis</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check crash reports</span>
+adb shell <span class="keyword">ls</span> -la /data/tombstones/
+<span class="comment"># Monitor ANR detection</span>
+adb logcat | <span class="keyword">grep</span> -i anr
+<span class="comment"># Check system logs</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -i crash</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/CrashReportService.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/CrashReportService.java&lt;/code&gt;</a></li><li class="list-item">Crash reporting in <code class="inline-code">CrashReportService.handleSystemCrash()</code></li></ul>
+<h3 id="-q21--how--does--system_server--handle--system--optimization--and--performance--tuning">Q21. How does system_server handle system optimization and performance tuning?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server implements sophisticated optimization through multiple performance subsystems:</p>
+
+<p class="article-paragraph"><strong>Performance Optimization:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/PerformanceService.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/PerformanceService.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class PerformanceService {
+    // Optimize system performance
+    public void optimizeSystemPerformance() {
+        // CPU optimization
+        optimizeCpuPerformance();
+        
+        // Memory optimization
+        optimizeMemoryPerformance();
+        
+        // I/O optimization
+        optimizeIoPerformance();
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Optimization Features:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>CPU Scaling</strong>: Dynamic CPU frequency adjustment</li><li class="list-item"><strong>Memory Management</strong>: Intelligent memory allocation</li><li class="list-item"><strong>I/O Optimization</strong>: Efficient I/O operations</li><li class="list-item"><strong>Cache Management</strong>: Intelligent cache management</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Monitor system performance</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -i performance
+<span class="comment"># Check CPU frequency</span>
+adb shell cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq
+<span class="comment"># Monitor memory usage</span>
+adb shell dumpsys meminfo system_server</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/PerformanceService.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/PerformanceService.java&lt;/code&gt;</a></li><li class="list-item">Performance optimization in <code class="inline-code">PerformanceService.optimizeSystemPerformance()</code></li></ul>
+<h3 id="-q22--how--does--system_server--handle--system--monitoring--and--health--checks">Q22. How does system_server handle system monitoring and health checks?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server implements comprehensive monitoring through Watchdog and health check subsystems:</p>
+
+<p class="article-paragraph"><strong>Health Monitoring:</strong></p>
+
+
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/Watchdog.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/Watchdog.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// Simplified illustration of Watchdog health monitoring concept
+
+public class Watchdog extends Thread {
+    // Simplified illustration: Actual Watchdog monitors handler threads
+    // using HandlerChecker mechanism to detect timeouts
+    private void monitorHandlers() {
+        // Actual implementation: Uses HandlerChecker to monitor
+        // foreground and background handler threads for timeouts
+        for (HandlerChecker checker : mHandlerCheckers) {
+            if (checker.isOverdueLocked()) {
+                // Timeout detected - trigger recovery
+                doSysRq(&#x27;c&#x27;);
+            }
+        }
+    }
+}</code></pre>
+          </div>
+
+<blockquote class="article-quote"><p><strong>Note:</strong> The code example below is a simplified illustration. The actual <a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/Watchdog.java" class="article-link" target="_blank" rel="noopener noreferrer">Watchdog.java</a> implementation uses <code class="inline-code">HandlerChecker</code> to monitor handler threads and detects timeouts when handlers don't respond.</p></blockquote>
+<p class="article-paragraph"><strong>Monitoring Features:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Handler Monitoring</strong>: Uses <code class="inline-code">HandlerChecker</code> to monitor service handler threads (AMS, WMS, etc.)</li><li class="list-item"><strong>Timeout Detection</strong>: Detects when handlers don't respond within configured timeout period</li><li class="list-item"><strong>Recovery Mechanism</strong>: Calls <code class="inline-code">doSysRq(&#x27;c&#x27;)</code> to trigger kernel panic for system recovery</li><li class="list-item"><strong>Crash Loop Protection</strong>: Uses <code class="inline-code">breakCrashLoop()</code> to escape repeated crash scenarios</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check system health</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -i health
+<span class="comment"># Monitor watchdog</span>
+adb logcat | <span class="keyword">grep</span> -i watchdog
+<span class="comment"># Check system status</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -i status</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/Watchdog.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/Watchdog.java&lt;/code&gt;</a></li><li class="list-item">Health monitoring: Watchdog uses <code class="inline-code">HandlerChecker</code> to monitor handler threads and detect timeouts</li></ul>
+<h3 id="-q23--how--does--system_server--handle--system--configuration--and--customization">Q23. How does system_server handle system configuration and customization?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server manages system configuration through ConfigurationService with sophisticated customization mechanisms:</p>
+
+<p class="article-paragraph"><strong>Configuration Management:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/ConfigurationService.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/ConfigurationService.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class ConfigurationService {
+    // Update system configuration
+    public void updateSystemConfiguration(String configKey, String configValue) {
+        // Validate configuration
+        validateConfiguration(configKey, configValue);
+        
+        // Update configuration
+        updateConfiguration(configKey, configValue);
+        
+        // Notify configuration change
+        notifyConfigurationChange(configKey, configValue);
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Configuration Features:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>System Settings</strong>: Global system settings</li><li class="list-item"><strong>User Preferences</strong>: User-specific preferences</li><li class="list-item"><strong>Device Configuration</strong>: Hardware-specific configuration</li><li class="list-item"><strong>Runtime Configuration</strong>: Dynamic configuration updates</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check system configuration</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -i configuration
+<span class="comment"># Monitor configuration changes</span>
+adb logcat | <span class="keyword">grep</span> -i <span class="string">&quot;configuration.*changed&quot;</span>
+<span class="comment"># List system settings</span>
+adb shell settings list system</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/ConfigurationService.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/ConfigurationService.java&lt;/code&gt;</a></li><li class="list-item">Configuration management in <code class="inline-code">ConfigurationService.updateSystemConfiguration()</code></li></ul>
+<h3 id="-q24--how--does--system_server--handle--system--integration--and--third--party--services">Q24. How does system_server handle system integration and third-party services?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server manages system integration through ServiceManager with sophisticated service discovery and integration:</p>
+
+<p class="article-paragraph"><strong>Service Integration:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/ServiceManager.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/ServiceManager.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class ServiceManager {
+    // Integrate third-party service
+    public void integrateThirdPartyService(String serviceName, Object service) {
+        // Register service
+        registerService(serviceName, service);
+        
+        // Configure service
+        configureService(serviceName, service);
+        
+        // Start service
+        startService(serviceName, service);
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Integration Features:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Service Discovery</strong>: Automatic service discovery</li><li class="list-item"><strong>Service Registration</strong>: Dynamic service registration</li><li class="list-item"><strong>Service Configuration</strong>: Runtime service configuration</li><li class="list-item"><strong>Service Lifecycle</strong>: Complete service lifecycle management</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># List registered services</span>
+adb shell service list
+<span class="comment"># Monitor service integration</span>
+adb logcat | <span class="keyword">grep</span> -i <span class="string">&quot;service.*integration&quot;</span>
+<span class="comment"># Check service status</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -i service</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/ServiceManager.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/ServiceManager.java&lt;/code&gt;</a></li><li class="list-item">Service integration in <code class="inline-code">ServiceManager.integrateThirdPartyService()</code></li></ul>
+<h3 id="-q25--how--does--system_server--handle--system--evolution--and--future--compatibility">Q25. How does system_server handle system evolution and future compatibility?</h3>
+
+<p class="article-paragraph"><strong>Answer:</strong></p>
+<p class="article-paragraph">System_server implements sophisticated evolution management through versioning and compatibility frameworks:</p>
+
+<p class="article-paragraph"><strong>Evolution Management:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/EvolutionService.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/EvolutionService.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class EvolutionService {
+    // Handle system evolution
+    public void handleSystemEvolution(String evolutionType, String evolutionData) {
+        // Check compatibility
+        checkCompatibility(evolutionType, evolutionData);
+        
+        // Apply evolution
+        applyEvolution(evolutionType, evolutionData);
+        
+        // Verify evolution
+        verifyEvolution(evolutionType, evolutionData);
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Evolution Features:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Version Compatibility</strong>: Backward compatibility management</li><li class="list-item"><strong>API Evolution</strong>: API versioning and migration</li><li class="list-item"><strong>Feature Flags</strong>: Runtime feature enablement</li><li class="list-item"><strong>Migration Support</strong>: Automatic data migration</li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check system version</span>
+adb shell getprop ro.build.version.release
+<span class="comment"># Monitor evolution process</span>
+adb logcat | <span class="keyword">grep</span> -i <span class="string">&quot;evolution.*service&quot;</span>
+<span class="comment"># Check compatibility</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -i compatibility</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Reference:</strong></p>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/EvolutionService.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/EvolutionService.java&lt;/code&gt;</a></li><li class="list-item">Evolution management in <code class="inline-code">EvolutionService.handleSystemEvolution()</code></li></ul>
+<hr class="article-divider">
+
+<h2 id="-summary">Summary</h2>
+
+<p class="article-paragraph">This comprehensive Q&A section covered 25+ deep questions about system_server, providing:</p>
+
+
+<ol class="article-list"><li class="list-item"><strong>Architectural Understanding</strong>: Why monolithic design, service dependencies, crash handling</li><li class="list-item"><strong>Communication Mechanisms</strong>: Binder IPC, service discovery, HAL communication</li><li class="list-item"><strong>System Management</strong>: Memory, power, thermal, security, configuration</li><li class="list-item"><strong>Advanced Topics</strong>: Tracing, monitoring, optimization, evolution</li></ol>
+<hr class="article-divider">
+
+<h2 id="-series--completion">Series Completion</h2>
+
+<p class="article-paragraph">Congratulations! You've completed the <strong>Android System Server Deep Dive</strong> series. You now have:</p>
+
+
+<ul class="article-list"><li class="list-item">✅ Foundational understanding of system_server architecture</li><li class="list-item">✅ Deep knowledge of core services and their interactions</li><li class="list-item">✅ Understanding of Binder IPC communication</li><li class="list-item">✅ Practical debugging and troubleshooting skills</li><li class="list-item">✅ Best practices for system_server development</li><li class="list-item">✅ Answers to 25+ advanced questions</li></ul>
+<hr class="article-divider">
+
+<h2 id="-related--articles">Related Articles</h2>
+
+
+<ul class="article-list"><li class="list-item"><a href="./android-system-server-architecture.html" class="article-link">Part 1: Architecture and Design</a></li><li class="list-item"><a href="./android-system-server-services.html" class="article-link">Part 2: Core System Services</a></li><li class="list-item"><a href="./android-system-server-binder-ipc.html" class="article-link">Part 3: Binder IPC Framework</a></li><li class="list-item"><a href="./android-system-server-debugging.html" class="article-link">Part 4: Debugging and Troubleshooting</a></li><li class="list-item"><a href="./android-system-server-best-practices.html" class="article-link">Part 5: Best Practices and Optimization</a></li><li class="list-item"><a href="./android-system-server-series.html" class="article-link">Series Index</a></li></ul>
+<hr class="article-divider">
+
+<p class="article-paragraph"><em>This article is part of the <a href="./android-system-server-series.html" class="article-link">Android System Server Deep Dive</a> series. For the complete learning path, start with the <a href="./android-system-server-series.html" class="article-link">Series Index</a>.</em></p>
+
+          </div>
+          
+          <!-- Article Footer -->
+          <div class="article-footer">
+            <div class="article-tags">
+              <span class="tag-label">Tags:</span>
+              <span class="tag">Android</span>
+              <span class="tag">Internals</span>
+              <span class="tag">System Architecture</span>
+            </div>
+            <div class="article-share">
+              <span class="share-label">Share:</span>
+              <a href="https://twitter.com/intent/tweet?text=System Server: Advanced Q&A&url=https://www.hemangpandhi.com/articles/android-system-server-qa.html" target="_blank" class="share-link">🐦 Twitter</a>
+              <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://www.hemangpandhi.com/articles/android-system-server-qa.html" target="_blank" class="share-link">💼 LinkedIn</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Article Sidebar -->
+        <aside class="article-sidebar" id="articleSidebar">
+          <!-- Table of Contents -->
+          <div class="sidebar-widget toc-widget">
+            <h4>📋 Table of Contents</h4>
+            <nav class="article-toc" id="tableOfContents">
+              <ul>
+                <li><a href="#introduction">Loading...</a></li>
+              </ul>
+            </nav>
+          </div>
+
+          <!-- Author Info -->
+          <div class="sidebar-widget author-widget">
+            <h4>👤 About the Author</h4>
+            <div class="author-card">
+              <img src="../assets/images/android_logo.PNG" alt="Android Internals Team" class="author-avatar-small">
+              <div class="author-details">
+                <h5>Android Internals Team</h5>
+                <p>Android Internals expert with deep knowledge of system architecture and development tools. Specializing in HAL, Framework, and system optimization.</p>
+                <div class="author-stats">
+                  <span class="stat">📚 50+ Articles</span>
+                  <span class="stat">🔧 10+ Years Experience</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Related Articles -->
+          <div class="sidebar-widget related-widget">
+            <h4>🔗 Related Articles</h4>
+            <div class="related-articles">
+              <a href="../adb.html" class="related-article">
+                <h5>ADB (Android Debug Bridge)</h5>
+                <p>Powerful tool for Android development and debugging</p>
+              </a>
+              <a href="../hal.html" class="related-article">
+                <h5>HAL (Hardware Abstraction Layer)</h5>
+                <p>Bridging Android software and device hardware</p>
+              </a>
+              <a href="../framework.html" class="related-article">
+                <h5>Android Framework</h5>
+                <p>The backbone of Android app development</p>
+              </a>
+            </div>
+          </div>
+
+          <!-- Newsletter Signup -->
+          <div class="sidebar-widget newsletter-widget">
+            <h4>📧 Stay Updated</h4>
+            <p>Get the latest Android Internals articles delivered to your inbox.</p>
+            <form class="newsletter-form">
+              <input type="email" placeholder="Enter your email" required>
+              <button type="submit" class="btn btn-primary">Subscribe</button>
+            </form>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <a href="../index.html" class="footer-logo-link">
+            <img src="../assets/images/android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
+          </a>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="../hal.html">HAL</a></li>
+            <li><a href="../framework.html">Framework</a></li>
+            <li><a href="../adb.html">ADB</a></li>
+            <li><a href="../books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+        <div class="footer-section">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="../privacy.html">Privacy Policy</a></li>
+            <li><a href="../terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/scripts.js"></script>
+  
+  <!-- Cookie Consent Banner -->
+  <div id="cookieConsentBanner" class="cookie-consent-banner">
+    <div class="cookie-consent-content">
+      <div class="cookie-consent-text">
+        <p>We use cookies and service workers to enhance your browsing experience, analyze site traffic, and personalize content. By clicking "Accept", you consent to our use of cookies. <a href="../privacy.html">Learn more</a></p>
+      </div>
+      <div class="cookie-consent-buttons">
+        <button id="cookieAcceptBtn" class="cookie-consent-btn cookie-consent-btn-accept">Accept</button>
+        <button id="cookieDeclineBtn" class="cookie-consent-btn cookie-consent-btn-decline">Decline</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Redirect .md URLs to .html (for browser cache/history issues)
+    (function() {
+      const currentPath = window.location.pathname;
+      if (currentPath.endsWith('.md')) {
+        const newPath = currentPath.replace(/\.md$/, '.html');
+        console.log('Redirecting .md URL to .html:', currentPath, '->', newPath);
+        window.location.replace(newPath);
+        return;
+      }
+    })();
+    
+    // Article functionality
+    // Define functions globally first
+    window.zoomDiagram = function(diagramId, factor) {
+      const cleanId = diagramId.startsWith('mermaid-') ? diagramId : 'mermaid-' + diagramId;
+      const diagram = document.getElementById(cleanId);
+      const diagramContainer = document.getElementById('diagram-' + cleanId);
+      const zoomIndicator = document.getElementById('zoom-' + diagramId);
+      
+      if (!diagram || !diagramContainer) return;
+      
+      // Initialize zoomLevels if not exists
+      window.zoomLevels = window.zoomLevels || {};
+      
+      const currentZoom = window.zoomLevels[diagramId] || 1;
+      const newZoom = Math.max(1, Math.min(5, currentZoom * factor)); // Start from 100% minimum
+      window.zoomLevels[diagramId] = newZoom;
+      
+      // Apply zoom to the diagram element only
+      diagram.style.transform = `scale(${newZoom})`;
+      diagram.style.transformOrigin = 'top left';
+      
+      // Check if we're in fullscreen mode
+      const isFullscreen = diagramContainer.style.position === 'fixed';
+      if (isFullscreen) {
+        // In fullscreen, preserve full height and enable scrolling
+        diagramContainer.style.height = '100vh';
+        diagramContainer.style.minHeight = '100vh';
+        diagramContainer.style.maxHeight = 'none';
+        diagramContainer.style.overflow = 'auto';
+      } else {
+        // Normal mode - ensure proper scrolling when zoomed
+        if (newZoom > 1) {
+          // When zoomed, ensure container allows horizontal and vertical scrolling
+          diagramContainer.style.overflow = 'auto';
+          diagramContainer.style.overflowX = 'auto';
+          diagramContainer.style.overflowY = 'auto';
+          diagramContainer.style.width = '100%';
+          diagramContainer.style.maxWidth = '100%';
+          diagramContainer.style.position = 'relative';
+          diagramContainer.style.zIndex = '1040';
+          diagramContainer.classList.add('zoomed');
+          
+          // Ensure the diagram element itself has proper width for scrolling
+          const svg = diagram.querySelector('svg');
+          if (svg) {
+            // Get the natural SVG width (before scaling)
+            const svgNaturalWidth = svg.viewBox.baseVal.width || svg.width.baseVal.value;
+            if (svgNaturalWidth > 0) {
+              // Set diagram width to accommodate scaled SVG
+              const scaledWidth = svgNaturalWidth * newZoom;
+              diagram.style.width = scaledWidth + 'px';
+              diagram.style.minWidth = scaledWidth + 'px';
+              diagram.style.maxWidth = 'none';
+            } else {
+              // Fallback: use bounding box if viewBox not available
+              const svgWidth = svg.getBoundingClientRect().width;
+              const scaledWidth = svgWidth * newZoom;
+              diagram.style.width = scaledWidth + 'px';
+              diagram.style.minWidth = scaledWidth + 'px';
+              diagram.style.maxWidth = 'none';
+            }
+          }
+        } else {
+          // At 100% zoom, clear all styles to use natural dimensions
+          diagramContainer.style.cssText = '';
+          diagram.style.width = '';
+          diagram.style.minWidth = '';
+          diagram.style.maxWidth = '';
+          diagramContainer.classList.remove('zoomed');
+        }
+      }
+      
+      if (zoomIndicator) {
+        zoomIndicator.textContent = Math.round(newZoom * 100) + '%';
+      }
+    }
+    
+    window.resetZoom = function(diagramId) {
+      const cleanId = diagramId.startsWith('mermaid-') ? diagramId : 'mermaid-' + diagramId;
+      const diagram = document.getElementById(cleanId);
+      const diagramContainer = document.getElementById('diagram-' + cleanId);
+      const zoomIndicator = document.getElementById('zoom-' + diagramId);
+      
+      if (!diagram || !diagramContainer) return;
+      
+      // Reset zoom level
+      window.zoomLevels = window.zoomLevels || {};
+      window.zoomLevels[diagramId] = 1;
+      
+      // Remove zoomed class and z-index
+      diagramContainer.classList.remove('zoomed');
+      
+      // Reset diagram to 100% scale
+      diagram.style.transform = 'scale(1)';
+      diagram.style.transformOrigin = 'top left';
+      
+      // Check if we're in fullscreen mode
+      const isFullscreen = diagramContainer.style.position === 'fixed';
+      if (isFullscreen) {
+        // In fullscreen, preserve full height
+        diagramContainer.style.height = '100vh';
+        diagramContainer.style.minHeight = '100vh';
+        diagramContainer.style.maxHeight = 'none';
+        diagramContainer.style.overflow = 'auto';
+      } else {
+        // Normal mode - clear all styles exactly like fullscreen exit
+        // This ensures the same behavior as exiting fullscreen mode
+        diagramContainer.style.cssText = '';
+        diagram.style.width = '';
+        diagram.style.minWidth = '';
+        diagram.style.maxWidth = '';
+        const mermaidEl = diagramContainer.querySelector('.mermaid');
+        if (mermaidEl) {
+          mermaidEl.style.cssText = '';
+        }
+        const svgEl = mermaidEl?.querySelector('svg');
+        if (svgEl) {
+          svgEl.style.cssText = '';
+        }
+      }
+      
+      if (zoomIndicator) {
+        zoomIndicator.textContent = '100%';
+      }
+    }
+    
+    window.toggleFullscreen = function(diagramId) {
+      console.log('Fullscreen toggle called for:', diagramId);
+      
+      const container = document.getElementById(`diagram-${diagramId}`);
+      if (!container) {
+        console.error('Container not found:', `diagram-${diagramId}`);
+        return;
+      }
+      
+      const isFullscreen = container.style.position === 'fixed';
+      
+      if (isFullscreen) {
+        // Exit fullscreen
+        console.log('Exiting fullscreen');
+        
+        // Show navigation bar again
+        const mainNav = document.querySelector('.main-nav');
+        if (mainNav) {
+          mainNav.style.display = '';
+          mainNav.style.visibility = '';
+          mainNav.style.opacity = '';
+          mainNav.style.height = '';
+          mainNav.style.overflow = '';
+        }
+        
+        container.style.cssText = '';
+        document.body.style.overflow = '';
+        document.body.classList.remove('fullscreen-mode');
+        
+        // Reset the mermaid element styles to normal mode
+        const mermaidEl = container.querySelector('.mermaid');
+        if (mermaidEl) {
+          mermaidEl.style.cssText = '';
+        }
+        
+        // Reset the SVG element styles to normal mode
+        const svgEl = mermaidEl?.querySelector('svg');
+        if (svgEl) {
+          svgEl.style.cssText = '';
+        }
+      } else {
+        // Enter fullscreen
+        console.log('Entering fullscreen');
+        
+        // Hide navigation bar explicitly (especially important for mobile)
+        const mainNav = document.querySelector('.main-nav');
+        if (mainNav) {
+          mainNav.style.display = 'none';
+          mainNav.style.visibility = 'hidden';
+          mainNav.style.opacity = '0';
+          mainNav.style.height = '0';
+          mainNav.style.overflow = 'hidden';
+        }
+        
+        container.style.cssText = `
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          min-height: 100vh !important;
+          z-index: 999999 !important;
+          background: white !important;
+          display: block !important;
+          padding: 10px !important;
+          box-sizing: border-box !important;
+          overflow: auto !important;
+        `;
+        
+        const mermaidEl = container.querySelector('.mermaid');
+        if (mermaidEl) {
+          mermaidEl.style.cssText = `
+            max-width: 95vw !important;
+            max-height: 95vh !important;
+            width: auto !important;
+            height: auto !important;
+            margin: 0 auto !important;
+            display: block !important;
+          `;
+          
+          // Also ensure the SVG inside uses full height
+          const svgEl = mermaidEl.querySelector('svg');
+          if (svgEl) {
+            svgEl.style.cssText = `
+              max-width: 95vw !important;
+              max-height: 95vh !important;
+              width: auto !important;
+              height: auto !important;
+            `;
+          }
+        }
+        
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('fullscreen-mode');
+      }
+    }
+    
+    // Add escape key functionality
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        // Find any fullscreen diagram and exit it
+        const fullscreenDiagram = document.querySelector('.mermaid-diagram[style*="position: fixed"]');
+        if (fullscreenDiagram) {
+          const diagramId = fullscreenDiagram.id.replace('diagram-', '');
+          window.toggleFullscreen(diagramId);
+        }
+      }
+    });
+    
+    // Initialize zoom levels storage
+    window.zoomLevels = window.zoomLevels || {};
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOMContentLoaded fired');
+      console.log('Mermaid available:', typeof mermaid);
+      
+      // Initialize Mermaid with automatic rendering and minimal padding
+      try {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: 'default',
+          securityLevel: 'loose',
+          fontFamily: 'Arial, sans-serif',
+          // Global settings for all diagram types
+          useMaxWidth: true,
+          // Flowchart settings - optimized for Mermaid 10.7.0
+          // Critical: padding must be set to ensure viewBox includes all content
+          flowchart: {
+            padding: 20, // Increased padding to ensure all content is in viewBox
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis',
+            nodeSpacing: 50,
+            rankSpacing: 50,
+            wrap: false
+          },
+          // Sequence diagram settings
+          sequence: {
+            diagramMarginX: 10,
+            diagramMarginY: 10,
+            actorMargin: 50,
+            width: 150,
+            height: 65,
+            boxMargin: 10,
+            boxTextMargin: 5,
+            noteMargin: 35,
+            messageMargin: 35,
+            mirrorActors: true,
+            bottomMarginAdj: 1,
+            useMaxWidth: true
+          },
+          // Class diagram settings
+          class: {
+            useMaxWidth: true,
+            padding: 10
+          },
+          // State diagram settings
+          state: {
+            useMaxWidth: true,
+            padding: 10
+          },
+          // Gantt chart settings
+          gantt: {
+            useMaxWidth: true
+          },
+          // Pie chart settings
+          pie: {
+            useMaxWidth: true
+          },
+          // Git graph settings
+          gitGraph: {
+            useMaxWidth: true
+          },
+          // ER diagram settings
+          er: {
+            useMaxWidth: true
+          },
+          // Journey diagram settings
+          journey: {
+            useMaxWidth: true
+          },
+          // C4 diagram settings
+          c4: {
+            useMaxWidth: true
+          }
+        });
+        console.log('Mermaid initialized successfully');
+        
+        // Simple approach: Just ensure diagrams are properly displayed after Mermaid renders
+        // Wait for Mermaid to render all diagrams, then ensure they're visible
+        setTimeout(function() {
+          console.log('Ensuring all diagrams are properly displayed');
+          
+          // Find all Mermaid diagrams
+          const mermaidContainers = document.querySelectorAll('.mermaid-diagram');
+          mermaidContainers.forEach(function(container) {
+            const diagramId = container.id.replace('diagram-', '');
+            const diagram = document.getElementById(diagramId);
+            const zoomIndicator = document.getElementById('zoom-' + diagramId);
+            
+            if (diagram && container) {
+              // Check if this is a sequence diagram
+              const svg = container.querySelector('svg');
+              let isSequenceDiagram = false;
+              if (svg) {
+                // Detect sequence diagrams
+                const hasSequenceElements = svg.querySelector('g.actor, g.note, g.activation, g[class*="sequence"]');
+                if (hasSequenceElements) {
+                  isSequenceDiagram = true;
+                  container.classList.add('sequence-diagram-container');
+                }
+              }
+              
+              // Initialize zoom level to 100%
+              window.zoomLevels = window.zoomLevels || {};
+              window.zoomLevels[diagramId] = 1;
+              
+              // Reset diagram to 100% scale
+              diagram.style.transform = 'scale(1)';
+              diagram.style.transformOrigin = 'top left';
+              
+              // CRITICAL FIX for Mermaid 10.7.0: Ensure container and SVG can display full content
+              // Remove ALL height and overflow constraints
+              container.style.cssText = `
+                overflow: visible !important;
+                height: auto !important;
+                max-height: none !important;
+                min-height: auto !important;
+                margin: 1rem 0 !important;
+                padding: 0.75rem 1rem !important;
+                background: #f8f9fa !important;
+                border-radius: 8px !important;
+                border: 1px solid #e9ecef !important;
+                position: relative !important;
+                z-index: 1 !important;
+              `;
+              
+              // CRITICAL FIX for Mermaid 10.7.0: Ensure SVG displays fully
+              // Issue: Mermaid 10.7.0 may generate viewBox that cuts off content or has wrong aspect ratio
+              if (svg) {
+                // Use multiple attempts to ensure SVG is fully rendered
+                function fixSvgDimensions() {
+                  const viewBox = svg.viewBox.baseVal;
+                  
+                  if (viewBox && viewBox.width > 0 && viewBox.height > 0) {
+                    // Remove any explicit width/height attributes that might conflict
+                    // Let CSS handle sizing based on viewBox
+                    svg.removeAttribute('width');
+                    svg.removeAttribute('height');
+                    
+                    // Ensure preserveAspectRatio is set correctly
+                    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                    
+                    // Set styles to ensure full content is visible
+                    // Use viewBox-based sizing (browser will calculate height from aspect ratio)
+                    svg.style.cssText = `
+                      display: block !important;
+                      margin: 0 auto !important;
+                      width: 100% !important;
+                      max-width: 100% !important;
+                      height: auto !important;
+                      min-height: auto !important;
+                      max-height: none !important;
+                      overflow: visible !important;
+                      box-sizing: border-box !important;
+                    `;
+                    
+                    // Verify content is not cut off by checking bounding box
+                    try {
+                      const bbox = svg.getBBox();
+                      if (bbox) {
+                        // If content extends beyond viewBox, we need to expand it
+                        const contentRight = bbox.x + bbox.width;
+                        const contentBottom = bbox.y + bbox.height;
+                        const viewBoxRight = viewBox.x + viewBox.width;
+                        const viewBoxBottom = viewBox.y + viewBox.height;
+                        
+                        // If content is cut off, expand viewBox
+                        if (contentRight > viewBoxRight || contentBottom > viewBoxBottom) {
+                          const newX = Math.min(viewBox.x, bbox.x - 10);
+                          const newY = Math.min(viewBox.y, bbox.y - 10);
+                          const newWidth = Math.max(viewBox.width, contentRight - newX + 10);
+                          const newHeight = Math.max(viewBox.height, contentBottom - newY + 10);
+                          
+                          svg.setAttribute('viewBox', `${newX} ${newY} ${newWidth} ${newHeight}`);
+                          console.log('Expanded viewBox for', diagramId, 'to show full content');
+                        }
+                      }
+                    } catch (e) {
+                      // getBBox might fail if SVG is not fully rendered, that's OK
+                    }
+                  }
+                }
+                
+                // Try immediately
+                fixSvgDimensions();
+                
+                // Try again after a short delay (Mermaid might still be rendering)
+                setTimeout(fixSvgDimensions, 100);
+                setTimeout(fixSvgDimensions, 500);
+              }
+              
+              // Also ensure the mermaid element itself doesn't constrain
+              const mermaidEl = container.querySelector('.mermaid');
+              if (mermaidEl) {
+                mermaidEl.style.cssText = `
+                  text-align: center !important;
+                  display: block !important;
+                  width: 100% !important;
+                  height: auto !important;
+                  max-height: none !important;
+                  overflow: visible !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
+                `;
+              }
+              
+              // Re-apply reduced padding for sequence diagrams
+              if (isSequenceDiagram) {
+                container.style.padding = '0.4rem 1rem';
+              }
+              
+              // Update zoom indicator
+              if (zoomIndicator) {
+                zoomIndicator.textContent = '100%';
+              }
+            }
+          });
+        }, 1000); // Wait 1 second for Mermaid to finish rendering
+        
+      } catch (error) {
+        console.error('Mermaid initialization failed:', error);
+      }
+      
+      // Check if content is visible
+      const contentWrapper = document.querySelector('.article-content-wrapper');
+      console.log('Content wrapper found:', contentWrapper);
+      if (contentWrapper) {
+        console.log('Content wrapper visible:', contentWrapper.offsetHeight > 0);
+        console.log('Content wrapper display:', window.getComputedStyle(contentWrapper).display);
+      }
+      
+      // Reading mode toggle
+      const toggleReadingMode = document.getElementById('toggleReadingMode');
+      const toggleSidebar = document.getElementById('toggleSidebar');
+      const articleLayout = document.getElementById('articleLayout');
+      const articleSidebar = document.getElementById('articleSidebar');
+      
+      toggleReadingMode.addEventListener('click', function() {
+        articleLayout.classList.toggle('full-screen');
+        const isFullScreen = articleLayout.classList.contains('full-screen');
+        
+        if (isFullScreen) {
+          toggleReadingMode.querySelector('.reading-mode-text').textContent = 'Exit Full Screen';
+          articleSidebar.style.display = 'none';
+        } else {
+          toggleReadingMode.querySelector('.reading-mode-text').textContent = 'Full Screen';
+          articleSidebar.style.display = 'block';
+        }
+      });
+      
+      toggleSidebar.addEventListener('click', function() {
+        const isHidden = articleSidebar.style.display === 'none';
+        articleSidebar.style.display = isHidden ? 'block' : 'none';
+        toggleSidebar.querySelector('.sidebar-text').textContent = isHidden ? 'Hide Sidebar' : 'Show Sidebar';
+      });
+      
+      // Generate Table of Contents
+      function generateTOC() {
+        const headings = document.querySelectorAll('.article-content-wrapper h1, .article-content-wrapper h2, .article-content-wrapper h3');
+        const tocContainer = document.getElementById('tableOfContents');
+        
+        if (headings.length === 0) return;
+        
+        let tocHTML = '<ul>';
+        headings.forEach((heading, index) => {
+          const id = `heading-${index}`;
+          heading.id = id;
+          
+          const level = parseInt(heading.tagName.charAt(1));
+          const indent = level > 2 ? 'style="margin-left: ' + ((level - 2) * 20) + 'px;"' : '';
+          
+          tocHTML += `<li ${indent}><a href="#${id}">${heading.textContent}</a></li>`;
+        });
+        tocHTML += '</ul>';
+        
+        tocContainer.innerHTML = tocHTML;
+      }
+      
+      // Smooth scrolling for TOC links
+      function addSmoothScrolling() {
+        document.querySelectorAll('.article-toc a').forEach(link => {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+              target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }
+          });
+        });
+      }
+      
+      // Copy code functionality
+      function addCopyCodeButtons() {
+        document.querySelectorAll('.code-copy').forEach(button => {
+          button.addEventListener('click', function() {
+            const codeBlock = this.closest('.code-example').querySelector('code');
+            const text = codeBlock.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+              this.textContent = 'Copied!';
+              setTimeout(() => {
+                this.textContent = 'Copy';
+              }, 2000);
+            });
+          });
+        });
+      }
+      
+      // Initialize functionality
+      generateTOC();
+      setTimeout(() => {
+        addSmoothScrolling();
+        addCopyCodeButtons();
+      }, 100);
+    });
+
+  </script>
+</body>
+</html> 

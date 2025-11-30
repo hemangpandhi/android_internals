@@ -1026,8 +1026,16 @@ function generateArticlePages(articles) {
       .replace(/{{content}}/g, article.html)
       .replace(/{{slug}}/g, article.slug);
       
-    const outputPath = path.join(__dirname, '..', 'build', 'articles', `${article.slug}.html`);
-    fs.writeFileSync(outputPath, articleHtml);
+    // Write to both build directory and root articles directory (for local development)
+    const buildOutputPath = path.join(__dirname, '..', 'build', 'articles', `${article.slug}.html`);
+    const rootArticlesDir = path.join(__dirname, '..', 'articles');
+    if (!fs.existsSync(rootArticlesDir)) {
+      fs.mkdirSync(rootArticlesDir, { recursive: true });
+    }
+    const rootOutputPath = path.join(rootArticlesDir, `${article.slug}.html`);
+    
+    fs.writeFileSync(buildOutputPath, articleHtml);
+    fs.writeFileSync(rootOutputPath, articleHtml);
     console.log(`  ✅ Generated: ${article.slug}.html`);
   });
   
@@ -1428,9 +1436,11 @@ function generateVideosPage() {
     // Generate HTML page
     const htmlContent = generateVideosHTML(sections, disclaimer);
     
-    // Write to build directory
-    const outputPath = path.join(buildDir, 'videos.html');
-    fs.writeFileSync(outputPath, htmlContent);
+    // Write to both build directory and root directory (for local development)
+    const buildOutputPath = path.join(buildDir, 'videos.html');
+    const rootOutputPath = path.join(__dirname, '..', 'videos.html');
+    fs.writeFileSync(buildOutputPath, htmlContent);
+    fs.writeFileSync(rootOutputPath, htmlContent);
     
     const totalVideos = sections.reduce((total, section) => total + section.videos.length, 0);
     console.log(`  ✅ Generated videos.html with ${totalVideos} videos in ${sections.length} sections`);

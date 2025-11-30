@@ -1,0 +1,2270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Server: Debugging and Troubleshooting - Android Internals</title>
+  <meta name="description" content="Practical debugging techniques, tools, and failure mode analysis for Android System Server troubleshooting.">
+  <meta name="keywords" content="Android, Internals, System Architecture, development, programming">
+  <link rel="stylesheet" href="../assets/css/styles.css?v=17">
+  <link rel="icon" href="../assets/images/android_logo.PNG" type="image/png">
+  <link rel="manifest" href="../assets/manifest.json">
+  <meta name="theme-color" content="#3ddc84">
+  
+  <!-- Mermaid.js for diagram rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+  <style>
+    .mermaid-diagram {
+      margin: 1rem 0;
+      padding: 0.75rem 1rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+      position: relative;
+      overflow: visible !important;
+      z-index: 1;
+      /* Scroll margin to account for fixed navigation bar (80px height) */
+      scroll-margin-top: 100px;
+      /* Ensure container can expand to show full diagram - no height constraints */
+      min-height: auto !important;
+      height: auto !important;
+      max-height: none !important;
+      /* Ensure content is not clipped */
+      overflow-x: visible;
+      overflow-y: visible;
+    }
+    
+    .mermaid-diagram.zoomed {
+      /* Ensure zoomed diagrams can scroll horizontally and vertically */
+      overflow-x: auto !important;
+      overflow-y: auto !important;
+      max-width: 100%;
+      z-index: 1040 !important;
+      position: relative;
+    }
+    
+    .mermaid {
+      text-align: center;
+      display: block;
+      width: 100%;
+      min-height: auto;
+      height: auto;
+      transition: transform 0.3s ease;
+      cursor: grab;
+      margin: 0;
+      padding: 0;
+      display: block;
+    }
+    
+    .mermaid svg {
+      display: block !important;
+      margin: 0 auto !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: auto !important;
+      max-height: none !important;
+      /* Ensure SVG can expand to show full content - critical for Mermaid 10.7.0 */
+      overflow: visible !important;
+      /* Remove any height constraints that might clip content */
+      box-sizing: border-box;
+    }
+    
+    /* Specific styling for sequence diagrams to reduce vertical spacing */
+    .mermaid-diagram.sequence-diagram-container {
+      padding: 0.4rem 1rem !important;
+    }
+    
+    /* Alternative CSS selector for sequence diagrams */
+    .mermaid-diagram:has(svg g.actor),
+    .mermaid-diagram:has(svg g.note),
+    .mermaid-diagram:has(svg g.activation) {
+      padding: 0.4rem 1rem;
+    }
+    
+    .mermaid:active {
+      cursor: grabbing;
+    }
+    
+    /* Zoom controls */
+    .mermaid-zoom-controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 5px;
+      z-index: 1050;
+    }
+    
+    .zoom-btn {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      color: #333;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      min-width: 32px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
+    
+    .zoom-btn:hover {
+      background: #f0f0f0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .zoom-reset {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+    
+    .zoom-reset:hover {
+      background: #0056b3;
+      border-color: #0056b3;
+    }
+    
+    .fullscreen-btn {
+      background: #28a745;
+      color: white;
+      border-color: #28a745;
+    }
+    
+    .fullscreen-btn:hover {
+      background: #1e7e34;
+      border-color: #1e7e34;
+    }
+    
+    /* Zoom indicator */
+    .zoom-indicator {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: monospace;
+    }
+    
+    /* Fullscreen mode for Mermaid diagrams */
+    .mermaid-diagram.fullscreen {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 99999 !important;
+      background: white !important;
+      padding: 20px !important;
+      margin: 0 !important;
+      border: none !important;
+      overflow: auto !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    
+    .mermaid-diagram.fullscreen .mermaid {
+      max-width: 90vw !important;
+      max-height: 90vh !important;
+      width: auto !important;
+      height: auto !important;
+      display: block !important;
+    }
+    
+    .mermaid-diagram.fullscreen .mermaid svg {
+      max-width: 100% !important;
+      max-height: 100% !important;
+      width: auto !important;
+      height: auto !important;
+    }
+    
+    .mermaid-diagram.fullscreen .mermaid-zoom-controls {
+      display: none !important;
+    }
+    
+    .mermaid-diagram.fullscreen .zoom-indicator {
+      display: none !important;
+    }
+    
+    body.fullscreen-mode {
+      overflow: hidden !important;
+      background: white !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    /* Hide navigation bar when diagram is in fullscreen mode - especially important for mobile */
+    body.fullscreen-mode .main-nav {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+    }
+    
+    .fullscreen-hidden {
+      display: none !important;
+    }
+    
+    /* Mobile responsive styles for Mermaid diagrams */
+    @media (max-width: 768px) {
+      .mermaid-diagram {
+        margin: 0.75rem 0;
+        padding: 0.5rem 0.75rem;
+        /* Scroll margin to account for fixed navigation bar */
+        scroll-margin-top: 100px;
+        /* Remove max-height constraint to allow natural dimensions */
+      }
+      
+      .mermaid-zoom-controls {
+        top: 5px;
+        right: 5px;
+        gap: 3px;
+      }
+      
+      .zoom-btn {
+        padding: 4px 6px;
+        font-size: 10px;
+        min-width: 28px;
+        height: 24px;
+      }
+      
+      .zoom-indicator {
+        bottom: 5px;
+        left: 5px;
+        padding: 2px 6px;
+        font-size: 10px;
+      }
+      
+      /* Fullscreen mobile adjustments */
+      .mermaid-diagram.fullscreen {
+        padding: 10px !important;
+        /* Ensure fullscreen starts from very top on mobile */
+        top: 0 !important;
+      }
+      
+      .mermaid-diagram.fullscreen .mermaid {
+        max-width: 95vw !important;
+        max-height: 95vh !important;
+      }
+      
+      /* Hide navigation bar on mobile when diagram is fullscreen */
+      body.fullscreen-mode .main-nav {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        transform: translateY(-100%) !important;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .mermaid-diagram {
+        margin: 0.5rem 0;
+        padding: 0.4rem 0.6rem;
+        /* Scroll margin to account for fixed navigation bar */
+        scroll-margin-top: 100px;
+        /* Remove max-height constraint to allow natural dimensions */
+      }
+      
+      .mermaid-zoom-controls {
+        top: 3px;
+        right: 3px;
+        gap: 2px;
+      }
+      
+      .zoom-btn {
+        padding: 3px 5px;
+        font-size: 9px;
+        min-width: 24px;
+        height: 20px;
+      }
+      
+      .zoom-indicator {
+        bottom: 3px;
+        left: 3px;
+        padding: 1px 4px;
+        font-size: 9px;
+      }
+      
+      /* Fullscreen mobile adjustments for very small screens */
+      .mermaid-diagram.fullscreen {
+        padding: 5px !important;
+        /* Ensure fullscreen starts from very top on small mobile */
+        top: 0 !important;
+      }
+      
+      .mermaid-diagram.fullscreen .mermaid {
+        max-width: 98vw !important;
+        max-height: 98vh !important;
+      }
+      
+      /* Hide navigation bar on small mobile when diagram is fullscreen */
+      body.fullscreen-mode .main-nav {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        transform: translateY(-100%) !important;
+      }
+    }
+  </style>
+  
+  <!-- Security Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+      <!-- X-Frame-Options should be set via HTTP headers, not meta tags -->
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="System Server: Debugging and Troubleshooting">
+  <meta property="og:description" content="Practical debugging techniques, tools, and failure mode analysis for Android System Server troubleshooting.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.hemangpandhi.com/articles/android-system-server-debugging.html">
+  <meta property="og:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="System Server: Debugging and Troubleshooting">
+  <meta name="twitter:description" content="Practical debugging techniques, tools, and failure mode analysis for Android System Server troubleshooting.">
+  <meta name="twitter:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="main-nav">
+    <div class="nav-container">
+      <a href="../index.html" class="nav-logo-link">
+        <img src="../assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="../index.html" class="nav-link">Home</a>
+        <a href="../index.html#topics" class="nav-link">Topics</a>
+        <a href="../index.html#blogs" class="nav-link">Blogs</a>
+        <a href="../index.html#about" class="nav-link">About</a>
+        <a href="../books.html" class="nav-link">Reference Books</a>
+        <a href="../videos.html" class="nav-link">Reference Videos</a>
+      </div>
+      <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle mobile menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Article Header -->
+  <header class="article-header">
+    <div class="container">
+      <div class="article-hero">
+        <div class="article-meta">
+          <span class="article-category">System Architecture</span>
+          <span class="article-date">2025-10-04</span>
+          <span class="article-read-time">5 min read</span>
+        </div>
+        <h1 class="article-title">System Server: Debugging and Troubleshooting</h1>
+        <p class="article-subtitle">Practical debugging techniques, tools, and failure mode analysis for Android System Server troubleshooting.</p>
+        <div class="article-author">
+          <img src="../assets/images/android_logo.PNG" alt="Author" class="author-avatar">
+          <div class="author-info">
+            <span class="author-name">Android Internals Team</span>
+            <span class="author-title">Android Internals Expert</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="article-content">
+    <!-- Reading Mode Toggle -->
+    <div class="reading-mode-controls">
+      <button id="toggleReadingMode" class="reading-mode-btn">
+        <span class="reading-mode-icon">📖</span>
+        <span class="reading-mode-text">Full Screen</span>
+      </button>
+      <button id="toggleSidebar" class="sidebar-toggle-btn">
+        <span class="sidebar-icon">📋</span>
+        <span class="sidebar-text">Sidebar</span>
+      </button>
+    </div>
+
+    <div class="container">
+      <div class="article-layout" id="articleLayout">
+        <!-- Article Body -->
+        <article class="article-body" id="articleBody">
+          <div class="article-intro">
+            <p class="lead-text">Practical debugging techniques, tools, and failure mode analysis for Android System Server troubleshooting.</p>
+          </div>
+          
+          <div class="article-content-wrapper">
+            <h1 id="-system--server--debugging--and--troubleshooting">System Server: Debugging and Troubleshooting</h1>
+
+
+<h2 id="-learning--objectives">Learning Objectives</h2>
+
+<blockquote class="article-quote"><p><strong>Part 4 of 6</strong> in the <a href="./android-system-server-series.html" class="article-link">Android System Server Deep Dive</a> series</p><p></p><p><strong>Previous</strong>: <a href="./android-system-server-binder-ipc.html" class="article-link">Part 3: Binder IPC Framework</a>  </p><p><strong>Next</strong>: <a href="./android-system-server-best-practices.html" class="article-link">Part 5: Best Practices and Optimization</a>  </p><p><strong>Series Index</strong>: <a href="./android-system-server-series.html" class="article-link">View all articles</a></p></blockquote>
+<p class="article-paragraph">By the end of this article, you will understand:</p>
+
+<ul class="article-list"><li class="list-item">Essential command-line debugging tools and advanced techniques</li><li class="list-item">Binder IPC debugging and transaction analysis</li><li class="list-item">Service-specific debugging commands for AMS, WMS, PMS, and others</li><li class="list-item">Thread analysis, deadlock detection, and memory leak identification</li><li class="list-item">Performance profiling with systrace, perfetto, and simpleperf</li><li class="list-item">Boot time debugging and service lifecycle analysis</li><li class="list-item">ANR analysis workflow and Watchdog timeout diagnosis</li><li class="list-item">SELinux debugging and system properties for troubleshooting</li><li class="list-item">Real-world debugging scenarios and step-by-step workflows</li></ul>
+<hr class="article-divider">
+
+<h2 id="-part--iv--practical--debugging--and--analysis">Part IV: Practical Debugging and Analysis</h2>
+
+<h3 id="-41--essential--command--line--tools">4.1 Essential Command-Line Tools</h3>
+
+<p class="article-paragraph"><strong>Process Inspection:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Find system_server PID</span>
+adb shell ps -A | <span class="keyword">grep</span> system_server
+
+<span class="comment"># List all threads</span>
+adb shell ps -T -p $(pidof system_server)
+
+<span class="comment"># Monitor CPU usage</span>
+adb shell top -t -d 3</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Log Analysis:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Filter system_server logs</span>
+adb logcat | <span class="keyword">grep</span> --line-buffered <span class="string">&quot;$(pidof system_server)&quot;</span>
+
+<span class="comment"># Filter by specific tags</span>
+adb logcat ActivityManager:I PowerManagerService:W *:S
+
+<span class="comment"># View crash logs</span>
+adb logcat -b crash
+
+<span class="comment"># Advanced log filtering</span>
+<span class="comment"># Filter by priority and tag</span>
+adb logcat *:S ActivityManager:D WindowManager:V
+
+<span class="comment"># Filter by process name</span>
+adb logcat | <span class="keyword">grep</span> --line-buffered <span class="string">&quot;system_server&quot;</span>
+
+<span class="comment"># Filter by time range</span>
+adb logcat -t &<span class="comment">#x27;11-15 10:30:00.000&#x27; -t &#x27;11-15 10:35:00.000&#x27;</span>
+
+<span class="comment"># Save logs to file</span>
+adb logcat &gt; system_server.log
+
+<span class="comment"># Filter multiple tags</span>
+adb logcat -s ActivityManager WindowManager PackageManager
+
+<span class="comment"># Clear logs and start fresh</span>
+adb logcat -c
+adb logcat &gt; fresh_logs.txt</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Service State Inspection:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># List all services</span>
+adb shell service list
+
+<span class="comment"># Dump service state</span>
+adb shell dumpsys activity
+adb shell dumpsys window
+adb shell dumpsys power
+adb shell dumpsys meminfo system_server
+
+<span class="comment"># List all available dumpsys services</span>
+adb shell dumpsys -l
+
+<span class="comment"># Dump specific service with options</span>
+adb shell dumpsys activity activities
+adb shell dumpsys activity services
+adb shell dumpsys activity processes
+adb shell dumpsys window windows
+adb shell dumpsys window displays</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Service-Specific Debugging Commands:</strong></p>
+
+<p class="article-paragraph"><strong>ActivityManagerService (AMS):</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Dump activity stack</span>
+adb shell dumpsys activity activities | <span class="keyword">grep</span> -A 20 <span class="string">&quot;mResumedActivity&quot;</span>
+
+<span class="comment"># Check running processes</span>
+adb shell dumpsys activity processes
+
+<span class="comment"># View pending intents</span>
+adb shell dumpsys activity intents
+
+<span class="comment"># Check app startup info</span>
+adb shell dumpsys activity top
+
+<span class="comment"># Monitor activity lifecycle</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;ActivityManager|ActivityTaskManager&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>WindowManagerService (WMS):</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Dump window hierarchy</span>
+adb shell dumpsys window windows
+
+<span class="comment"># Check display info</span>
+adb shell dumpsys window displays
+
+<span class="comment"># View surface flinger info</span>
+adb shell dumpsys SurfaceFlinger
+
+<span class="comment"># Monitor window operations</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;WindowManager|SurfaceFlinger&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>PackageManagerService (PMS):</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># List installed packages</span>
+adb shell dumpsys package packages
+
+<span class="comment"># Check package permissions</span>
+adb shell dumpsys package permissions
+
+<span class="comment"># View package info</span>
+adb shell dumpsys package &lt;package_name&gt;
+
+<span class="comment"># Monitor package operations</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;PackageManager|Installer&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>PowerManagerService:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check wake locks</span>
+adb shell dumpsys power | <span class="keyword">grep</span> -A 20 <span class="string">&quot;Wake Locks&quot;</span>
+
+<span class="comment"># View power state</span>
+adb shell dumpsys power
+
+<span class="comment"># Check battery stats</span>
+adb shell dumpsys batterystats
+
+<span class="comment"># Monitor power events</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;PowerManager|BatteryService&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Other Critical Services:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Network service</span>
+adb shell dumpsys connectivity
+adb shell dumpsys netstats
+
+<span class="comment"># Input service</span>
+adb shell dumpsys input
+
+<span class="comment"># Location service</span>
+adb shell dumpsys location
+
+<span class="comment"># Notification service</span>
+adb shell dumpsys notification</code></pre>
+          </div>
+
+<h3 id="-42--performance--profiling">4.2 Performance Profiling</h3>
+
+<p class="article-paragraph"><strong>CPU Profiling with simpleperf:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Record profile</span>
+adb shell simpleperf record -p $(pidof system_server) -g --duration 10 -o /data/local/tmp/perf.data
+
+<span class="comment"># Pull and analyze</span>
+adb pull /data/local/tmp/perf.data</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Memory Analysis:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Memory breakdown</span>
+adb shell dumpsys meminfo system_server
+
+<span class="comment"># Process ranking</span>
+adb shell procrank
+
+<span class="comment"># Native heap profiling</span>
+./tools/heap_profile --name system_server</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>System Tracing:</strong></p>
+
+<p class="article-paragraph"><strong>Perfetto Tracing:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Capture comprehensive system trace</span>
+adb shell perfetto -o /data/local/tmp/trace.pbtxt -t 10s \
+  -c - &lt;&lt;EOF
+buffers: {
+    size_kb: 63488
+    fill_policy: DISCARD
+}
+buffers: {
+    size_kb: 2048
+    fill_policy: DISCARD
+}
+data_sources: {
+    config {
+        name: <span class="string">&quot;android.surfaceflinger.frame&quot;</span>
+    }
+}
+data_sources: {
+    config {
+        name: <span class="string">&quot;linux.ftrace&quot;</span>
+        ftrace_config {
+            ftrace_events: <span class="string">&quot;sched/sched_switch&quot;</span>
+            ftrace_events: <span class="string">&quot;sched/sched_waking&quot;</span>
+            ftrace_events: <span class="string">&quot;power/suspend_resume&quot;</span>
+            ftrace_events: <span class="string">&quot;power/cpu_frequency&quot;</span>
+            ftrace_events: <span class="string">&quot;power/cpu_idle&quot;</span>
+            ftrace_events: <span class="string">&quot;binder/binder_transaction&quot;</span>
+            ftrace_events: <span class="string">&quot;binder/binder_transaction_received&quot;</span>
+            atrace_categories: <span class="string">&quot;gfx&quot;</span>
+            atrace_categories: <span class="string">&quot;input&quot;</span>
+            atrace_categories: <span class="string">&quot;view&quot;</span>
+            atrace_categories: <span class="string">&quot;webview&quot;</span>
+            atrace_categories: <span class="string">&quot;wm&quot;</span>
+            atrace_categories: <span class="string">&quot;am&quot;</span>
+            atrace_categories: <span class="string">&quot;sm&quot;</span>
+            atrace_categories: <span class="string">&quot;audio&quot;</span>
+            atrace_categories: <span class="string">&quot;video&quot;</span>
+            atrace_categories: <span class="string">&quot;camera&quot;</span>
+            atrace_categories: <span class="string">&quot;hal&quot;</span>
+            atrace_categories: <span class="string">&quot;app&quot;</span>
+            atrace_categories: <span class="string">&quot;res&quot;</span>
+            atrace_categories: <span class="string">&quot;dalvik&quot;</span>
+            atrace_categories: <span class="string">&quot;rs&quot;</span>
+            atrace_categories: <span class="string">&quot;bionic&quot;</span>
+            atrace_categories: <span class="string">&quot;power&quot;</span>
+            atrace_categories: <span class="string">&quot;pm&quot;</span>
+            atrace_categories: <span class="string">&quot;ss&quot;</span>
+            atrace_categories: <span class="string">&quot;database&quot;</span>
+            atrace_categories: <span class="string">&quot;network&quot;</span>
+            atrace_categories: <span class="string">&quot;adb&quot;</span>
+            atrace_categories: <span class="string">&quot;vibrator&quot;</span>
+            atrace_categories: <span class="string">&quot;aidl&quot;</span>
+            atrace_categories: <span class="string">&quot;nnapi&quot;</span>
+            atrace_categories: <span class="string">&quot;rro&quot;</span>
+            buffer_size_kb: 2048
+        }
+    }
+}
+EOF
+
+<span class="comment"># Pull trace and view in perfetto UI</span>
+adb pull /data/local/tmp/trace.pbtxt
+<span class="comment"># Open https://ui.perfetto.dev/ and upload trace.pbtxt</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Systrace (Legacy but still useful):</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Capture systrace</span>
+<span class="keyword">python</span> systrace.py --time=10 -o trace.html \
+  sched freq idle am wm gfx view binder_driver hal dalvik camera input res
+
+<span class="comment"># View in Chrome: chrome://tracing</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Analyzing Traces:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Binder Transactions</strong>: Look for long binder_transaction events (>5ms)</li><li class="list-item"><strong>CPU Scheduling</strong>: Check for thread starvation or priority inversion</li><li class="list-item"><strong>Service Calls</strong>: Identify slow service responses</li><li class="list-item"><strong>Deadlocks</strong>: Look for circular wait patterns in thread states</li></ul>
+<h3 id="-43--binder--ipc--debugging">4.3 Binder IPC Debugging</h3>
+
+<p class="article-paragraph"><strong>Binder Transaction Monitoring:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># View Binder statistics</span>
+adb shell cat /proc/binder/stats
+
+<span class="comment"># Monitor Binder transactions in real-time</span>
+adb shell strace -p $(pidof system_server) -e trace=binder_ioctl
+
+<span class="comment"># Check Binder thread pool state</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -A 10 <span class="string">&quot;Binder&quot;</span>
+
+<span class="comment"># Monitor Binder transaction latency</span>
+adb shell dumpsys meminfo system_server | <span class="keyword">grep</span> -i binder</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Binder Deadlock Detection:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check for blocked Binder threads</span>
+adb shell cat /data/anr/traces.txt | <span class="keyword">grep</span> -A 20 <span class="string">&quot;Binder&quot;</span>
+
+<span class="comment"># Monitor Binder transaction timeouts</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;Binder.*timeout|DeadObjectException&quot;</span>
+
+<span class="comment"># Check Binder transaction queue depth</span>
+adb shell cat /proc/binder/proc/$(pidof system_server)</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Binder Performance Analysis:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Trace Binder calls with systrace</span>
+<span class="keyword">python</span> systrace.py --time=10 -o trace.html binder
+
+<span class="comment"># Check transaction sizes</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -E <span class="string">&quot;transaction|parcel&quot;</span></code></pre>
+          </div>
+
+<h3 id="-44--thread--analysis--and--deadlock--detection">4.4 Thread Analysis and Deadlock Detection</h3>
+
+<p class="article-paragraph"><strong>Thread Inspection:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># List all threads with details</span>
+adb shell ps -T -p $(pidof system_server)
+
+<span class="comment"># Get thread stack traces</span>
+adb shell kill -3 $(pidof system_server)
+adb shell cat /data/anr/traces.txt | <span class="keyword">grep</span> -A 50 <span class="string">&quot;system_server&quot;</span>
+
+<span class="comment"># Monitor thread CPU usage</span>
+adb shell top -H -p $(pidof system_server)
+
+<span class="comment"># Check thread priorities</span>
+adb shell cat /proc/$(pidof system_server)/task/*/stat | awk &<span class="comment">#x27;{print $1, $18}&#x27;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Deadlock Detection Workflow:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># 1. Capture thread dump</span>
+adb shell kill -3 $(pidof system_server)
+adb pull /data/anr/traces.txt
+
+<span class="comment"># 2. Analyze for deadlock patterns</span>
+<span class="comment"># Look for:</span>
+<span class="comment"># - Threads waiting on locks held by other threads</span>
+<span class="comment"># - Circular wait conditions</span>
+<span class="comment"># - Blocked threads in synchronized blocks</span>
+
+<span class="comment"># 3. Identify lock holders</span>
+<span class="keyword">grep</span> -B 5 -A 20 <span class="string">&quot;BLOCKED&quot;</span> traces.txt
+
+<span class="comment"># 4. Check for monitor contention</span>
+<span class="keyword">grep</span> -i <span class="string">&quot;waiting.*monitor&quot;</span> traces.txt</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Thread State Analysis:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check thread states (RUNNABLE, BLOCKED, WAITING, TIMED_WAITING)</span>
+adb shell cat /proc/$(pidof system_server)/task/*/stat | \
+  awk &<span class="comment">#x27;{print $1, $3}&#x27; | sort -k2</span>
+
+<span class="comment"># Monitor thread creation/destruction</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;Thread.*started|Thread.*terminated&quot;</span></code></pre>
+          </div>
+
+<h3 id="-45--memory--leak--detection">4.5 Memory Leak Detection</h3>
+
+<p class="article-paragraph"><strong>Memory Monitoring:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Continuous memory monitoring</span>
+watch -n 1 <span class="string">&quot;adb shell dumpsys meminfo system_server | head -30&quot;</span>
+
+<span class="comment"># Check for memory growth over time</span>
+adb shell dumpsys meminfo system_server &gt; mem_before.txt
+<span class="comment"># ... perform operations ...</span>
+adb shell dumpsys meminfo system_server &gt; mem_after.txt
+diff mem_before.txt mem_after.txt
+
+<span class="comment"># Check native heap</span>
+adb shell dumpsys meminfo system_server | <span class="keyword">grep</span> -A 10 <span class="string">&quot;Native Heap&quot;</span>
+
+<span class="comment"># Check Java heap</span>
+adb shell dumpsys meminfo system_server | <span class="keyword">grep</span> -A 10 <span class="string">&quot;Java Heap&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Heap Analysis:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Generate heap dump (requires root or debuggable build)</span>
+adb shell am dumpheap $(pidof system_server) /data/local/tmp/heap.hprof
+adb pull /data/local/tmp/heap.hprof
+
+<span class="comment"># Analyze with Android Studio Memory Profiler or MAT (Eclipse Memory Analyzer)</span>
+
+<span class="comment"># Check for object retention</span>
+adb shell dumpsys meminfo system_server | <span class="keyword">grep</span> -E <span class="string">&quot;Objects|Views|Activities&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Native Memory Leaks:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Use Malloc Debug (requires root)</span>
+adb shell setprop libc.debug.malloc.options backtrace
+adb shell setprop libc.debug.malloc.program system_server
+adb reboot
+
+<span class="comment"># After reboot, check for leaks</span>
+adb shell dumpsys meminfo system_server | <span class="keyword">grep</span> -A 5 <span class="string">&quot;Native&quot;</span></code></pre>
+          </div>
+
+<h3 id="-46--boot--time--debugging">4.6 Boot Time Debugging</h3>
+
+<p class="article-paragraph"><strong>Service Startup Analysis:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Monitor service startup sequence</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;SystemServiceManager|Starting.*Service&quot;</span>
+
+<span class="comment"># Check boot time</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -E <span class="string">&quot;boot|startup&quot;</span>
+
+<span class="comment"># Analyze service initialization order</span>
+adb logcat -b all | <span class="keyword">grep</span> -E <span class="string">&quot;SystemServer.*start|ServiceManager&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Boot Performance:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Capture boot trace</span>
+adb shell perfetto -o /data/local/tmp/boot_trace.pbtxt \
+  -c - &lt;&lt;EOF
+buffers: { size_kb: 63488 }
+data_sources: {
+    config {
+        name: <span class="string">&quot;android.boot&quot;</span>
+    }
+}
+EOF
+
+<span class="comment"># Check boot time metrics</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -E <span class="string">&quot;boot.*time|startup.*duration&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Service Registration Debugging:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check service registration</span>
+adb shell service list | <span class="keyword">grep</span> -E <span class="string">&quot;activity|window|power&quot;</span>
+
+<span class="comment"># Monitor service binder registration</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;addService|ServiceManager.*add&quot;</span></code></pre>
+          </div>
+
+<h3 id="-47--advanced--debugging--techniques">4.7 Advanced Debugging Techniques</h3>
+
+<p class="article-paragraph"><strong>Attaching Native Debugger:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Get PID</span>
+adb shell pidof system_server
+
+<span class="comment"># Attach LLDB (requires root or debuggable build)</span>
+lldbclient.py -p &lt;PID&gt;
+
+<span class="comment"># Common LLDB commands:</span>
+<span class="comment"># (lldb) bt          # Backtrace</span>
+<span class="comment"># (lldb) thread list # List threads</span>
+<span class="comment"># (lldb) frame select # Select frame</span>
+<span class="comment"># (lldb) print &lt;var&gt; # Print variable</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Java Debugging with JDWP:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Enable JDWP (requires debuggable build)</span>
+adb shell setprop dalvik.vm.checkjni true
+adb shell setprop debug.checkjni 1
+
+<span class="comment"># Attach debugger</span>
+jdb -attach localhost:8700</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>System Properties for Debugging:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Enable debug logging</span>
+adb shell setprop log.tag.ActivityManager VERBOSE
+adb shell setprop log.tag.WindowManager VERBOSE
+adb shell setprop log.tag.PackageManager VERBOSE
+
+<span class="comment"># Enable Binder debugging</span>
+adb shell setprop debug.binder.logging 1
+
+<span class="comment"># Enable service manager debugging</span>
+adb shell setprop debug.servicemanager.logging 1
+
+<span class="comment"># Check all debug properties</span>
+adb shell getprop | <span class="keyword">grep</span> debug</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>SELinux Debugging:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check SELinux status</span>
+adb shell getenforce
+
+<span class="comment"># View SELinux denials</span>
+adb shell dmesg | <span class="keyword">grep</span> -i <span class="string">&quot;avc.*denied&quot;</span>
+adb logcat | <span class="keyword">grep</span> -i <span class="string">&quot;selinux&quot;</span>
+
+<span class="comment"># Check SELinux context for system_server</span>
+adb shell ps -Z | <span class="keyword">grep</span> system_server
+
+<span class="comment"># Set SELinux to permissive (requires root, for debugging only)</span>
+adb shell setenforce 0</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Watchdog Analysis:</strong></p>
+
+<ul class="article-list"><li class="list-item">Examine <code class="inline-code">/data/anr/traces.txt</code> for deadlock patterns</li><li class="list-item">Look for blocked threads and lock holders</li><li class="list-item">Analyze circular dependencies</li><li class="list-item">Check for threads stuck in native code</li><li class="list-item">Verify no infinite loops in service code</li></ul>
+<h2 id="-part--v--common--failure--modes">Part V: Common Failure Modes</h2>
+
+<h3 id="-51--watchdog--timeouts">5.1 Watchdog Timeouts</h3>
+
+<p class="article-paragraph"><strong>Symptoms</strong>: 60-second system freeze followed by soft reboot</p>
+
+<p class="article-paragraph"><strong>Causes</strong>: Deadlocked threads, blocking I/O on main thread</p>
+
+<p class="article-paragraph"><strong>Diagnosis</strong>: Analyze stack traces in <code class="inline-code">/data/anr/traces.txt</code></p>
+
+<h3 id="-52--system--anrs">5.2 System ANRs</h3>
+
+<p class="article-paragraph"><strong>Symptoms</strong>: App ANR dialogs with root cause in system_server</p>
+
+<p class="article-paragraph"><strong>Causes</strong>: Slow service responses, blocked Binder threads</p>
+
+<p class="article-paragraph"><strong>ANR Analysis Workflow:</strong></p>
+
+<p class="article-paragraph"><strong>Step 1: Identify ANR Type</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check ANR traces</span>
+adb shell cat /data/anr/traces.txt
+
+<span class="comment"># Check ANR in logcat</span>
+adb logcat | <span class="keyword">grep</span> -i <span class="string">&quot;anr\|not responding&quot;</span>
+
+<span class="comment"># Check dropbox for ANR reports</span>
+adb shell dumpsys dropbox --print | <span class="keyword">grep</span> -i anr</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Step 2: Analyze Application Stack Trace</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Find the app process in traces.txt</span>
+<span class="keyword">grep</span> -A 50 &quot;pid.*&lt;app_pid&gt;&quot; /data/anr/traces.txt
+
+<span class="comment"># Look for:</span>
+<span class="comment"># - Main thread blocked on Binder call</span>
+<span class="comment"># - Waiting on system_server response</span>
+<span class="comment"># - Blocked on lock held by system_server</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Step 3: Analyze System Server Stack Trace</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Find system_server in traces.txt</span>
+<span class="keyword">grep</span> -A 50 <span class="string">&quot;system_server&quot;</span> /data/anr/traces.txt
+
+<span class="comment"># Look for:</span>
+<span class="comment"># - Binder thread blocked on slow operation</span>
+<span class="comment"># - Service handler stuck in long-running code</span>
+<span class="comment"># - Deadlock with application thread</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Step 4: Identify Root Cause</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check Binder transaction latency</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -A 5 <span class="string">&quot;Binder&quot;</span>
+
+<span class="comment"># Check service response times</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;Service.*took|Transaction.*duration&quot;</span>
+
+<span class="comment"># Verify service is not deadlocked</span>
+adb shell cat /data/anr/traces.txt | <span class="keyword">grep</span> -E <span class="string">&quot;BLOCKED|WAITING&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Common ANR Patterns:</strong></p>
+
+<ol class="article-list"><li class="list-item"><strong>Slow Binder Transaction:</strong></li></ol>
+
+<ul class="article-list"><li class="list-item">App thread: <code class="inline-code">BinderProxy.transact()</code> waiting</li><li class="list-item">System thread: Service handler processing slowly</li><li class="list-item">Solution: Optimize service handler, use async callbacks</li></ul>
+<ol class="article-list"><li class="list-item"><strong>Deadlock:</strong></li></ol>
+
+<ul class="article-list"><li class="list-item">App thread: Waiting on lock A, holding lock B</li><li class="list-item">System thread: Waiting on lock B, holding lock A</li><li class="list-item">Solution: Fix lock ordering, use tryLock with timeout</li></ul>
+<ol class="article-list"><li class="list-item"><strong>Blocked on I/O:</strong></li></ol>
+
+<ul class="article-list"><li class="list-item">System thread: Blocked on file/network I/O</li><li class="list-item">Solution: Move I/O to background thread, use async APIs</li></ul>
+<p class="article-paragraph"><strong>ANR/Watchdog Interaction:</strong></p>
+
+<p class="article-paragraph">While Watchdog Timeouts (Section 5.1) and System ANRs are distinct failure modes, they often interact in complex ways. For example, an extremely slow Binder call from an application waiting on the system<em>server could lead to both an App ANR (when the app&#x27;s main thread is blocked waiting for the system</em>server response) and eventually contribute to a Watchdog timeout if critical system<em>server threads are blocked by the same operation. This interaction highlights the importance of monitoring both application-level ANRs and system-level watchdog events when diagnosing performance issues, as they may share a common root cause in system</em>server thread blocking.</p>
+
+<h3 id="-53--native--crashes">5.3 Native Crashes</h3>
+
+<p class="article-paragraph"><strong>Symptoms</strong>: Instant hard reboot or system_server crash</p>
+
+<p class="article-paragraph"><strong>Causes</strong>: Segmentation faults in JNI or native code, null pointer dereferences, stack overflow</p>
+
+<p class="article-paragraph"><strong>Crash Analysis Workflow:</strong></p>
+
+<p class="article-paragraph"><strong>Step 1: Locate Crash Reports</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># List tombstone files</span>
+adb shell <span class="keyword">ls</span> -l /data/tombstones/
+
+<span class="comment"># Pull latest tombstone</span>
+adb pull /data/tombstones/tombstone_00
+
+<span class="comment"># Check crash in logcat</span>
+adb logcat -b crash
+
+<span class="comment"># Check dropbox for crash reports</span>
+adb shell dumpsys dropbox --print | <span class="keyword">grep</span> -i <span class="string">&quot;crash\|tombstone&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Step 2: Analyze Tombstone</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Key sections to examine:</span>
+<span class="comment"># - Build fingerprint</span>
+<span class="comment"># - Signal (SIGSEGV, SIGABRT, etc.)</span>
+<span class="comment"># - Register state</span>
+<span class="comment"># - Stack trace</span>
+<span class="comment"># - Memory map</span>
+
+<span class="comment"># Use addr2line to resolve addresses</span>
+addr2line -e &lt;binary&gt; &lt;address&gt;</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Step 3: Identify Root Cause</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>SIGSEGV</strong>: Null pointer, buffer overflow, use-after-free</li><li class="list-item"><strong>SIGABRT</strong>: Assertion failure, abort() call</li><li class="list-item"><strong>SIGBUS</strong>: Misaligned memory access</li><li class="list-item"><strong>SIGFPE</strong>: Floating point exception</li></ul>
+<p class="article-paragraph"><strong>Common Native Crash Patterns:</strong></p>
+
+<ol class="article-list"><li class="list-item"><strong>JNI Null Pointer:</strong></li></ol>
+
+<ul class="article-list"><li class="list-item">Check JNI code for null checks</li><li class="list-item">Verify object references are valid</li><li class="list-item">Solution: Add null checks, validate JNI parameters</li></ul>
+<ol class="article-list"><li class="list-item"><strong>Stack Overflow:</strong></li></ol>
+
+<ul class="article-list"><li class="list-item">Check for infinite recursion</li><li class="list-item">Verify stack size limits</li><li class="list-item">Solution: Fix recursion, increase stack size if needed</li></ul>
+<ol class="article-list"><li class="list-item"><strong>Use-After-Free:</strong></li></ol>
+
+<ul class="article-list"><li class="list-item">Check for dangling pointers</li><li class="list-item">Verify object lifetime management</li><li class="list-item">Solution: Use smart pointers, validate object state</li></ul>
+<h3 id="-54--service--lifecycle--issues">5.4 Service Lifecycle Issues</h3>
+
+<p class="article-paragraph"><strong>Symptoms</strong>: Services not starting, crashing, or not responding</p>
+
+<p class="article-paragraph"><strong>Debugging Service Startup:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Monitor service registration</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;addService|ServiceManager&quot;</span>
+
+<span class="comment"># Check service availability</span>
+adb shell service check &lt;service_name&gt;
+
+<span class="comment"># Verify service binder interface</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> &lt;service_name&gt;</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Service Crash Recovery:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check if service crashed</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;Service.*died|Service.*crash&quot;</span>
+
+<span class="comment"># Monitor service restart</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;Service.*restart|Service.*recovery&quot;</span>
+
+<span class="comment"># Check service state</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -A 10 &lt;service_name&gt;</code></pre>
+          </div>
+
+<h3 id="-55--performance--regressions">5.5 Performance Regressions</h3>
+
+<p class="article-paragraph"><strong>Symptoms</strong>: System slowdown, increased latency, higher CPU usage</p>
+
+<p class="article-paragraph"><strong>Performance Baseline:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Capture baseline metrics</span>
+adb shell dumpsys meminfo system_server &gt; baseline_mem.txt
+adb shell top -n 1 -p $(pidof system_server) &gt; baseline_cpu.txt
+
+<span class="comment"># After changes, compare</span>
+adb shell dumpsys meminfo system_server &gt; current_mem.txt
+adb shell top -n 1 -p $(pidof system_server) &gt; current_cpu.txt</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Identifying Regressions:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Compare CPU usage</span>
+diff baseline_cpu.txt current_cpu.txt
+
+<span class="comment"># Compare memory usage</span>
+diff baseline_mem.txt current_mem.txt
+
+<span class="comment"># Check for new allocations</span>
+adb shell dumpsys meminfo system_server | <span class="keyword">grep</span> -E <span class="string">&quot;Objects|Allocations&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Performance Profiling:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Profile before and after</span>
+adb shell simpleperf record -p $(pidof system_server) -g --duration 30
+
+<span class="comment"># Compare profiles</span>
+simpleperf report --compare baseline.data current.data</code></pre>
+          </div>
+
+<h3 id="-56--battery--and--thermal--issues">5.6 Battery and Thermal Issues</h3>
+
+<p class="article-paragraph"><strong>Symptoms</strong>: Excessive battery drain, thermal throttling</p>
+
+<p class="article-paragraph"><strong>Battery Analysis:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check wake locks</span>
+adb shell dumpsys power | <span class="keyword">grep</span> -A 20 <span class="string">&quot;Wake Locks&quot;</span>
+
+<span class="comment"># Check battery stats</span>
+adb shell dumpsys batterystats
+
+<span class="comment"># Monitor CPU frequency</span>
+adb shell cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq
+
+<span class="comment"># Check thermal state</span>
+adb shell dumpsys thermalservice</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Identifying Battery Drains:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Check for excessive CPU wakeups</span>
+adb shell dumpsys batterystats | <span class="keyword">grep</span> -E <span class="string">&quot;wakeup|partial_wake_lock&quot;</span>
+
+<span class="comment"># Monitor service CPU usage</span>
+adb shell top -H -p $(pidof system_server) -d 5
+
+<span class="comment"># Check for polling loops</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;polling|wakeup|alarm&quot;</span></code></pre>
+          </div>
+
+<hr class="article-divider">
+
+<h2 id="-6--real--world--debugging--scenarios">6. Real-World Debugging Scenarios</h2>
+
+<h3 id="-scenario--1--system--freeze--investigation">Scenario 1: System Freeze Investigation</h3>
+
+<p class="article-paragraph"><strong>Symptoms</strong>: Device freezes, no response to input</p>
+
+<p class="article-paragraph"><strong>Debugging Steps:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># 1. Check if system_server is alive</span>
+adb shell ps -A | <span class="keyword">grep</span> system_server
+
+<span class="comment"># 2. Get thread dump</span>
+adb shell kill -3 $(pidof system_server)
+adb pull /data/anr/traces.txt
+
+<span class="comment"># 3. Analyze for deadlocks</span>
+<span class="keyword">grep</span> -E <span class="string">&quot;BLOCKED|WAITING&quot;</span> traces.txt
+
+<span class="comment"># 4. Check Binder transactions</span>
+adb shell cat /proc/binder/stats
+
+<span class="comment"># 5. Check CPU usage</span>
+adb shell top -H -p $(pidof system_server)</code></pre>
+          </div>
+
+<h3 id="-scenario--2--app--launch--slowdown">Scenario 2: App Launch Slowdown</h3>
+
+<p class="article-paragraph"><strong>Symptoms</strong>: Apps take too long to start</p>
+
+<p class="article-paragraph"><strong>Debugging Steps:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># 1. Trace app launch</span>
+adb shell perfetto -o /data/local/tmp/launch.pbtxt -t 10s am
+
+<span class="comment"># 2. Check AMS activity stack</span>
+adb shell dumpsys activity activities | <span class="keyword">grep</span> -A 10 <span class="string">&quot;mResumedActivity&quot;</span>
+
+<span class="comment"># 3. Monitor service calls during launch</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;ActivityManager|PackageManager&quot;</span> | <span class="keyword">grep</span> -E <span class="string">&quot;start|launch&quot;</span>
+
+<span class="comment"># 4. Check for blocking operations</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -A 5 <span class="string">&quot;Binder&quot;</span></code></pre>
+          </div>
+
+<h3 id="-scenario--3--memory--leak--investigation">Scenario 3: Memory Leak Investigation</h3>
+
+<p class="article-paragraph"><strong>Symptoms</strong>: System memory usage grows over time</p>
+
+<p class="article-paragraph"><strong>Debugging Steps:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># 1. Baseline memory</span>
+adb shell dumpsys meminfo system_server &gt; mem_baseline.txt
+
+<span class="comment"># 2. Wait and check again</span>
+sleep 3600  <span class="comment"># Wait 1 hour</span>
+adb shell dumpsys meminfo system_server &gt; mem_after.txt
+
+<span class="comment"># 3. Compare</span>
+diff mem_baseline.txt mem_after.txt
+
+<span class="comment"># 4. Generate heap dump</span>
+adb shell am dumpheap $(pidof system_server) /data/local/tmp/heap.hprof
+adb pull /data/local/tmp/heap.hprof
+
+<span class="comment"># 5. Analyze with MAT or Android Studio</span></code></pre>
+          </div>
+
+<h3 id="-scenario--4--binder--transaction--timeout">Scenario 4: Binder Transaction Timeout</h3>
+
+<p class="article-paragraph"><strong>Symptoms</strong>: Apps report "Service not responding"</p>
+
+<p class="article-paragraph"><strong>Debugging Steps:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># 1. Check Binder statistics</span>
+adb shell cat /proc/binder/stats
+
+<span class="comment"># 2. Monitor Binder transactions</span>
+adb shell strace -p $(pidof system_server) -e trace=binder_ioctl
+
+<span class="comment"># 3. Check service handler threads</span>
+adb shell ps -T -p $(pidof system_server) | <span class="keyword">grep</span> -E <span class="string">&quot;Binder|Handler&quot;</span>
+
+<span class="comment"># 4. Analyze service response times</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;Service.*took|Transaction.*duration&quot;</span>
+
+<span class="comment"># 5. Check for deadlocks</span>
+adb shell cat /data/anr/traces.txt | <span class="keyword">grep</span> -A 20 <span class="string">&quot;Binder&quot;</span></code></pre>
+          </div>
+
+<hr class="article-divider">
+
+<h2 id="-summary">Summary</h2>
+
+<p class="article-paragraph">This comprehensive article covered essential and advanced debugging tools and techniques for system_server:</p>
+
+
+<ol class="article-list"><li class="list-item"><strong>Command-Line Tools</strong>: Process inspection, log analysis, service state dumps, and service-specific debugging</li><li class="list-item"><strong>Binder IPC Debugging</strong>: Transaction monitoring, deadlock detection, and performance analysis</li><li class="list-item"><strong>Thread Analysis</strong>: Deadlock detection, thread state analysis, and CPU profiling</li><li class="list-item"><strong>Memory Debugging</strong>: Leak detection, heap analysis, and native memory tracking</li><li class="list-item"><strong>Boot Time Debugging</strong>: Service startup analysis and initialization order</li><li class="list-item"><strong>Performance Profiling</strong>: CPU, memory, and system tracing with perfetto and systrace</li><li class="list-item"><strong>Advanced Techniques</strong>: Native debugging, JDWP, system properties, and SELinux debugging</li><li class="list-item"><strong>Failure Modes</strong>: Watchdog timeouts, ANRs, native crashes, service lifecycle issues, performance regressions, and battery/thermal problems</li><li class="list-item"><strong>Real-World Scenarios</strong>: Step-by-step workflows for common debugging situations</li></ol>
+<hr class="article-divider">
+
+<h2 id="-next--steps">Next Steps</h2>
+
+<p class="article-paragraph">Continue to <strong><a href="./android-system-server-best-practices.html" class="article-link">Part 5: Best Practices and Optimization</a></strong> to learn development guidelines and common pitfalls to avoid.</p>
+
+<hr class="article-divider">
+
+<h2 id="-related--articles">Related Articles</h2>
+
+
+<ul class="article-list"><li class="list-item"><a href="./android-system-server-binder-ipc.html" class="article-link">Part 3: Binder IPC Framework</a></li><li class="list-item"><a href="./android-system-server-best-practices.html" class="article-link">Part 5: Best Practices and Optimization</a></li><li class="list-item"><a href="./android-system-server-qa.html" class="article-link">Part 6: Advanced Q&amp;A</a> - See Q3, Q5 for detailed failure analysis</li><li class="list-item"><a href="./android-system-server-series.html" class="article-link">Series Index</a></li></ul>
+<hr class="article-divider">
+
+<p class="article-paragraph"><em>This article is part of the <a href="./android-system-server-series.html" class="article-link">Android System Server Deep Dive</a> series. For the complete learning path, start with the <a href="./android-system-server-series.html" class="article-link">Series Index</a>.</em></p>
+
+          </div>
+          
+          <!-- Article Footer -->
+          <div class="article-footer">
+            <div class="article-tags">
+              <span class="tag-label">Tags:</span>
+              <span class="tag">Android</span>
+              <span class="tag">Internals</span>
+              <span class="tag">System Architecture</span>
+            </div>
+            <div class="article-share">
+              <span class="share-label">Share:</span>
+              <a href="https://twitter.com/intent/tweet?text=System Server: Debugging and Troubleshooting&url=https://www.hemangpandhi.com/articles/android-system-server-debugging.html" target="_blank" class="share-link">🐦 Twitter</a>
+              <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://www.hemangpandhi.com/articles/android-system-server-debugging.html" target="_blank" class="share-link">💼 LinkedIn</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Article Sidebar -->
+        <aside class="article-sidebar" id="articleSidebar">
+          <!-- Table of Contents -->
+          <div class="sidebar-widget toc-widget">
+            <h4>📋 Table of Contents</h4>
+            <nav class="article-toc" id="tableOfContents">
+              <ul>
+                <li><a href="#introduction">Loading...</a></li>
+              </ul>
+            </nav>
+          </div>
+
+          <!-- Author Info -->
+          <div class="sidebar-widget author-widget">
+            <h4>👤 About the Author</h4>
+            <div class="author-card">
+              <img src="../assets/images/android_logo.PNG" alt="Android Internals Team" class="author-avatar-small">
+              <div class="author-details">
+                <h5>Android Internals Team</h5>
+                <p>Android Internals expert with deep knowledge of system architecture and development tools. Specializing in HAL, Framework, and system optimization.</p>
+                <div class="author-stats">
+                  <span class="stat">📚 50+ Articles</span>
+                  <span class="stat">🔧 10+ Years Experience</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Related Articles -->
+          <div class="sidebar-widget related-widget">
+            <h4>🔗 Related Articles</h4>
+            <div class="related-articles">
+              <a href="../adb.html" class="related-article">
+                <h5>ADB (Android Debug Bridge)</h5>
+                <p>Powerful tool for Android development and debugging</p>
+              </a>
+              <a href="../hal.html" class="related-article">
+                <h5>HAL (Hardware Abstraction Layer)</h5>
+                <p>Bridging Android software and device hardware</p>
+              </a>
+              <a href="../framework.html" class="related-article">
+                <h5>Android Framework</h5>
+                <p>The backbone of Android app development</p>
+              </a>
+            </div>
+          </div>
+
+          <!-- Newsletter Signup -->
+          <div class="sidebar-widget newsletter-widget">
+            <h4>📧 Stay Updated</h4>
+            <p>Get the latest Android Internals articles delivered to your inbox.</p>
+            <form class="newsletter-form">
+              <input type="email" placeholder="Enter your email" required>
+              <button type="submit" class="btn btn-primary">Subscribe</button>
+            </form>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <a href="../index.html" class="footer-logo-link">
+            <img src="../assets/images/android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
+          </a>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="../hal.html">HAL</a></li>
+            <li><a href="../framework.html">Framework</a></li>
+            <li><a href="../adb.html">ADB</a></li>
+            <li><a href="../books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+        <div class="footer-section">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="../privacy.html">Privacy Policy</a></li>
+            <li><a href="../terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/scripts.js"></script>
+  
+  <!-- Cookie Consent Banner -->
+  <div id="cookieConsentBanner" class="cookie-consent-banner">
+    <div class="cookie-consent-content">
+      <div class="cookie-consent-text">
+        <p>We use cookies and service workers to enhance your browsing experience, analyze site traffic, and personalize content. By clicking "Accept", you consent to our use of cookies. <a href="../privacy.html">Learn more</a></p>
+      </div>
+      <div class="cookie-consent-buttons">
+        <button id="cookieAcceptBtn" class="cookie-consent-btn cookie-consent-btn-accept">Accept</button>
+        <button id="cookieDeclineBtn" class="cookie-consent-btn cookie-consent-btn-decline">Decline</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Redirect .md URLs to .html (for browser cache/history issues)
+    (function() {
+      const currentPath = window.location.pathname;
+      if (currentPath.endsWith('.md')) {
+        const newPath = currentPath.replace(/\.md$/, '.html');
+        console.log('Redirecting .md URL to .html:', currentPath, '->', newPath);
+        window.location.replace(newPath);
+        return;
+      }
+    })();
+    
+    // Article functionality
+    // Define functions globally first
+    window.zoomDiagram = function(diagramId, factor) {
+      const cleanId = diagramId.startsWith('mermaid-') ? diagramId : 'mermaid-' + diagramId;
+      const diagram = document.getElementById(cleanId);
+      const diagramContainer = document.getElementById('diagram-' + cleanId);
+      const zoomIndicator = document.getElementById('zoom-' + diagramId);
+      
+      if (!diagram || !diagramContainer) return;
+      
+      // Initialize zoomLevels if not exists
+      window.zoomLevels = window.zoomLevels || {};
+      
+      const currentZoom = window.zoomLevels[diagramId] || 1;
+      const newZoom = Math.max(1, Math.min(5, currentZoom * factor)); // Start from 100% minimum
+      window.zoomLevels[diagramId] = newZoom;
+      
+      // Apply zoom to the diagram element only
+      diagram.style.transform = `scale(${newZoom})`;
+      diagram.style.transformOrigin = 'top left';
+      
+      // Check if we're in fullscreen mode
+      const isFullscreen = diagramContainer.style.position === 'fixed';
+      if (isFullscreen) {
+        // In fullscreen, preserve full height and enable scrolling
+        diagramContainer.style.height = '100vh';
+        diagramContainer.style.minHeight = '100vh';
+        diagramContainer.style.maxHeight = 'none';
+        diagramContainer.style.overflow = 'auto';
+      } else {
+        // Normal mode - ensure proper scrolling when zoomed
+        if (newZoom > 1) {
+          // When zoomed, ensure container allows horizontal and vertical scrolling
+          diagramContainer.style.overflow = 'auto';
+          diagramContainer.style.overflowX = 'auto';
+          diagramContainer.style.overflowY = 'auto';
+          diagramContainer.style.width = '100%';
+          diagramContainer.style.maxWidth = '100%';
+          diagramContainer.style.position = 'relative';
+          diagramContainer.style.zIndex = '1040';
+          diagramContainer.classList.add('zoomed');
+          
+          // Ensure the diagram element itself has proper width for scrolling
+          const svg = diagram.querySelector('svg');
+          if (svg) {
+            // Get the natural SVG width (before scaling)
+            const svgNaturalWidth = svg.viewBox.baseVal.width || svg.width.baseVal.value;
+            if (svgNaturalWidth > 0) {
+              // Set diagram width to accommodate scaled SVG
+              const scaledWidth = svgNaturalWidth * newZoom;
+              diagram.style.width = scaledWidth + 'px';
+              diagram.style.minWidth = scaledWidth + 'px';
+              diagram.style.maxWidth = 'none';
+            } else {
+              // Fallback: use bounding box if viewBox not available
+              const svgWidth = svg.getBoundingClientRect().width;
+              const scaledWidth = svgWidth * newZoom;
+              diagram.style.width = scaledWidth + 'px';
+              diagram.style.minWidth = scaledWidth + 'px';
+              diagram.style.maxWidth = 'none';
+            }
+          }
+        } else {
+          // At 100% zoom, clear all styles to use natural dimensions
+          diagramContainer.style.cssText = '';
+          diagram.style.width = '';
+          diagram.style.minWidth = '';
+          diagram.style.maxWidth = '';
+          diagramContainer.classList.remove('zoomed');
+        }
+      }
+      
+      if (zoomIndicator) {
+        zoomIndicator.textContent = Math.round(newZoom * 100) + '%';
+      }
+    }
+    
+    window.resetZoom = function(diagramId) {
+      const cleanId = diagramId.startsWith('mermaid-') ? diagramId : 'mermaid-' + diagramId;
+      const diagram = document.getElementById(cleanId);
+      const diagramContainer = document.getElementById('diagram-' + cleanId);
+      const zoomIndicator = document.getElementById('zoom-' + diagramId);
+      
+      if (!diagram || !diagramContainer) return;
+      
+      // Reset zoom level
+      window.zoomLevels = window.zoomLevels || {};
+      window.zoomLevels[diagramId] = 1;
+      
+      // Remove zoomed class and z-index
+      diagramContainer.classList.remove('zoomed');
+      
+      // Reset diagram to 100% scale
+      diagram.style.transform = 'scale(1)';
+      diagram.style.transformOrigin = 'top left';
+      
+      // Check if we're in fullscreen mode
+      const isFullscreen = diagramContainer.style.position === 'fixed';
+      if (isFullscreen) {
+        // In fullscreen, preserve full height
+        diagramContainer.style.height = '100vh';
+        diagramContainer.style.minHeight = '100vh';
+        diagramContainer.style.maxHeight = 'none';
+        diagramContainer.style.overflow = 'auto';
+      } else {
+        // Normal mode - clear all styles exactly like fullscreen exit
+        // This ensures the same behavior as exiting fullscreen mode
+        diagramContainer.style.cssText = '';
+        diagram.style.width = '';
+        diagram.style.minWidth = '';
+        diagram.style.maxWidth = '';
+        const mermaidEl = diagramContainer.querySelector('.mermaid');
+        if (mermaidEl) {
+          mermaidEl.style.cssText = '';
+        }
+        const svgEl = mermaidEl?.querySelector('svg');
+        if (svgEl) {
+          svgEl.style.cssText = '';
+        }
+      }
+      
+      if (zoomIndicator) {
+        zoomIndicator.textContent = '100%';
+      }
+    }
+    
+    window.toggleFullscreen = function(diagramId) {
+      console.log('Fullscreen toggle called for:', diagramId);
+      
+      const container = document.getElementById(`diagram-${diagramId}`);
+      if (!container) {
+        console.error('Container not found:', `diagram-${diagramId}`);
+        return;
+      }
+      
+      const isFullscreen = container.style.position === 'fixed';
+      
+      if (isFullscreen) {
+        // Exit fullscreen
+        console.log('Exiting fullscreen');
+        
+        // Show navigation bar again
+        const mainNav = document.querySelector('.main-nav');
+        if (mainNav) {
+          mainNav.style.display = '';
+          mainNav.style.visibility = '';
+          mainNav.style.opacity = '';
+          mainNav.style.height = '';
+          mainNav.style.overflow = '';
+        }
+        
+        container.style.cssText = '';
+        document.body.style.overflow = '';
+        document.body.classList.remove('fullscreen-mode');
+        
+        // Reset the mermaid element styles to normal mode
+        const mermaidEl = container.querySelector('.mermaid');
+        if (mermaidEl) {
+          mermaidEl.style.cssText = '';
+        }
+        
+        // Reset the SVG element styles to normal mode
+        const svgEl = mermaidEl?.querySelector('svg');
+        if (svgEl) {
+          svgEl.style.cssText = '';
+        }
+      } else {
+        // Enter fullscreen
+        console.log('Entering fullscreen');
+        
+        // Hide navigation bar explicitly (especially important for mobile)
+        const mainNav = document.querySelector('.main-nav');
+        if (mainNav) {
+          mainNav.style.display = 'none';
+          mainNav.style.visibility = 'hidden';
+          mainNav.style.opacity = '0';
+          mainNav.style.height = '0';
+          mainNav.style.overflow = 'hidden';
+        }
+        
+        container.style.cssText = `
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          min-height: 100vh !important;
+          z-index: 999999 !important;
+          background: white !important;
+          display: block !important;
+          padding: 10px !important;
+          box-sizing: border-box !important;
+          overflow: auto !important;
+        `;
+        
+        const mermaidEl = container.querySelector('.mermaid');
+        if (mermaidEl) {
+          mermaidEl.style.cssText = `
+            max-width: 95vw !important;
+            max-height: 95vh !important;
+            width: auto !important;
+            height: auto !important;
+            margin: 0 auto !important;
+            display: block !important;
+          `;
+          
+          // Also ensure the SVG inside uses full height
+          const svgEl = mermaidEl.querySelector('svg');
+          if (svgEl) {
+            svgEl.style.cssText = `
+              max-width: 95vw !important;
+              max-height: 95vh !important;
+              width: auto !important;
+              height: auto !important;
+            `;
+          }
+        }
+        
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('fullscreen-mode');
+      }
+    }
+    
+    // Add escape key functionality
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        // Find any fullscreen diagram and exit it
+        const fullscreenDiagram = document.querySelector('.mermaid-diagram[style*="position: fixed"]');
+        if (fullscreenDiagram) {
+          const diagramId = fullscreenDiagram.id.replace('diagram-', '');
+          window.toggleFullscreen(diagramId);
+        }
+      }
+    });
+    
+    // Initialize zoom levels storage
+    window.zoomLevels = window.zoomLevels || {};
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOMContentLoaded fired');
+      console.log('Mermaid available:', typeof mermaid);
+      
+      // Initialize Mermaid with automatic rendering and minimal padding
+      try {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: 'default',
+          securityLevel: 'loose',
+          fontFamily: 'Arial, sans-serif',
+          // Global settings for all diagram types
+          useMaxWidth: true,
+          // Flowchart settings - optimized for Mermaid 10.7.0
+          // Critical: padding must be set to ensure viewBox includes all content
+          flowchart: {
+            padding: 20, // Increased padding to ensure all content is in viewBox
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis',
+            nodeSpacing: 50,
+            rankSpacing: 50,
+            wrap: false
+          },
+          // Sequence diagram settings
+          sequence: {
+            diagramMarginX: 10,
+            diagramMarginY: 10,
+            actorMargin: 50,
+            width: 150,
+            height: 65,
+            boxMargin: 10,
+            boxTextMargin: 5,
+            noteMargin: 35,
+            messageMargin: 35,
+            mirrorActors: true,
+            bottomMarginAdj: 1,
+            useMaxWidth: true
+          },
+          // Class diagram settings
+          class: {
+            useMaxWidth: true,
+            padding: 10
+          },
+          // State diagram settings
+          state: {
+            useMaxWidth: true,
+            padding: 10
+          },
+          // Gantt chart settings
+          gantt: {
+            useMaxWidth: true
+          },
+          // Pie chart settings
+          pie: {
+            useMaxWidth: true
+          },
+          // Git graph settings
+          gitGraph: {
+            useMaxWidth: true
+          },
+          // ER diagram settings
+          er: {
+            useMaxWidth: true
+          },
+          // Journey diagram settings
+          journey: {
+            useMaxWidth: true
+          },
+          // C4 diagram settings
+          c4: {
+            useMaxWidth: true
+          }
+        });
+        console.log('Mermaid initialized successfully');
+        
+        // Simple approach: Just ensure diagrams are properly displayed after Mermaid renders
+        // Wait for Mermaid to render all diagrams, then ensure they're visible
+        setTimeout(function() {
+          console.log('Ensuring all diagrams are properly displayed');
+          
+          // Find all Mermaid diagrams
+          const mermaidContainers = document.querySelectorAll('.mermaid-diagram');
+          mermaidContainers.forEach(function(container) {
+            const diagramId = container.id.replace('diagram-', '');
+            const diagram = document.getElementById(diagramId);
+            const zoomIndicator = document.getElementById('zoom-' + diagramId);
+            
+            if (diagram && container) {
+              // Check if this is a sequence diagram
+              const svg = container.querySelector('svg');
+              let isSequenceDiagram = false;
+              if (svg) {
+                // Detect sequence diagrams
+                const hasSequenceElements = svg.querySelector('g.actor, g.note, g.activation, g[class*="sequence"]');
+                if (hasSequenceElements) {
+                  isSequenceDiagram = true;
+                  container.classList.add('sequence-diagram-container');
+                }
+              }
+              
+              // Initialize zoom level to 100%
+              window.zoomLevels = window.zoomLevels || {};
+              window.zoomLevels[diagramId] = 1;
+              
+              // Reset diagram to 100% scale
+              diagram.style.transform = 'scale(1)';
+              diagram.style.transformOrigin = 'top left';
+              
+              // CRITICAL FIX for Mermaid 10.7.0: Ensure container and SVG can display full content
+              // Remove ALL height and overflow constraints
+              container.style.cssText = `
+                overflow: visible !important;
+                height: auto !important;
+                max-height: none !important;
+                min-height: auto !important;
+                margin: 1rem 0 !important;
+                padding: 0.75rem 1rem !important;
+                background: #f8f9fa !important;
+                border-radius: 8px !important;
+                border: 1px solid #e9ecef !important;
+                position: relative !important;
+                z-index: 1 !important;
+              `;
+              
+              // CRITICAL FIX for Mermaid 10.7.0: Ensure SVG displays fully
+              // Issue: Mermaid 10.7.0 may generate viewBox that cuts off content or has wrong aspect ratio
+              if (svg) {
+                // Use multiple attempts to ensure SVG is fully rendered
+                function fixSvgDimensions() {
+                  const viewBox = svg.viewBox.baseVal;
+                  
+                  if (viewBox && viewBox.width > 0 && viewBox.height > 0) {
+                    // Remove any explicit width/height attributes that might conflict
+                    // Let CSS handle sizing based on viewBox
+                    svg.removeAttribute('width');
+                    svg.removeAttribute('height');
+                    
+                    // Ensure preserveAspectRatio is set correctly
+                    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                    
+                    // Set styles to ensure full content is visible
+                    // Use viewBox-based sizing (browser will calculate height from aspect ratio)
+                    svg.style.cssText = `
+                      display: block !important;
+                      margin: 0 auto !important;
+                      width: 100% !important;
+                      max-width: 100% !important;
+                      height: auto !important;
+                      min-height: auto !important;
+                      max-height: none !important;
+                      overflow: visible !important;
+                      box-sizing: border-box !important;
+                    `;
+                    
+                    // Verify content is not cut off by checking bounding box
+                    try {
+                      const bbox = svg.getBBox();
+                      if (bbox) {
+                        // If content extends beyond viewBox, we need to expand it
+                        const contentRight = bbox.x + bbox.width;
+                        const contentBottom = bbox.y + bbox.height;
+                        const viewBoxRight = viewBox.x + viewBox.width;
+                        const viewBoxBottom = viewBox.y + viewBox.height;
+                        
+                        // If content is cut off, expand viewBox
+                        if (contentRight > viewBoxRight || contentBottom > viewBoxBottom) {
+                          const newX = Math.min(viewBox.x, bbox.x - 10);
+                          const newY = Math.min(viewBox.y, bbox.y - 10);
+                          const newWidth = Math.max(viewBox.width, contentRight - newX + 10);
+                          const newHeight = Math.max(viewBox.height, contentBottom - newY + 10);
+                          
+                          svg.setAttribute('viewBox', `${newX} ${newY} ${newWidth} ${newHeight}`);
+                          console.log('Expanded viewBox for', diagramId, 'to show full content');
+                        }
+                      }
+                    } catch (e) {
+                      // getBBox might fail if SVG is not fully rendered, that's OK
+                    }
+                  }
+                }
+                
+                // Try immediately
+                fixSvgDimensions();
+                
+                // Try again after a short delay (Mermaid might still be rendering)
+                setTimeout(fixSvgDimensions, 100);
+                setTimeout(fixSvgDimensions, 500);
+              }
+              
+              // Also ensure the mermaid element itself doesn't constrain
+              const mermaidEl = container.querySelector('.mermaid');
+              if (mermaidEl) {
+                mermaidEl.style.cssText = `
+                  text-align: center !important;
+                  display: block !important;
+                  width: 100% !important;
+                  height: auto !important;
+                  max-height: none !important;
+                  overflow: visible !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
+                `;
+              }
+              
+              // Re-apply reduced padding for sequence diagrams
+              if (isSequenceDiagram) {
+                container.style.padding = '0.4rem 1rem';
+              }
+              
+              // Update zoom indicator
+              if (zoomIndicator) {
+                zoomIndicator.textContent = '100%';
+              }
+            }
+          });
+        }, 1000); // Wait 1 second for Mermaid to finish rendering
+        
+      } catch (error) {
+        console.error('Mermaid initialization failed:', error);
+      }
+      
+      // Check if content is visible
+      const contentWrapper = document.querySelector('.article-content-wrapper');
+      console.log('Content wrapper found:', contentWrapper);
+      if (contentWrapper) {
+        console.log('Content wrapper visible:', contentWrapper.offsetHeight > 0);
+        console.log('Content wrapper display:', window.getComputedStyle(contentWrapper).display);
+      }
+      
+      // Reading mode toggle
+      const toggleReadingMode = document.getElementById('toggleReadingMode');
+      const toggleSidebar = document.getElementById('toggleSidebar');
+      const articleLayout = document.getElementById('articleLayout');
+      const articleSidebar = document.getElementById('articleSidebar');
+      
+      toggleReadingMode.addEventListener('click', function() {
+        articleLayout.classList.toggle('full-screen');
+        const isFullScreen = articleLayout.classList.contains('full-screen');
+        
+        if (isFullScreen) {
+          toggleReadingMode.querySelector('.reading-mode-text').textContent = 'Exit Full Screen';
+          articleSidebar.style.display = 'none';
+        } else {
+          toggleReadingMode.querySelector('.reading-mode-text').textContent = 'Full Screen';
+          articleSidebar.style.display = 'block';
+        }
+      });
+      
+      toggleSidebar.addEventListener('click', function() {
+        const isHidden = articleSidebar.style.display === 'none';
+        articleSidebar.style.display = isHidden ? 'block' : 'none';
+        toggleSidebar.querySelector('.sidebar-text').textContent = isHidden ? 'Hide Sidebar' : 'Show Sidebar';
+      });
+      
+      // Generate Table of Contents
+      function generateTOC() {
+        const headings = document.querySelectorAll('.article-content-wrapper h1, .article-content-wrapper h2, .article-content-wrapper h3');
+        const tocContainer = document.getElementById('tableOfContents');
+        
+        if (headings.length === 0) return;
+        
+        let tocHTML = '<ul>';
+        headings.forEach((heading, index) => {
+          const id = `heading-${index}`;
+          heading.id = id;
+          
+          const level = parseInt(heading.tagName.charAt(1));
+          const indent = level > 2 ? 'style="margin-left: ' + ((level - 2) * 20) + 'px;"' : '';
+          
+          tocHTML += `<li ${indent}><a href="#${id}">${heading.textContent}</a></li>`;
+        });
+        tocHTML += '</ul>';
+        
+        tocContainer.innerHTML = tocHTML;
+      }
+      
+      // Smooth scrolling for TOC links
+      function addSmoothScrolling() {
+        document.querySelectorAll('.article-toc a').forEach(link => {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+              target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }
+          });
+        });
+      }
+      
+      // Copy code functionality
+      function addCopyCodeButtons() {
+        document.querySelectorAll('.code-copy').forEach(button => {
+          button.addEventListener('click', function() {
+            const codeBlock = this.closest('.code-example').querySelector('code');
+            const text = codeBlock.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+              this.textContent = 'Copied!';
+              setTimeout(() => {
+                this.textContent = 'Copy';
+              }, 2000);
+            });
+          });
+        });
+      }
+      
+      // Initialize functionality
+      generateTOC();
+      setTimeout(() => {
+        addSmoothScrolling();
+        addCopyCodeButtons();
+      }, 100);
+    });
+
+  </script>
+</body>
+</html> 

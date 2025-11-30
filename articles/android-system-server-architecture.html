@@ -1,0 +1,2432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Server: Architecture and Design - Android Internals</title>
+  <meta name="description" content="Learn the foundational architecture of Android System Server, including monolithic design rationale, process initialization, and service management.">
+  <meta name="keywords" content="Android, Internals, System Architecture, development, programming">
+  <link rel="stylesheet" href="../assets/css/styles.css?v=17">
+  <link rel="icon" href="../assets/images/android_logo.PNG" type="image/png">
+  <link rel="manifest" href="../assets/manifest.json">
+  <meta name="theme-color" content="#3ddc84">
+  
+  <!-- Mermaid.js for diagram rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+  <style>
+    .mermaid-diagram {
+      margin: 1rem 0;
+      padding: 0.75rem 1rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+      position: relative;
+      overflow: visible !important;
+      z-index: 1;
+      /* Scroll margin to account for fixed navigation bar (80px height) */
+      scroll-margin-top: 100px;
+      /* Ensure container can expand to show full diagram - no height constraints */
+      min-height: auto !important;
+      height: auto !important;
+      max-height: none !important;
+      /* Ensure content is not clipped */
+      overflow-x: visible;
+      overflow-y: visible;
+    }
+    
+    .mermaid-diagram.zoomed {
+      /* Ensure zoomed diagrams can scroll horizontally and vertically */
+      overflow-x: auto !important;
+      overflow-y: auto !important;
+      max-width: 100%;
+      z-index: 1040 !important;
+      position: relative;
+    }
+    
+    .mermaid {
+      text-align: center;
+      display: block;
+      width: 100%;
+      min-height: auto;
+      height: auto;
+      transition: transform 0.3s ease;
+      cursor: grab;
+      margin: 0;
+      padding: 0;
+      display: block;
+    }
+    
+    .mermaid svg {
+      display: block !important;
+      margin: 0 auto !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: auto !important;
+      max-height: none !important;
+      /* Ensure SVG can expand to show full content - critical for Mermaid 10.7.0 */
+      overflow: visible !important;
+      /* Remove any height constraints that might clip content */
+      box-sizing: border-box;
+    }
+    
+    /* Specific styling for sequence diagrams to reduce vertical spacing */
+    .mermaid-diagram.sequence-diagram-container {
+      padding: 0.4rem 1rem !important;
+    }
+    
+    /* Alternative CSS selector for sequence diagrams */
+    .mermaid-diagram:has(svg g.actor),
+    .mermaid-diagram:has(svg g.note),
+    .mermaid-diagram:has(svg g.activation) {
+      padding: 0.4rem 1rem;
+    }
+    
+    .mermaid:active {
+      cursor: grabbing;
+    }
+    
+    /* Zoom controls */
+    .mermaid-zoom-controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 5px;
+      z-index: 1050;
+    }
+    
+    .zoom-btn {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      color: #333;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      min-width: 32px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
+    
+    .zoom-btn:hover {
+      background: #f0f0f0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .zoom-reset {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+    
+    .zoom-reset:hover {
+      background: #0056b3;
+      border-color: #0056b3;
+    }
+    
+    .fullscreen-btn {
+      background: #28a745;
+      color: white;
+      border-color: #28a745;
+    }
+    
+    .fullscreen-btn:hover {
+      background: #1e7e34;
+      border-color: #1e7e34;
+    }
+    
+    /* Zoom indicator */
+    .zoom-indicator {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: monospace;
+    }
+    
+    /* Fullscreen mode for Mermaid diagrams */
+    .mermaid-diagram.fullscreen {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 99999 !important;
+      background: white !important;
+      padding: 20px !important;
+      margin: 0 !important;
+      border: none !important;
+      overflow: auto !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    
+    .mermaid-diagram.fullscreen .mermaid {
+      max-width: 90vw !important;
+      max-height: 90vh !important;
+      width: auto !important;
+      height: auto !important;
+      display: block !important;
+    }
+    
+    .mermaid-diagram.fullscreen .mermaid svg {
+      max-width: 100% !important;
+      max-height: 100% !important;
+      width: auto !important;
+      height: auto !important;
+    }
+    
+    .mermaid-diagram.fullscreen .mermaid-zoom-controls {
+      display: none !important;
+    }
+    
+    .mermaid-diagram.fullscreen .zoom-indicator {
+      display: none !important;
+    }
+    
+    body.fullscreen-mode {
+      overflow: hidden !important;
+      background: white !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    /* Hide navigation bar when diagram is in fullscreen mode - especially important for mobile */
+    body.fullscreen-mode .main-nav {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+    }
+    
+    .fullscreen-hidden {
+      display: none !important;
+    }
+    
+    /* Mobile responsive styles for Mermaid diagrams */
+    @media (max-width: 768px) {
+      .mermaid-diagram {
+        margin: 0.75rem 0;
+        padding: 0.5rem 0.75rem;
+        /* Scroll margin to account for fixed navigation bar */
+        scroll-margin-top: 100px;
+        /* Remove max-height constraint to allow natural dimensions */
+      }
+      
+      .mermaid-zoom-controls {
+        top: 5px;
+        right: 5px;
+        gap: 3px;
+      }
+      
+      .zoom-btn {
+        padding: 4px 6px;
+        font-size: 10px;
+        min-width: 28px;
+        height: 24px;
+      }
+      
+      .zoom-indicator {
+        bottom: 5px;
+        left: 5px;
+        padding: 2px 6px;
+        font-size: 10px;
+      }
+      
+      /* Fullscreen mobile adjustments */
+      .mermaid-diagram.fullscreen {
+        padding: 10px !important;
+        /* Ensure fullscreen starts from very top on mobile */
+        top: 0 !important;
+      }
+      
+      .mermaid-diagram.fullscreen .mermaid {
+        max-width: 95vw !important;
+        max-height: 95vh !important;
+      }
+      
+      /* Hide navigation bar on mobile when diagram is fullscreen */
+      body.fullscreen-mode .main-nav {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        transform: translateY(-100%) !important;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .mermaid-diagram {
+        margin: 0.5rem 0;
+        padding: 0.4rem 0.6rem;
+        /* Scroll margin to account for fixed navigation bar */
+        scroll-margin-top: 100px;
+        /* Remove max-height constraint to allow natural dimensions */
+      }
+      
+      .mermaid-zoom-controls {
+        top: 3px;
+        right: 3px;
+        gap: 2px;
+      }
+      
+      .zoom-btn {
+        padding: 3px 5px;
+        font-size: 9px;
+        min-width: 24px;
+        height: 20px;
+      }
+      
+      .zoom-indicator {
+        bottom: 3px;
+        left: 3px;
+        padding: 1px 4px;
+        font-size: 9px;
+      }
+      
+      /* Fullscreen mobile adjustments for very small screens */
+      .mermaid-diagram.fullscreen {
+        padding: 5px !important;
+        /* Ensure fullscreen starts from very top on small mobile */
+        top: 0 !important;
+      }
+      
+      .mermaid-diagram.fullscreen .mermaid {
+        max-width: 98vw !important;
+        max-height: 98vh !important;
+      }
+      
+      /* Hide navigation bar on small mobile when diagram is fullscreen */
+      body.fullscreen-mode .main-nav {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        transform: translateY(-100%) !important;
+      }
+    }
+  </style>
+  
+  <!-- Security Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+      <!-- X-Frame-Options should be set via HTTP headers, not meta tags -->
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="System Server: Architecture and Design">
+  <meta property="og:description" content="Learn the foundational architecture of Android System Server, including monolithic design rationale, process initialization, and service management.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.hemangpandhi.com/articles/android-system-server-architecture.html">
+  <meta property="og:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="System Server: Architecture and Design">
+  <meta name="twitter:description" content="Learn the foundational architecture of Android System Server, including monolithic design rationale, process initialization, and service management.">
+  <meta name="twitter:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="main-nav">
+    <div class="nav-container">
+      <a href="../index.html" class="nav-logo-link">
+        <img src="../assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="../index.html" class="nav-link">Home</a>
+        <a href="../index.html#topics" class="nav-link">Topics</a>
+        <a href="../index.html#blogs" class="nav-link">Blogs</a>
+        <a href="../index.html#about" class="nav-link">About</a>
+        <a href="../books.html" class="nav-link">Reference Books</a>
+        <a href="../videos.html" class="nav-link">Reference Videos</a>
+      </div>
+      <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle mobile menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Article Header -->
+  <header class="article-header">
+    <div class="container">
+      <div class="article-hero">
+        <div class="article-meta">
+          <span class="article-category">System Architecture</span>
+          <span class="article-date">2025-10-04</span>
+          <span class="article-read-time">5 min read</span>
+        </div>
+        <h1 class="article-title">System Server: Architecture and Design</h1>
+        <p class="article-subtitle">Learn the foundational architecture of Android System Server, including monolithic design rationale, process initialization, and service management.</p>
+        <div class="article-author">
+          <img src="../assets/images/android_logo.PNG" alt="Author" class="author-avatar">
+          <div class="author-info">
+            <span class="author-name">Android Internals Team</span>
+            <span class="author-title">Android Internals Expert</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="article-content">
+    <!-- Reading Mode Toggle -->
+    <div class="reading-mode-controls">
+      <button id="toggleReadingMode" class="reading-mode-btn">
+        <span class="reading-mode-icon">📖</span>
+        <span class="reading-mode-text">Full Screen</span>
+      </button>
+      <button id="toggleSidebar" class="sidebar-toggle-btn">
+        <span class="sidebar-icon">📋</span>
+        <span class="sidebar-text">Sidebar</span>
+      </button>
+    </div>
+
+    <div class="container">
+      <div class="article-layout" id="articleLayout">
+        <!-- Article Body -->
+        <article class="article-body" id="articleBody">
+          <div class="article-intro">
+            <p class="lead-text">Learn the foundational architecture of Android System Server, including monolithic design rationale, process initialization, and service management.</p>
+          </div>
+          
+          <div class="article-content-wrapper">
+            <h1 id="-system--server--architecture--and--design">System Server: Architecture and Design</h1>
+
+
+<h2 id="-learning--objectives">Learning Objectives</h2>
+
+<blockquote class="article-quote"><p><strong>Part 1 of 6</strong> in the <a href="./android-system-server-series.html" class="article-link">Android System Server Deep Dive</a> series</p><p></p><p><strong>Previous</strong>: <a href="./android-system-server-series.html" class="article-link">Series Index</a> (Start here)  </p><p><strong>Next</strong>: <a href="./android-system-server-services.html" class="article-link">Part 2: Core System Services</a>  </p><p><strong>Series Index</strong>: <a href="./android-system-server-series.html" class="article-link">View all articles</a></p></blockquote>
+<p class="article-paragraph">By the end of this article, you will understand:</p>
+
+<ul class="article-list"><li class="list-item">Why system_server exists as a monolithic process</li><li class="list-item">How system_server is created and initialized from Zygote</li><li class="list-item">Service management architecture and boot phases</li><li class="list-item">Architectural trade-offs and design rationale</li><li class="list-item">Internal vs external service communication patterns</li></ul>
+<hr class="article-divider">
+
+<h2 id="-overview--the--monolithic--heart--of--android">Overview: The Monolithic Heart of Android</h2>
+
+<p class="article-paragraph">The Android System Server (<code class="inline-code">system_server</code>) is the monolithic core of the Android operating system, hosting the vast majority of Android's framework services. This single process design represents one of the most critical architectural decisions in Android's history, balancing performance, memory efficiency, and complexity in ways that directly impact every Android device's behavior.</p>
+
+<h3 id="-why--system--server--exists">Why System Server Exists</h3>
+
+<p class="article-paragraph">The Android System Server exists to centralize critical system functionality that would otherwise require complex inter-process communication. By hosting dozens of services in a single process, Android achieves:</p>
+
+
+<ul class="article-list"><li class="list-item"><strong>Unified Service Management</strong>: All framework services share the same process space, enabling efficient in-memory communication</li><li class="list-item"><strong>Optimized Boot Sequence</strong>: Services can be initialized in dependency order without IPC overhead</li><li class="list-item"><strong>Memory Efficiency</strong>: Shared framework classes and data structures reduce overall system memory footprint</li><li class="list-item"><strong>Performance</strong>: Critical service interactions avoid Binder IPC overhead</li></ul>
+<h3 id="-architectural--position--in--android--hierarchy">Architectural Position in Android Hierarchy</h3>
+
+<div class="mermaid-diagram" id="diagram-mermaid-xeyonbi71">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-xeyonbi71', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-xeyonbi71')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-xeyonbi71', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-xeyonbi71')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-xeyonbi71">graph TD
+    A[Linux Kernel] --> B[Init Process]
+    B --> C[Zygote Process]
+    C --> D[System Server]
+    C --> E[App Processes]
+    D --> F[ActivityManagerService]
+    D --> G[WindowManagerService]
+    D --> H[PackageManagerService]
+    D --> I[PowerManagerService]
+    D --> J[Other System Services]
+    F --> K[Application Framework]
+    G --> K
+    H --> K
+    I --> K
+    K --> L[Android Applications]</div>
+            <div class="zoom-indicator" id="zoom-mermaid-xeyonbi71">100%</div>
+          </div>
+
+<p class="article-paragraph">The System Server sits at the critical junction between the native Android runtime and the application framework, managing the lifecycle of all Android applications while coordinating with hardware abstraction layers (HAL) and kernel services.</p>
+
+<h3 id="-impact--on--performance--reliability--and--security">Impact on Performance, Reliability, and Security</h3>
+
+<p class="article-paragraph"><strong>Performance Impact:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Startup Time</strong>: Monolithic design enables fast service initialization through shared memory and direct method calls</li><li class="list-item"><strong>Memory Usage</strong>: Shared framework classes reduce memory footprint by up to 40% compared to microservice architecture</li><li class="list-item"><strong>IPC Overhead</strong>: Critical service interactions avoid Binder transaction costs</li></ul>
+<p class="article-paragraph"><strong>Reliability Trade-offs:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Single Point of Failure</strong>: Any service crash can bring down the entire system server</li><li class="list-item"><strong>Fault Isolation</strong>: Limited isolation between services increases risk of cascading failures</li><li class="list-item"><strong>Recovery Complexity</strong>: System server restart affects all dependent services and applications</li></ul>
+<p class="article-paragraph"><strong>Security Considerations:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Privilege Concentration</strong>: System server runs with elevated privileges, increasing attack surface</li><li class="list-item"><strong>Service Isolation</strong>: Limited isolation between services could enable privilege escalation</li><li class="list-item"><strong>Attack Vectors</strong>: Vulnerabilities in one service could potentially affect others</li></ul>
+<h2 id="-part--i--architectural--foundation">Part I: Architectural Foundation</h2>
+
+<h3 id="-11--the--monolithic--design--rationale">1.1 The Monolithic Design Rationale</h3>
+
+<p class="article-paragraph">The Android System Server exists as a single, monolithic process hosting dozens of critical system services. This design choice represents a fundamental trade-off between performance and fault isolation, chosen specifically for mobile device constraints and real-time requirements.</p>
+
+<p class="article-paragraph"><strong>Deep Performance Analysis:</strong></p>
+
+<p class="article-paragraph"><strong>Memory Efficiency Through Shared Framework:</strong></p>
+
+
+<blockquote class="article-quote"><p><strong>Note:</strong> The classpath for system<em>server is set by Zygote during process creation, not by SystemServer itself. All services within system</em>server share the same ClassLoader and framework classes that were preloaded by Zygote, enabling significant memory savings through copy-on-write optimization.</p></blockquote>
+<p class="article-paragraph"><strong>Key Points:</strong></p>
+
+<ul class="article-list"><li class="list-item">Zygote preloads framework classes before forking system_server</li><li class="list-item">All services in system_server share the same ClassLoader instance</li><li class="list-item">Framework classes are loaded once and shared via copy-on-write memory pages</li><li class="list-item">This eliminates duplicate class loading across services</li></ul>
+<p class="article-paragraph">The monolithic design achieves up to 40% memory reduction compared to microservice architecture through:</p>
+
+<ul class="article-list"><li class="list-item"><strong>Shared ART Runtime</strong>: Single VM instance serves all services</li><li class="list-item"><strong>Copy-on-Write Optimization</strong>: Framework classes loaded once, shared across services</li><li class="list-item"><strong>Reduced Binder Overhead</strong>: In-process calls eliminate marshaling/unmarshaling costs</li></ul>
+<p class="article-paragraph"><strong>Startup Performance Optimization:</strong></p>
+
+<p class="article-paragraph">The monolithic design enables extremely fast startup compared to microservice architectures:</p>
+
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Measure system_server startup time</span>
+adb shell time ps -A | <span class="keyword">grep</span> system_server
+<span class="comment"># Typical startup: 200-400ms vs 2-3s for microservice approach</span>
+
+<span class="comment"># Detailed boot timing analysis</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -A 10 <span class="string">&quot;Boot timing&quot;</span>
+
+<span class="comment"># Monitor service startup sequence</span>
+adb logcat -v time | <span class="keyword">grep</span> -E <span class="string">&quot;SystemServiceManager.*Starting&quot;</span> | head -50</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Startup Time Breakdown:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Zygote Fork</strong>: ~10-20ms (copy-on-write process creation)</li><li class="list-item"><strong>Privilege Drop</strong>: ~1-2ms (UID/GID change)</li><li class="list-item"><strong>Context Creation</strong>: ~20-30ms (Android context initialization)</li><li class="list-item"><strong>Bootstrap Services</strong>: ~100-150ms (critical services startup)</li><li class="list-item"><strong>Core Services</strong>: ~50-100ms (dependent services)</li><li class="list-item"><strong>Other Services</strong>: ~50-100ms (remaining services)</li><li class="list-item"><strong>Total</strong>: ~200-400ms (typical range)</li></ul>
+<p class="article-paragraph"><strong>Comparison with Microservice Architecture:</strong></p>
+<ul class="article-list"><li class="list-item"><strong>Microservice Approach</strong>: Each service in separate process</li></ul>
+<ul class="article-list"><li class="list-item">Process creation overhead: ~50-100ms per service</li><li class="list-item">Binder IPC setup: ~10-20ms per service</li><li class="list-item">Service discovery: ~5-10ms per service</li><li class="list-item"><strong>Total</strong>: 2-3 seconds for 20+ services</li></ul>
+<ul class="article-list"><li class="list-item"><strong>Monolithic Approach</strong>: All services in single process</li></ul>
+
+<ul class="article-list"><li class="list-item">Single process creation: ~10-20ms</li><li class="list-item">Direct method calls: ~0.001ms per call</li><li class="list-item"><strong>Total</strong>: ~200-400ms</li></ul>
+<p class="article-paragraph"><strong>AOSP Source References:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Main Entry Point</strong>: <a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/java/com/android/server/SystemServer.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/java/com/android/server/SystemServer.java&lt;/code&gt;</a></li><li class="list-item"><strong>Service Manager</strong>: <a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/SystemServiceManager.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/SystemServiceManager.java&lt;/code&gt;</a></li><li class="list-item"><strong>Bootstrap Services</strong>: <a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/java/com/android/server/SystemServer.java#startBootstrapServices(" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/java/com/android/server/SystemServer.java#startBootstrapServices()&lt;/code&gt;</a>)</li></ul>
+<p class="article-paragraph"><strong>Trade-offs and Mitigation Strategies:</strong></p>
+
+<p class="article-paragraph"><strong>Single Point of Failure Mitigation:</strong></p>
+
+
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/Watchdog.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/Watchdog.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// Simplified illustration of Watchdog monitoring concept
+
+// Actual class: public class Watchdog implements Dumpable (not extends Thread)
+public class Watchdog implements Dumpable {
+    private static final long DEFAULT_TIMEOUT = 60_000; // 60 seconds
+    private final ArrayList&lt;HandlerCheckerAndTimeout&gt; mHandlerCheckers = new ArrayList&lt;&gt;();
+    private final HandlerChecker mMonitorChecker;
+    
+    // Simplified illustration: Actual Watchdog runs in a separate thread
+    // and monitors multiple handler threads using HandlerChecker mechanism
+    private void run() {
+        while (true) {
+            // Actual implementation uses HandlerChecker.getCompletionStateLocked()
+            // to check each handler&#x27;s state (COMPLETED, WAITING, WAITED_UNTIL_PRE_WATCHDOG, OVERDUE)
+            final int waitState = evaluateCheckerCompletionLocked();
+            
+            if (waitState == OVERDUE) {
+                // Actual implementation: Calls doSysRq(&#x27;c&#x27;) to trigger kernel panic
+                // or breakCrashLoop() to escape crash loops
+                // Also collects thread dumps and logs to dropbox
+                doSysRq(&#x27;c&#x27;); // Triggers kernel panic for system recovery
+                breakCrashLoop(); // Escape crash loops
+            }
+        }
+    }
+    
+    // Evaluates all handler checkers and returns worst state
+    private int evaluateCheckerCompletionLocked() {
+        int state = COMPLETED;
+        for (HandlerCheckerAndTimeout hc : mHandlerCheckers) {
+            state = Math.max(state, hc.checker().getCompletionStateLocked());
+        }
+        return state;
+    }
+}</code></pre>
+          </div>
+
+<blockquote class="article-quote"><p><strong>Note:</strong> The code example below is a simplified illustration of the Watchdog concept. The actual implementation in <a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/Watchdog.java" class="article-link" target="_blank" rel="noopener noreferrer">Watchdog.java</a> is significantly more complex, involving multiple monitor threads, handler checkers, timeout detection mechanisms, and sophisticated recovery logic.</p></blockquote>
+<p class="article-paragraph"><strong>Actual Watchdog Implementation Details:</strong></p>
+
+<ul class="article-list"><li class="list-item">Uses <code class="inline-code">HandlerChecker</code> to monitor multiple service handlers (AMS, WMS, etc.)</li><li class="list-item">Detects timeouts when handlers don't respond within configured timeout</li><li class="list-item">Recovery mechanism: Calls <code class="inline-code">doSysRq(&#x27;c&#x27;)</code> to trigger kernel panic for system recovery</li><li class="list-item">Uses <code class="inline-code">breakCrashLoop()</code> to escape repeated crash scenarios</li><li class="list-item">Monitors both foreground and background handler threads</li><li class="list-item">Supports configurable timeout values via system properties</li></ul>
+<p class="article-paragraph"><strong>Security Isolation Through SELinux:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># SELinux policies provide service-level isolation</span>
+adb shell getenforce
+adb shell <span class="keyword">ls</span> -Z /system/bin/system_server
+<span class="comment"># system_server:system_server:s0:c512,c768</span></code></pre>
+          </div>
+
+<h3 id="-12--process--genesis--and--initialization">1.2 Process Genesis and Initialization</h3>
+
+<p class="article-paragraph">The <code class="inline-code">system_server</code> process creation represents one of the most critical sequences in Android boot, involving precise timing, privilege management, and service dependency orchestration.</p>
+
+<p class="article-paragraph"><strong>Detailed Initialization Sequence:</strong></p>
+
+<div class="mermaid-diagram" id="diagram-mermaid-g6eiva33s">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-g6eiva33s', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-g6eiva33s')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-g6eiva33s', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-g6eiva33s')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-g6eiva33s">sequenceDiagram
+    participant Init as Init Process
+    participant Zygote as Zygote Process
+    participant SystemServer as System Server
+    participant ServiceManager as Service Manager
+    participant AMS as ActivityManagerService
+    participant WMS as WindowManagerService
+
+    Init->>Zygote: Start Zygote with system_server class
+    Zygote->>Zygote: Preload framework classes
+    Zygote->>SystemServer: Fork child process
+    SystemServer->>SystemServer: Drop privileges (root → system)
+    SystemServer->>ServiceManager: Register with ServiceManager
+    SystemServer->>AMS: Start bootstrap services
+    SystemServer->>WMS: Start core services
+    SystemServer->>SystemServer: Start other services
+    SystemServer->>SystemServer: Signal ready to Zygote</div>
+            <div class="zoom-indicator" id="zoom-mermaid-g6eiva33s">100%</div>
+          </div>
+
+<p class="article-paragraph"><strong>AOSP Source Code Deep Dive:</strong></p>
+
+<p class="article-paragraph"><strong>Zygote Forking Logic:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/com/android/internal/os/ZygoteInit.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/core/java/com/android/internal/os/ZygoteInit.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public static void main(String argv[]) {
+    // ... initialization code ...
+    
+    if (startSystemServer) {
+        Runnable r = forkSystemServer(abiList, socketName, zygoteServer);
+        if (r != null) {
+            r.run();
+            return;
+        }
+    }
+}
+
+private static Runnable forkSystemServer(String abiList, String socketName,
+        ZygoteServer zygoteServer) {
+    // Fork the system server process
+    int pid = Zygote.forkSystemServer(
+            parsedArgs.uid, parsedArgs.gid,
+            parsedArgs.gids,
+            parsedArgs.debugFlags,
+            null,
+            parsedArgs.permittedCapabilities,
+            parsedArgs.effectiveCapabilities);
+    
+    if (pid == 0) {
+        // Child process - system_server
+        return new SystemServerRunnable();
+    }
+    return null;
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>System Server Entry Point:</strong></p>
+
+
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/java/com/android/server/SystemServer.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/java/com/android/server/SystemServer.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// Simplified illustration - actual implementation contains extensive error handling, timing, and initialization
+
+public static void main(String[] args) {
+    new SystemServer().run();
+}
+
+private void run() {
+    // Initialize timing and tracing (actual implementation)
+    TimingsTraceAndSlog t = new TimingsTraceAndSlog();
+    
+    // Extensive initialization before services (simplified here):
+    // - System properties setup
+    // - Timezone initialization
+    // - Locale management
+    // - Binder configuration
+    // - SQLite settings
+    // - Native library loading
+    // - Heap profiling setup
+    // - And many more initialization steps...
+    
+    // Create Android context for system_server
+    // This context provides access to system resources, services, and configuration
+    createSystemContext();  // Actual method name
+    
+    // Initialize native services first
+    // Native services must be ready before Java services start
+    System.loadLibrary(&quot;android_servers&quot;);
+    
+    // Create the system service manager
+    mSystemServiceManager = new SystemServiceManager(mSystemContext);
+    mSystemServiceManager.setStartInfo(mRuntimeRestart,
+            mRuntimeStartElapsedTime, mRuntimeStartUptime);
+    
+    // Start services in dependency order
+    // Each phase depends on previous phases completing successfully
+    // Actual implementation: All service methods take TimingsTraceAndSlog parameter
+    try {
+        startBootstrapServices(t);  // Phase 1: Critical services with no dependencies
+        startCoreServices(t);        // Phase 2: Services depending on bootstrap services
+        startOtherServices(t);       // Phase 3: Remaining services with complex dependencies
+        startApexServices(t);        // Phase 4: Apex module services (not shown in simplified version)
+    } catch (Throwable ex) {
+        Slog.e(TAG, &quot;Failure starting system services&quot;, ex);
+        throw ex;
+    }
+    
+    // Signal that system_server is ready
+    // Zygote can now accept app process fork requests
+    // Actual implementation: More complex callback chain with timing and error handling
+    ActivityManagerService.self().systemReady(() -&gt; {
+        Slog.i(TAG, &quot;System server ready&quot;);
+    });
+}</code></pre>
+          </div>
+
+<blockquote class="article-quote"><p><strong>Note:</strong> The code example below is a simplified illustration. The actual <a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/java/com/android/server/SystemServer.java" class="article-link" target="_blank" rel="noopener noreferrer">SystemServer.java</a> implementation is significantly more complex, with extensive error handling, timing tracking, native service initialization, and a more elaborate <code class="inline-code">systemReady()</code> callback mechanism.</p></blockquote>
+<p class="article-paragraph"><strong>Privilege Management:</strong></p>
+
+<p class="article-paragraph">The system<em>server process drops privileges from root (UID 0) to the system user (UID 1000) during initialization. This critical security step limits the scope of potential damage if the system</em>server is compromised. By running with reduced privileges, even if an attacker gains control of the system_server process, they cannot directly access root-level resources or modify critical kernel parameters, significantly reducing the attack surface.</p>
+
+<p class="article-paragraph"><strong>Why Privilege Dropping is Critical:</strong></p>
+
+
+<ol class="article-list"><li class="list-item"><strong>Attack Surface Reduction</strong>: Running as root (UID 0) would give attackers complete system control</li><li class="list-item"><strong>Principle of Least Privilege</strong>: System_server only needs system user privileges for its operations</li><li class="list-item"><strong>Damage Limitation</strong>: Compromised system_server cannot directly modify kernel or root-only files</li><li class="list-item"><strong>SELinux Enforcement</strong>: Combined with SELinux policies, provides defense-in-depth security</li></ol>
+<p class="article-paragraph"><strong>Privilege Drop Implementation:</strong></p>
+
+
+<blockquote class="article-quote"><p><strong>Note:</strong> Privilege dropping actually occurs during the Zygote fork process, not in SystemServer.run(). The code below is a conceptual illustration of what happens during system_server initialization.</p></blockquote>
+<p class="article-paragraph">The actual privilege dropping happens in <code class="inline-code">Zygote.forkSystemServer()</code> which sets the UID/GID before the SystemServer process starts. By the time <code class="inline-code">SystemServer.run()</code> executes, the process is already running as the system user (UID 1000).</p>
+
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/com/android/internal/os/Zygote.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/core/java/com/android/internal/os/Zygote.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// Conceptual illustration - actual implementation is in Zygote.forkSystemServer()
+
+// During fork, Zygote sets:
+// - UID to SYSTEM_UID (1000)
+// - GID to SYSTEM_GID (1000)
+// - Capabilities are managed via SELinux policies</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Remaining Capabilities:</strong></p>
+
+<p class="article-paragraph">Even after dropping to system user, system_server retains certain capabilities through:</p>
+
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Verify system_server privileges</span>
+adb shell ps -A | <span class="keyword">grep</span> system_server
+<span class="comment"># system_server runs as UID 1000 (system user)</span>
+<span class="comment"># Not root, but has elevated capabilities</span>
+
+<span class="comment"># Check SELinux context</span>
+adb shell <span class="keyword">ls</span> -Z /system/bin/system_server
+<span class="comment"># system_server:system_server:s0:c512,c768</span></code></pre>
+          </div>
+
+<ul class="article-list"><li class="list-item"><strong>SELinux Policies</strong>: Define what system_server can access</li><li class="list-item"><strong>File Permissions</strong>: System-owned files accessible to system user</li><li class="list-item"><strong>Binder Permissions</strong>: Service-level permission checks</li></ul>
+<p class="article-paragraph"><strong>Service Initialization Phases:</strong></p>
+
+<p class="article-paragraph">System_server initializes services in three distinct phases to handle dependencies correctly. Each phase builds upon the previous one, ensuring critical services are available before dependent services start.</p>
+
+<p class="article-paragraph"><strong>Phase 1: Bootstrap Services (Critical Dependencies)</strong></p>
+
+<p class="article-paragraph">These services have no dependencies on other system services and must start first. They provide foundational functionality that all other services require.</p>
+
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/java/com/android/server/SystemServer.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/java/com/android/server/SystemServer.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// Simplified illustration - actual implementation contains many more services, error handling, and timing
+
+private void startBootstrapServices(@NonNull TimingsTraceAndSlog t) {
+    t.traceBegin(&quot;startBootstrapServices&quot;);
+    
+    // Start the watchdog as early as possible
+    t.traceBegin(&quot;StartWatchdog&quot;);
+    final Watchdog watchdog = Watchdog.getInstance();
+    watchdog.start();
+    t.traceEnd();
+    
+    // Installer service - handles package installation
+    mInstaller = mSystemServiceManager.startService(Installer.class);
+    
+    // Device Identifiers service
+    mSystemServiceManager.startService(DeviceIdentifiersPolicyService.class);
+    
+    // Device ID attestation service
+    mSystemServiceManager.startService(DeviceIdAttestationService.class);
+    
+    // Activity Manager Service - CRITICAL
+    // Manages application lifecycle, process management, and activity stacks
+    mActivityManagerService = mSystemServiceManager.startService(
+            ActivityManagerService.Lifecycle.class).getService();
+    
+    // Power Manager Service - CRITICAL
+    // Controls device power states, wake locks, and screen management
+    mPowerManagerService = mSystemServiceManager.startService(PowerManagerService.class);
+    
+    // Recovery System Service
+    mSystemServiceManager.startService(RecoverySystemService.class);
+    
+    // Lights Service
+    mSystemServiceManager.startService(LightsService.class);
+    
+    // Display Manager Service
+    mDisplayManagerService = mSystemServiceManager.startService(
+            DisplayManagerService.class);
+    
+    // Package Manager Service - CRITICAL
+    // Manages installed packages, permissions, and component resolution
+    mPackageManagerService = PackageManagerService.main(mSystemContext, mInstaller,
+            mFactoryTestMode != FactoryTest.FACTORY_TEST_LOW_LEVEL,
+            mOnlyCore);
+    
+    // User Manager Service
+    mSystemServiceManager.startService(UserManagerService.Lifecycle.class);
+    
+    // Initialize attribute cache used to cache resources from packages
+    AttributeCache.init(mSystemContext);
+    
+    // Set up the Application instance for the system process
+    mActivityManagerService.setSystemProcess();
+    
+    t.traceEnd(); // startBootstrapServices
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Phase 2: Core Services (Bootstrap Dependencies)</strong></p>
+
+<p class="article-paragraph">These services depend on bootstrap services and provide core system functionality.</p>
+
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/java/com/android/server/SystemServer.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/java/com/android/server/SystemServer.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// Simplified illustration - actual implementation contains many more services, error handling, and timing
+
+private void startCoreServices(@NonNull TimingsTraceAndSlog t) {
+    t.traceBegin(&quot;startCoreServices&quot;);
+    
+    // Battery Service - depends on PowerManagerService
+    t.traceBegin(&quot;StartBatteryService&quot;);
+    mBatteryService = mSystemServiceManager.startService(BatteryService.class);
+    t.traceEnd();
+    
+    // Usage Stats Service - depends on ActivityManagerService
+    mSystemServiceManager.startService(UsageStatsService.class);
+    
+    // WebView Update Service
+    mSystemServiceManager.startService(WebViewUpdateService.class);
+    
+    // Job Scheduler Service - depends on ActivityManagerService
+    mSystemServiceManager.startService(JobSchedulerService.class);
+    
+    // Network Time Update Service
+    mSystemServiceManager.startService(NetworkTimeUpdateService.class);
+    
+    t.traceEnd(); // startCoreServices
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Phase 3: Other Services (Complex Dependencies)</strong></p>
+
+<p class="article-paragraph">These services have complex dependencies and can be initialized after core services are ready.</p>
+
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/java/com/android/server/SystemServer.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/java/com/android/server/SystemServer.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// Simplified illustration - actual implementation contains many more services, error handling, and timing
+
+private void startOtherServices(@NonNull TimingsTraceAndSlog t) {
+    t.traceBegin(&quot;startOtherServices&quot;);
+    
+    // Window Manager Service - depends on DisplayManagerService, ActivityManagerService
+    mWindowManagerService = WindowManagerService.main(mSystemContext, mDisplayManagerService,
+            mFactoryTestMode != FactoryTest.FACTORY_TEST_LOW_LEVEL,
+            mOnlyCore, mFirstBoot, mSystemServiceManager);
+    
+    // Input Manager Service - depends on WindowManagerService
+    mInputManagerService = mSystemServiceManager.startService(InputManagerService.class);
+    
+    // Connectivity Service - depends on multiple services
+    mSystemServiceManager.startService(ConnectivityService.class);
+    
+    // Location Manager Service
+    mSystemServiceManager.startService(LocationManagerService.class);
+    
+    // Notification Manager Service - depends on ActivityManagerService
+    mSystemServiceManager.startService(NotificationManagerService.class);
+    
+    // ... many more services ...
+    
+    t.traceEnd(); // startOtherServices
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Error Handling During Initialization:</strong></p>
+
+<p class="article-paragraph">System_server includes error handling to recover from service startup failures:</p>
+
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/java/com/android/server/SystemServer.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/java/com/android/server/SystemServer.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">private void startBootstrapServices(@NonNull TimingsTraceAndSlog t) {
+    t.traceBegin(&quot;startBootstrapServices&quot;);
+    
+    try {
+        t.traceBegin(&quot;StartActivityManagerService&quot;);
+        mActivityManagerService = mSystemServiceManager.startService(
+                ActivityManagerService.Lifecycle.class).getService();
+        t.traceEnd();
+    } catch (Throwable e) {
+        Slog.e(TAG, &quot;Failure starting ActivityManagerService&quot;, e);
+        // Critical service failure - may need to restart system_server
+        throw new RuntimeException(&quot;Failed to start ActivityManagerService&quot;, e);
+    }
+    
+    // Non-critical services can fail without crashing system_server
+    try {
+        mSystemServiceManager.startService(LightsService.class);
+    } catch (Throwable e) {
+        Slog.w(TAG, &quot;Failure starting LightsService&quot;, e);
+        // Continue with other services
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Zygote Preloading Benefits:</strong></p>
+
+<p class="article-paragraph">Before forking system<em>server, Zygote preloads framework classes, significantly reducing system</em>server startup time:</p>
+
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/com/android/internal/os/ZygoteInit.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/core/java/com/android/internal/os/ZygoteInit.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">static void preload() {
+    // Preload framework classes
+    preloadClasses();
+    
+    // Preload resources
+    preloadResources();
+    
+    // Preload OpenGL
+    preloadOpenGL();
+    
+    // Preload shared libraries
+    preloadSharedLibraries();
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Benefits:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Faster Startup</strong>: Preloaded classes don't need to be loaded during system_server initialization</li><li class="list-item"><strong>Memory Efficiency</strong>: Shared memory pages across all processes forked from Zygote</li><li class="list-item"><strong>Reduced I/O</strong>: Framework classes loaded once, shared via copy-on-write</li></ul>
+<p class="article-paragraph"><strong>Verification Commands:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Monitor system_server startup with timestamps</span>
+adb logcat -v time | <span class="keyword">grep</span> -E <span class="string">&quot;(SystemServer|ActivityManager|PackageManager)&quot;</span>
+
+<span class="comment"># Check service registration</span>
+adb shell service list | <span class="keyword">grep</span> -E <span class="string">&quot;(activity|package|power|display|window|battery)&quot;</span>
+
+<span class="comment"># Monitor memory usage during startup</span>
+adb shell dumpsys meminfo system_server
+
+<span class="comment"># Track service startup order</span>
+adb logcat | <span class="keyword">grep</span> <span class="string">&quot;SystemServiceManager.*Starting&quot;</span>
+
+<span class="comment"># Check for service startup failures</span>
+adb logcat | <span class="keyword">grep</span> -E <span class="string">&quot;(SystemServer.*Failure|SystemServer.*Error)&quot;</span>
+
+<span class="comment"># Monitor boot phases</span>
+adb logcat | <span class="keyword">grep</span> <span class="string">&quot;SystemServiceManager.*phase&quot;</span></code></pre>
+          </div>
+
+<h3 id="-13--service--management--architecture">1.3 Service Management Architecture</h3>
+
+<p class="article-paragraph"><strong>ServiceManager vs SystemServiceManager:</strong></p>
+
+<p class="article-paragraph">Understanding the distinction between these two managers is crucial for system_server architecture:</p>
+
+<ul class="article-list"><li class="list-item"><strong>ServiceManager</strong> (Native Daemon): </li></ul>
+
+<ul class="article-list"><li class="list-item">A separate native process (<code class="inline-code">/system/bin/servicemanager</code>)</li><li class="list-item">Acts as the central registry for Binder service discovery</li><li class="list-item">Maps string service names (e.g., "activity", "window", "power") to Binder handles</li><li class="list-item">Enables cross-process service lookup via <code class="inline-code">ServiceManager.getService()</code></li><li class="list-item"><strong>Location</strong>: <a href="https://android.googlesource.com/platform/frameworks/native/+/refs/tags/android-16.0.0_r3/cmds/servicemanager/" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/native/cmds/servicemanager/&lt;/code&gt;</a></li><li class="list-item"><strong>Process</strong>: Runs as separate process, started by init</li></ul>
+<ul class="article-list"><li class="list-item"><strong>SystemServiceManager</strong> (Java Class):</li></ul>
+
+<ul class="article-list"><li class="list-item">A Java class within <code class="inline-code">system_server</code> process</li><li class="list-item">Manages the lifecycle of Java-based system services</li><li class="list-item">Handles service instantiation, dependency resolution, boot phase progression</li><li class="list-item">Manages service state transitions (onStart, onBootPhase, onUserStarting, etc.)</li><li class="list-item"><strong>Location</strong>: <a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/SystemServiceManager.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;frameworks/base/services/core/java/com/android/server/SystemServiceManager.java&lt;/code&gt;</a></li><li class="list-item"><strong>Process</strong>: Part of system_server process</li></ul>
+<p class="article-paragraph"><strong>Key Architectural Distinction:</strong></p>
+
+
+<div class="table-container">
+<table class="article-table">
+<thead>
+<tr>
+<th>Aspect</th>
+<th>ServiceManager (Native)</th>
+<th>SystemServiceManager (Java)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Process</strong></td>
+<td>Separate native process</td>
+<td>Part of system_server</td>
+</tr>
+<tr>
+<td><strong>Purpose</strong></td>
+<td>Binder service registry</td>
+<td>Service lifecycle management</td>
+</tr>
+<tr>
+<td><strong>Scope</strong></td>
+<td>Cross-process service discovery</td>
+<td>In-process service management</td>
+</tr>
+<tr>
+<td><strong>Registration</strong></td>
+<td><code class="inline-code">ServiceManager.addService()</code></td>
+<td><code class="inline-code">SystemServiceManager.startService()</code></td>
+</tr>
+<tr>
+<td><strong>Discovery</strong></td>
+<td><code class="inline-code">ServiceManager.getService()</code></td>
+<td>Direct Java references</td>
+</tr>
+<tr>
+<td><strong>Communication</strong></td>
+<td>Binder IPC</td>
+<td>Direct method calls</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="article-paragraph"><strong>How They Work Together:</strong></p>
+
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// Step 1: SystemServiceManager starts service
+SystemServiceManager.startService(ActivityManagerService.class);
+
+// Step 2: Service registers with native ServiceManager for external access
+ServiceManager.addService(&quot;activity&quot;, mActivityManagerService);
+
+// Step 3: External process discovers service
+IBinder binder = ServiceManager.getService(&quot;activity&quot;);
+IActivityManager am = IActivityManager.Stub.asInterface(binder);</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Service Class Hierarchy:</strong></p>
+
+<div class="mermaid-diagram" id="diagram-mermaid-y2rlvuxd3">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-y2rlvuxd3', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-y2rlvuxd3')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-y2rlvuxd3', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-y2rlvuxd3')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-y2rlvuxd3">classDiagram
+    class SystemService {
+        <<abstract>>
+        +onStart()
+        +onBootPhase(int phase)
+        +onUserStarting(TargetUser user)
+        +onUserUnlocking(TargetUser user)
+    }
+    
+    class SystemServiceManager {
+        -List~SystemService~ mServices
+        -int mCurrentPhase
+        +startService(Class~?~ serviceClass) SystemService
+        +startBootPhase(int phase)
+        +onUserStarting(TargetUser user)
+    }
+    
+    class ActivityManagerService {
+        -ProcessList mProcessList
+        -ActivityStackSupervisor mStackSupervisor
+        +startActivity()
+        +killProcess()
+        +handleApplicationCrash()
+    }
+    
+    class WindowManagerService {
+        -WindowHashMap mWindowMap
+        -DisplayContent mRoot
+        +addWindow()
+        +removeWindow()
+        +relayoutWindow()
+    }
+    
+    class PowerManagerService {
+        -WakeLockList mWakeLocks
+        -PowerState mPowerState
+        +acquireWakeLock()
+        +releaseWakeLock()
+        +goToSleep()
+    }
+    
+    class PackageManagerService {
+        -PackageParser mPackageParser
+        -Settings mSettings
+        +installPackage()
+        +deletePackage()
+        +getPackageInfo()
+    }
+    
+    SystemService <|-- ActivityManagerService
+    SystemService <|-- WindowManagerService
+    SystemService <|-- PowerManagerService
+    SystemService <|-- PackageManagerService
+    SystemServiceManager "1" --> "*" SystemService : manages lifecycle
+    SystemServiceManager ..> SystemService : calls onBootPhase()</div>
+            <div class="zoom-indicator" id="zoom-mermaid-y2rlvuxd3">100%</div>
+          </div>
+
+<p class="article-paragraph"><strong>Service Lifecycle States:</strong></p>
+
+<div class="mermaid-diagram" id="diagram-mermaid-zc07tm9le">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-zc07tm9le', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-zc07tm9le')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-zc07tm9le', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-zc07tm9le')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-zc07tm9le">stateDiagram-v2
+    [*] --> Created: Service class instantiated
+    Created --> Starting: SystemServiceManager.startService()
+    Starting --> onStart: Service.onStart() called
+    onStart --> BootPhase0: Phase 0 begins
+    BootPhase0 --> BootPhase100: Phase 100 begins
+    BootPhase100 --> BootPhase500: Phase 500 begins
+    BootPhase500 --> BootPhase1000: Phase 1000 begins
+    BootPhase1000 --> Running: All boot phases complete
+    Running --> UserStarting: User switch begins
+    UserStarting --> UserUnlocking: User unlocking
+    UserUnlocking --> Running: User ready
+    Running --> Stopping: System shutdown
+    Stopping --> [*]: Service destroyed</div>
+            <div class="zoom-indicator" id="zoom-mermaid-zc07tm9le">100%</div>
+          </div>
+
+<p class="article-paragraph"><strong>Boot Phases Explained:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Phase 0-99</strong>: Pre-bootstrap initialization (native services, basic infrastructure)</li><li class="list-item"><strong>Phase 100-499</strong>: Bootstrap services (<code class="inline-code">startBootstrapServices()</code>) - Critical services like ActivityManagerService, PowerManagerService, PackageManagerService</li><li class="list-item"><strong>Phase 500-999</strong>: Core services (<code class="inline-code">startCoreServices()</code>) - Services that depend on bootstrap services (BatteryService, UsageStatsService)</li><li class="list-item"><strong>Phase 1000+</strong>: Other services (<code class="inline-code">startOtherServices()</code>) - Remaining services with complex dependencies</li></ul>
+<p class="article-paragraph"><strong>Service Registration Flow:</strong></p>
+
+<div class="mermaid-diagram" id="diagram-mermaid-bbrs4dfw6">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-bbrs4dfw6', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-bbrs4dfw6')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-bbrs4dfw6', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-bbrs4dfw6')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-bbrs4dfw6">sequenceDiagram
+    participant SSM as SystemServiceManager
+    participant Service as SystemService
+    participant NativeSM as ServiceManager (Native)
+    participant Client as App Process
+    
+    SSM->>Service: startService(ServiceClass)
+    Service->>Service: Constructor called
+    Service->>Service: onStart() invoked
+    Service->>NativeSM: ServiceManager.addService("service_name", binder)
+    NativeSM->>NativeSM: Register in service registry
+    Client->>NativeSM: getService("service_name")
+    NativeSM->>Client: Return Binder handle
+    Client->>Service: Direct Binder IPC call</div>
+            <div class="zoom-indicator" id="zoom-mermaid-bbrs4dfw6">100%</div>
+          </div>
+
+<p class="article-paragraph"><strong>Internal vs External Communication:</strong></p>
+
+<p class="article-paragraph">Understanding the communication patterns is crucial for system_server development and debugging.</p>
+
+<p class="article-paragraph"><strong>Internal Communication (Within system_server):</strong></p>
+
+<p class="article-paragraph">Services within system_server communicate directly without IPC overhead:</p>
+
+<div class="code-example code-good">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                <span class="code-badge code-badge-good">✅ GOOD</span>
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// ✅ GOOD: Direct method call - no IPC overhead
+public class WindowManagerService {
+    private ActivityManagerService mAmService;
+    
+    public void addWindow(WindowState window) {
+        // Direct method call - fast, no marshaling
+        mAmService.notifyWindowAdded(window);
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Characteristics:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Direct Java Method Calls</strong>: Fast, synchronous, no marshaling overhead</li><li class="list-item"><strong>Shared Memory Access</strong>: All services share the same heap</li><li class="list-item"><strong>Handler/Message Passing</strong>: Asynchronous operations using Handler/MessageQueue</li><li class="list-item"><strong>No Binder Overhead</strong>: Zero IPC transaction costs</li><li class="list-item"><strong>Type Safety</strong>: Direct object references, no serialization</li></ul>
+<p class="article-paragraph"><strong>External Communication (Cross-process):</strong></p>
+
+<p class="article-paragraph">Apps and other processes communicate with system_server via Binder IPC:</p>
+
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// External process calls system_server via Binder
+public class ActivityManagerProxy implements IActivityManager {
+    private final IBinder mRemote;
+    
+    public void startActivity(Intent intent) {
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(IActivityManager.descriptor);
+            intent.writeToParcel(data, 0);
+            // Binder IPC call - involves marshaling, kernel transition
+            mRemote.transact(START_ACTIVITY_TRANSACTION, data, reply, 0);
+        } finally {
+            data.recycle();
+            reply.recycle();
+        }
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Characteristics:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Binder IPC</strong>: Kernel-mediated inter-process communication</li><li class="list-item"><strong>Proxy-Stub Pattern</strong>: Type-safe interface definitions (AIDL)</li><li class="list-item"><strong>Transaction Marshaling</strong>: Serialization/deserialization overhead (~2-5ms per call)</li><li class="list-item"><strong>Kernel-Level Message Passing</strong>: Involves context switching</li><li class="list-item"><strong>Security Enforcement</strong>: Permission checks, UID/GID validation</li></ul>
+<p class="article-paragraph"><strong>Performance Comparison:</strong></p>
+
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Measure internal vs external call performance</span>
+<span class="comment"># Internal call: ~0.001ms (direct method call)</span>
+<span class="comment"># External call: ~2-5ms (Binder IPC with marshaling)</span>
+
+<span class="comment"># Profile Binder transactions</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -A 5 <span class="string">&quot;Binder&quot;</span></code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Thread Model:</strong></p>
+
+<p class="article-paragraph">System_server uses a sophisticated multi-threaded architecture to handle concurrent operations efficiently:</p>
+
+<p class="article-paragraph"><strong>Thread Types:</strong></p>
+
+<ol class="article-list"><li class="list-item"><strong>Main Thread (UI Thread)</strong>: </li></ol>
+
+<ul class="article-list"><li class="list-item">Handles service initialization and boot phases</li><li class="list-item">Processes system broadcasts</li><li class="list-item">Manages service lifecycle callbacks</li><li class="list-item"><strong>Critical</strong>: Must never block - blocking causes system-wide ANRs</li></ul>
+<ol class="article-list"><li class="list-item"><strong>Service Threads</strong>: </li></ol>
+
+<ul class="article-list"><li class="list-item">Dedicated threads for specific services</li><li class="list-item">Example: ActivityManagerService has <code class="inline-code">ActivityManager</code> thread for activity lifecycle management</li><li class="list-item">Example: WindowManagerService has <code class="inline-code">WindowManager</code> thread for window operations</li></ul>
+<ol class="article-list"><li class="list-item"><strong>HandlerThreads</strong>: </li></ol>
+
+<ul class="article-list"><li class="list-item">Services use HandlerThread for asynchronous operations</li><li class="list-item">Provides Looper/Handler pattern for message processing</li><li class="list-item">Example: Background work, delayed operations, periodic tasks</li></ul>
+<ol class="article-list"><li class="list-item"><strong>Binder Threads</strong>: </li></ol>
+
+<ul class="article-list"><li class="list-item">Kernel-managed threads (typically 15-16 threads)</li><li class="list-item">Handle incoming Binder transactions from other processes</li><li class="list-item">Named: <code class="inline-code">Binder:XXXX</code> where XXXX is the thread number</li><li class="list-item">Automatically created by Binder driver</li></ul>
+<p class="article-paragraph"><strong>Thread Architecture Example:</strong></p>
+
+<p class="article-paragraph">ActivityManagerService uses a sophisticated multi-threaded architecture to handle different types of operations efficiently:</p>
+
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/am/ActivityManagerService.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/am/ActivityManagerService.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public class ActivityManagerService extends IActivityManager.Stub
+        implements Watchdog.Monitor, BatteryStatsImpl.BatteryCallback {
+    
+    // Main handler thread - handles core AMS operations
+    // Created with THREAD_PRIORITY_FOREGROUND priority
+    public final ServiceThread mHandlerThread;
+    final MainHandler mHandler;
+    
+    // UI handler - handles UI-related operations (ANR dialogs, error dialogs)
+    // Uses shared UiThread.get().getLooper() for UI operations
+    final Handler mUiHandler;
+    
+    // Process start handler thread - dedicated thread for process creation
+    // Prevents blocking main handler during process startup
+    final ServiceThread mProcStartHandlerThread;
+    final ProcStartHandler mProcStartHandler;
+    
+    // Constructor - initializes all threads
+    public ActivityManagerService(Context systemContext, ActivityTaskManagerService atm) {
+        // Create main handler thread
+        mHandlerThread = new ServiceThread(TAG,
+                THREAD_PRIORITY_FOREGROUND, false /*allowIo*/);
+        mHandlerThread.start();
+        mHandler = new MainHandler(mHandlerThread.getLooper());
+        
+        // Create UI handler (uses shared UiThread)
+        mUiHandler = new UiHandler();
+        
+        // Create process start handler thread
+        mProcStartHandlerThread = new ServiceThread(TAG + &quot;:procStart&quot;,
+                THREAD_PRIORITY_FOREGROUND, false /* allowIo */);
+        mProcStartHandlerThread.start();
+        mProcStartHandler = new ProcStartHandler(this, mProcStartHandlerThread.getLooper());
+        
+        // AppProfiler uses BackgroundThread for memory profiling
+        mAppProfiler = new AppProfiler(this, BackgroundThread.getHandler().getLooper(),
+                new LowMemDetector(this));
+    }
+    
+    // MainHandler - handles core AMS operations
+    final class MainHandler extends Handler {
+        public MainHandler(Looper looper) {
+            super(looper, null, true);
+        }
+        
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case GC_BACKGROUND_PROCESSES_MSG:
+                    // Perform garbage collection on background processes
+                    mAppProfiler.performAppGcsIfAppropriateLocked();
+                    break;
+                case SERVICE_TIMEOUT_MSG:
+                    // Handle service timeout (ANR detection)
+                    mServices.serviceTimeout((ProcessRecord) msg.obj);
+                    break;
+                case PROC_START_TIMEOUT_MSG:
+                    // Handle process start timeout
+                    handleProcessStartOrKillTimeoutLocked((ProcessRecord) msg.obj, false);
+                    break;
+                case KILL_APPLICATION_MSG:
+                    // Force stop application
+                    forceStopPackageLocked(...);
+                    break;
+                case SERVICE_FOREGROUND_TIMEOUT_MSG:
+                    // Handle foreground service timeout
+                    mServices.serviceForegroundTimeout((ServiceRecord) msg.obj);
+                    break;
+                // ... many more message types
+            }
+        }
+    }
+    
+    // UiHandler - handles UI-related operations
+    final class UiHandler extends Handler {
+        public UiHandler() {
+            super(com.android.server.UiThread.get().getLooper(), null, true);
+        }
+        
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case SHOW_ERROR_UI_MSG:
+                    // Show application crash dialog
+                    mAppErrors.handleShowAppErrorUi(msg);
+                    break;
+                case SHOW_NOT_RESPONDING_UI_MSG:
+                    // Show ANR dialog
+                    mAppErrors.handleShowAnrUi(msg);
+                    break;
+                case SHOW_STRICT_MODE_VIOLATION_UI_MSG:
+                    // Show strict mode violation dialog
+                    proc.mErrorState.getDialogController().showViolationDialogs(res);
+                    break;
+                case DISPATCH_PROCESSES_CHANGED_UI_MSG:
+                    // Notify observers of process state changes
+                    mProcessList.dispatchProcessesChanged();
+                    break;
+                // ... more UI message types
+            }
+        }
+    }
+    
+    // ProcStartHandler - handles process creation operations
+    // Defined in ProcessList.java as inner class
+    static final class ProcStartHandler extends Handler {
+        static final int MSG_PROCESS_DIED = 1;
+        static final int MSG_PROCESS_KILL_TIMEOUT = 2;
+        
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_PROCESS_DIED:
+                    // Handle predecessor process death
+                    mService.mProcessList.handlePredecessorProcDied((ProcessRecord) msg.obj);
+                    break;
+                case MSG_PROCESS_KILL_TIMEOUT:
+                    // Handle process kill timeout
+                    mService.handleProcessStartOrKillTimeoutLocked((ProcessRecord) msg.obj, true);
+                    break;
+            }
+        }
+    }
+    
+    // Binder threads - automatically created by kernel
+    // Handle incoming Binder transactions from other processes
+    // Named: Binder:XXXX (typically 15-16 threads)
+    // Managed by Binder driver, not explicitly created in code
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Thread Responsibilities:</strong></p>
+
+<ol class="article-list"><li class="list-item"><strong>MainHandler (mHandlerThread)</strong>: Core AMS operations</li></ol>
+
+<ul class="article-list"><li class="list-item">Service lifecycle management</li><li class="list-item">Process timeout handling</li><li class="list-item">Memory management (GC)</li><li class="list-item">Application killing</li><li class="list-item">Configuration updates</li></ul>
+<ol class="article-list"><li class="list-item"><strong>UiHandler (UiThread)</strong>: UI-related operations</li></ol>
+
+<ul class="article-list"><li class="list-item">ANR dialogs</li><li class="list-item">Crash dialogs</li><li class="list-item">Strict mode violations</li><li class="list-item">Process state change notifications</li><li class="list-item">Uses shared <code class="inline-code">UiThread</code> for system-wide UI operations</li></ul>
+<ol class="article-list"><li class="list-item"><strong>ProcStartHandler (mProcStartHandlerThread)</strong>: Process creation</li></ol>
+
+<ul class="article-list"><li class="list-item">Process startup operations</li><li class="list-item">Process death handling</li><li class="list-item">Process kill timeouts</li><li class="list-item">Prevents blocking main handler during process creation</li></ul>
+<ol class="article-list"><li class="list-item"><strong>BackgroundThread</strong>: Background operations</li></ol>
+
+<ul class="article-list"><li class="list-item">Memory profiling (AppProfiler)</li><li class="list-item">Low memory detection</li><li class="list-item">Shared across system_server services</li></ul>
+<ol class="article-list"><li class="list-item"><strong>Binder Threads</strong>: IPC operations</li></ol>
+
+<ul class="article-list"><li class="list-item">Handle incoming Binder transactions</li><li class="list-item">Kernel-managed (15-16 threads typically)</li><li class="list-item">Named <code class="inline-code">Binder:XXXX</code></li></ul>
+<p class="article-paragraph"><strong>Thread Safety Considerations:</strong></p>
+
+<p class="article-paragraph">ActivityManagerService uses multiple synchronization mechanisms to ensure thread safety:</p>
+
+<div class="code-example code-good">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                <span class="code-badge code-badge-good">✅ GOOD</span>
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// ✅ GOOD: Thread-safe service design (based on ActivityManagerService pattern)
+public class MyService extends SystemService {
+    // Synchronization locks for different data structures
+    private final Object mLock = new Object();  // Main service lock
+    private final Object mProcLock = new Object();  // Process-related lock
+    
+    // Dedicated handler threads for different operations
+    private ServiceThread mHandlerThread;
+    private Handler mHandler;
+    private Handler mUiHandler;
+    
+    @Override
+    public void onStart() {
+        // Create main handler thread (similar to AMS pattern)
+        mHandlerThread = new ServiceThread(&quot;MyServiceHandler&quot;,
+                THREAD_PRIORITY_FOREGROUND, false /*allowIo*/);
+        mHandlerThread.start();
+        mHandler = new Handler(mHandlerThread.getLooper());
+        
+        // Use shared UiThread for UI operations
+        mUiHandler = new Handler(UiThread.get().getLooper());
+    }
+    
+    // Thread-safe operation posting
+    public void performOperation() {
+        // Post to handler thread for thread safety
+        mHandler.post(() -&gt; {
+            synchronized (mLock) {
+                // Safe to access service state here
+                doWork();
+            }
+        });
+    }
+    
+    // UI operations on UI thread
+    public void showDialog() {
+        mUiHandler.post(() -&gt; {
+            // UI operations must be on UI thread
+            showDialogInternal();
+        });
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Key Thread Safety Patterns in ActivityManagerService:</strong></p>
+
+
+<ol class="article-list"><li class="list-item"><strong>Lock Hierarchy</strong>: Uses <code class="inline-code">@GuardedBy</code> annotations to document lock requirements</li><li class="list-item"><strong>Handler Posting</strong>: All state modifications posted to appropriate handler thread</li><li class="list-item"><strong>Synchronized Blocks</strong>: Critical sections protected with synchronized blocks</li><li class="list-item"><strong>Thread-Specific Operations</strong>: UI operations on UiThread, process operations on ProcStartHandler</li></ol>
+<p class="article-paragraph"><strong>Service Dependency Resolution:</strong></p>
+
+<p class="article-paragraph">SystemServiceManager ensures services start in the correct order based on dependencies:</p>
+
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/SystemServiceManager.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/services/core/java/com/android/server/SystemServiceManager.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">public &lt;T extends SystemService&gt; T startService(Class&lt;T&gt; serviceClass) {
+    // Instantiate service
+    T service = serviceClass.newInstance();
+    
+    // Add to service list
+    mServices.add(service);
+    
+    // Call onStart() lifecycle method
+    service.onStart();
+    
+    return service;
+}
+
+public void startBootPhase(int phase) {
+    // Notify all services of boot phase progression
+    for (SystemService service : mServices) {
+        service.onBootPhase(phase);
+    }
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Dependency Examples:</strong></p>
+
+
+<ul class="article-list"><li class="list-item"><strong>BatteryService</strong> depends on <strong>PowerManagerService</strong> (bootstrap phase)</li><li class="list-item"><strong>WindowManagerService</strong> depends on <strong>DisplayManagerService</strong> and <strong>ActivityManagerService</strong></li><li class="list-item"><strong>InputManagerService</strong> depends on <strong>WindowManagerService</strong></li><li class="list-item"><strong>NotificationManagerService</strong> depends on <strong>ActivityManagerService</strong></li></ul>
+<p class="article-paragraph"><strong>Verification:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># View all threads in system_server</span>
+adb shell ps -T -p $(pidof system_server)
+
+<span class="comment"># Check service registration</span>
+adb shell service list
+
+<span class="comment"># Monitor boot phases</span>
+adb logcat | <span class="keyword">grep</span> <span class="string">&quot;SystemServiceManager.*phase&quot;</span>
+
+<span class="comment"># View service dependencies</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -A 5 <span class="string">&quot;Service dependencies&quot;</span>
+
+<span class="comment"># Check native ServiceManager</span>
+adb shell ps -A | <span class="keyword">grep</span> servicemanager
+
+<span class="comment"># List all registered Binder services</span>
+adb shell service list | wc -l  <span class="comment"># Count total services</span></code></pre>
+          </div>
+
+<hr class="article-divider">
+
+<h2 id="-summary">Summary</h2>
+
+<p class="article-paragraph">In this article, we've covered the foundational architecture of Android System Server:</p>
+
+
+<ol class="article-list"><li class="list-item"><strong>Monolithic Design</strong>: Understanding why Android chose a single-process architecture and the trade-offs involved</li><li class="list-item"><strong>Process Genesis</strong>: How system_server is created from Zygote and initialized</li><li class="list-item"><strong>Service Management</strong>: The distinction between ServiceManager and SystemServiceManager, and how services are registered and discovered</li><li class="list-item"><strong>Boot Phases</strong>: The phased initialization approach that ensures proper service dependencies</li><li class="list-item"><strong>Communication Patterns</strong>: Internal vs external communication mechanisms</li></ol>
+<hr class="article-divider">
+
+<h2 id="-next--steps">Next Steps</h2>
+
+<p class="article-paragraph">Continue your learning journey with <strong><a href="./android-system-server-services.html" class="article-link">Part 2: Core System Services</a></strong> to understand the individual services that make up system_server, including ActivityManagerService, WindowManagerService, PackageManagerService, and PowerManagerService.</p>
+
+<hr class="article-divider">
+
+<h2 id="-related--articles">Related Articles</h2>
+
+
+<ul class="article-list"><li class="list-item"><a href="./android-system-server-services.html" class="article-link">Part 2: Core System Services</a></li><li class="list-item"><a href="./android-system-server-binder-ipc.html" class="article-link">Part 3: Binder IPC Framework</a></li><li class="list-item"><a href="./android-system-server-debugging.html" class="article-link">Part 4: Debugging and Troubleshooting</a></li><li class="list-item"><a href="./android-system-server-series.html" class="article-link">Series Index</a></li></ul>
+<hr class="article-divider">
+
+<p class="article-paragraph"><em>This article is part of the <a href="./android-system-server-series.html" class="article-link">Android System Server Deep Dive</a> series. For the complete learning path, start with the <a href="./android-system-server-series.html" class="article-link">Series Index</a>.</em></p>
+
+          </div>
+          
+          <!-- Article Footer -->
+          <div class="article-footer">
+            <div class="article-tags">
+              <span class="tag-label">Tags:</span>
+              <span class="tag">Android</span>
+              <span class="tag">Internals</span>
+              <span class="tag">System Architecture</span>
+            </div>
+            <div class="article-share">
+              <span class="share-label">Share:</span>
+              <a href="https://twitter.com/intent/tweet?text=System Server: Architecture and Design&url=https://www.hemangpandhi.com/articles/android-system-server-architecture.html" target="_blank" class="share-link">🐦 Twitter</a>
+              <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://www.hemangpandhi.com/articles/android-system-server-architecture.html" target="_blank" class="share-link">💼 LinkedIn</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Article Sidebar -->
+        <aside class="article-sidebar" id="articleSidebar">
+          <!-- Table of Contents -->
+          <div class="sidebar-widget toc-widget">
+            <h4>📋 Table of Contents</h4>
+            <nav class="article-toc" id="tableOfContents">
+              <ul>
+                <li><a href="#introduction">Loading...</a></li>
+              </ul>
+            </nav>
+          </div>
+
+          <!-- Author Info -->
+          <div class="sidebar-widget author-widget">
+            <h4>👤 About the Author</h4>
+            <div class="author-card">
+              <img src="../assets/images/android_logo.PNG" alt="Android Internals Team" class="author-avatar-small">
+              <div class="author-details">
+                <h5>Android Internals Team</h5>
+                <p>Android Internals expert with deep knowledge of system architecture and development tools. Specializing in HAL, Framework, and system optimization.</p>
+                <div class="author-stats">
+                  <span class="stat">📚 50+ Articles</span>
+                  <span class="stat">🔧 10+ Years Experience</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Related Articles -->
+          <div class="sidebar-widget related-widget">
+            <h4>🔗 Related Articles</h4>
+            <div class="related-articles">
+              <a href="../adb.html" class="related-article">
+                <h5>ADB (Android Debug Bridge)</h5>
+                <p>Powerful tool for Android development and debugging</p>
+              </a>
+              <a href="../hal.html" class="related-article">
+                <h5>HAL (Hardware Abstraction Layer)</h5>
+                <p>Bridging Android software and device hardware</p>
+              </a>
+              <a href="../framework.html" class="related-article">
+                <h5>Android Framework</h5>
+                <p>The backbone of Android app development</p>
+              </a>
+            </div>
+          </div>
+
+          <!-- Newsletter Signup -->
+          <div class="sidebar-widget newsletter-widget">
+            <h4>📧 Stay Updated</h4>
+            <p>Get the latest Android Internals articles delivered to your inbox.</p>
+            <form class="newsletter-form">
+              <input type="email" placeholder="Enter your email" required>
+              <button type="submit" class="btn btn-primary">Subscribe</button>
+            </form>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <a href="../index.html" class="footer-logo-link">
+            <img src="../assets/images/android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
+          </a>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="../hal.html">HAL</a></li>
+            <li><a href="../framework.html">Framework</a></li>
+            <li><a href="../adb.html">ADB</a></li>
+            <li><a href="../books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+        <div class="footer-section">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="../privacy.html">Privacy Policy</a></li>
+            <li><a href="../terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/scripts.js"></script>
+  
+  <!-- Cookie Consent Banner -->
+  <div id="cookieConsentBanner" class="cookie-consent-banner">
+    <div class="cookie-consent-content">
+      <div class="cookie-consent-text">
+        <p>We use cookies and service workers to enhance your browsing experience, analyze site traffic, and personalize content. By clicking "Accept", you consent to our use of cookies. <a href="../privacy.html">Learn more</a></p>
+      </div>
+      <div class="cookie-consent-buttons">
+        <button id="cookieAcceptBtn" class="cookie-consent-btn cookie-consent-btn-accept">Accept</button>
+        <button id="cookieDeclineBtn" class="cookie-consent-btn cookie-consent-btn-decline">Decline</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Redirect .md URLs to .html (for browser cache/history issues)
+    (function() {
+      const currentPath = window.location.pathname;
+      if (currentPath.endsWith('.md')) {
+        const newPath = currentPath.replace(/\.md$/, '.html');
+        console.log('Redirecting .md URL to .html:', currentPath, '->', newPath);
+        window.location.replace(newPath);
+        return;
+      }
+    })();
+    
+    // Article functionality
+    // Define functions globally first
+    window.zoomDiagram = function(diagramId, factor) {
+      const cleanId = diagramId.startsWith('mermaid-') ? diagramId : 'mermaid-' + diagramId;
+      const diagram = document.getElementById(cleanId);
+      const diagramContainer = document.getElementById('diagram-' + cleanId);
+      const zoomIndicator = document.getElementById('zoom-' + diagramId);
+      
+      if (!diagram || !diagramContainer) return;
+      
+      // Initialize zoomLevels if not exists
+      window.zoomLevels = window.zoomLevels || {};
+      
+      const currentZoom = window.zoomLevels[diagramId] || 1;
+      const newZoom = Math.max(1, Math.min(5, currentZoom * factor)); // Start from 100% minimum
+      window.zoomLevels[diagramId] = newZoom;
+      
+      // Apply zoom to the diagram element only
+      diagram.style.transform = `scale(${newZoom})`;
+      diagram.style.transformOrigin = 'top left';
+      
+      // Check if we're in fullscreen mode
+      const isFullscreen = diagramContainer.style.position === 'fixed';
+      if (isFullscreen) {
+        // In fullscreen, preserve full height and enable scrolling
+        diagramContainer.style.height = '100vh';
+        diagramContainer.style.minHeight = '100vh';
+        diagramContainer.style.maxHeight = 'none';
+        diagramContainer.style.overflow = 'auto';
+      } else {
+        // Normal mode - ensure proper scrolling when zoomed
+        if (newZoom > 1) {
+          // When zoomed, ensure container allows horizontal and vertical scrolling
+          diagramContainer.style.overflow = 'auto';
+          diagramContainer.style.overflowX = 'auto';
+          diagramContainer.style.overflowY = 'auto';
+          diagramContainer.style.width = '100%';
+          diagramContainer.style.maxWidth = '100%';
+          diagramContainer.style.position = 'relative';
+          diagramContainer.style.zIndex = '1040';
+          diagramContainer.classList.add('zoomed');
+          
+          // Ensure the diagram element itself has proper width for scrolling
+          const svg = diagram.querySelector('svg');
+          if (svg) {
+            // Get the natural SVG width (before scaling)
+            const svgNaturalWidth = svg.viewBox.baseVal.width || svg.width.baseVal.value;
+            if (svgNaturalWidth > 0) {
+              // Set diagram width to accommodate scaled SVG
+              const scaledWidth = svgNaturalWidth * newZoom;
+              diagram.style.width = scaledWidth + 'px';
+              diagram.style.minWidth = scaledWidth + 'px';
+              diagram.style.maxWidth = 'none';
+            } else {
+              // Fallback: use bounding box if viewBox not available
+              const svgWidth = svg.getBoundingClientRect().width;
+              const scaledWidth = svgWidth * newZoom;
+              diagram.style.width = scaledWidth + 'px';
+              diagram.style.minWidth = scaledWidth + 'px';
+              diagram.style.maxWidth = 'none';
+            }
+          }
+        } else {
+          // At 100% zoom, clear all styles to use natural dimensions
+          diagramContainer.style.cssText = '';
+          diagram.style.width = '';
+          diagram.style.minWidth = '';
+          diagram.style.maxWidth = '';
+          diagramContainer.classList.remove('zoomed');
+        }
+      }
+      
+      if (zoomIndicator) {
+        zoomIndicator.textContent = Math.round(newZoom * 100) + '%';
+      }
+    }
+    
+    window.resetZoom = function(diagramId) {
+      const cleanId = diagramId.startsWith('mermaid-') ? diagramId : 'mermaid-' + diagramId;
+      const diagram = document.getElementById(cleanId);
+      const diagramContainer = document.getElementById('diagram-' + cleanId);
+      const zoomIndicator = document.getElementById('zoom-' + diagramId);
+      
+      if (!diagram || !diagramContainer) return;
+      
+      // Reset zoom level
+      window.zoomLevels = window.zoomLevels || {};
+      window.zoomLevels[diagramId] = 1;
+      
+      // Remove zoomed class and z-index
+      diagramContainer.classList.remove('zoomed');
+      
+      // Reset diagram to 100% scale
+      diagram.style.transform = 'scale(1)';
+      diagram.style.transformOrigin = 'top left';
+      
+      // Check if we're in fullscreen mode
+      const isFullscreen = diagramContainer.style.position === 'fixed';
+      if (isFullscreen) {
+        // In fullscreen, preserve full height
+        diagramContainer.style.height = '100vh';
+        diagramContainer.style.minHeight = '100vh';
+        diagramContainer.style.maxHeight = 'none';
+        diagramContainer.style.overflow = 'auto';
+      } else {
+        // Normal mode - clear all styles exactly like fullscreen exit
+        // This ensures the same behavior as exiting fullscreen mode
+        diagramContainer.style.cssText = '';
+        diagram.style.width = '';
+        diagram.style.minWidth = '';
+        diagram.style.maxWidth = '';
+        const mermaidEl = diagramContainer.querySelector('.mermaid');
+        if (mermaidEl) {
+          mermaidEl.style.cssText = '';
+        }
+        const svgEl = mermaidEl?.querySelector('svg');
+        if (svgEl) {
+          svgEl.style.cssText = '';
+        }
+      }
+      
+      if (zoomIndicator) {
+        zoomIndicator.textContent = '100%';
+      }
+    }
+    
+    window.toggleFullscreen = function(diagramId) {
+      console.log('Fullscreen toggle called for:', diagramId);
+      
+      const container = document.getElementById(`diagram-${diagramId}`);
+      if (!container) {
+        console.error('Container not found:', `diagram-${diagramId}`);
+        return;
+      }
+      
+      const isFullscreen = container.style.position === 'fixed';
+      
+      if (isFullscreen) {
+        // Exit fullscreen
+        console.log('Exiting fullscreen');
+        
+        // Show navigation bar again
+        const mainNav = document.querySelector('.main-nav');
+        if (mainNav) {
+          mainNav.style.display = '';
+          mainNav.style.visibility = '';
+          mainNav.style.opacity = '';
+          mainNav.style.height = '';
+          mainNav.style.overflow = '';
+        }
+        
+        container.style.cssText = '';
+        document.body.style.overflow = '';
+        document.body.classList.remove('fullscreen-mode');
+        
+        // Reset the mermaid element styles to normal mode
+        const mermaidEl = container.querySelector('.mermaid');
+        if (mermaidEl) {
+          mermaidEl.style.cssText = '';
+        }
+        
+        // Reset the SVG element styles to normal mode
+        const svgEl = mermaidEl?.querySelector('svg');
+        if (svgEl) {
+          svgEl.style.cssText = '';
+        }
+      } else {
+        // Enter fullscreen
+        console.log('Entering fullscreen');
+        
+        // Hide navigation bar explicitly (especially important for mobile)
+        const mainNav = document.querySelector('.main-nav');
+        if (mainNav) {
+          mainNav.style.display = 'none';
+          mainNav.style.visibility = 'hidden';
+          mainNav.style.opacity = '0';
+          mainNav.style.height = '0';
+          mainNav.style.overflow = 'hidden';
+        }
+        
+        container.style.cssText = `
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          min-height: 100vh !important;
+          z-index: 999999 !important;
+          background: white !important;
+          display: block !important;
+          padding: 10px !important;
+          box-sizing: border-box !important;
+          overflow: auto !important;
+        `;
+        
+        const mermaidEl = container.querySelector('.mermaid');
+        if (mermaidEl) {
+          mermaidEl.style.cssText = `
+            max-width: 95vw !important;
+            max-height: 95vh !important;
+            width: auto !important;
+            height: auto !important;
+            margin: 0 auto !important;
+            display: block !important;
+          `;
+          
+          // Also ensure the SVG inside uses full height
+          const svgEl = mermaidEl.querySelector('svg');
+          if (svgEl) {
+            svgEl.style.cssText = `
+              max-width: 95vw !important;
+              max-height: 95vh !important;
+              width: auto !important;
+              height: auto !important;
+            `;
+          }
+        }
+        
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('fullscreen-mode');
+      }
+    }
+    
+    // Add escape key functionality
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        // Find any fullscreen diagram and exit it
+        const fullscreenDiagram = document.querySelector('.mermaid-diagram[style*="position: fixed"]');
+        if (fullscreenDiagram) {
+          const diagramId = fullscreenDiagram.id.replace('diagram-', '');
+          window.toggleFullscreen(diagramId);
+        }
+      }
+    });
+    
+    // Initialize zoom levels storage
+    window.zoomLevels = window.zoomLevels || {};
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOMContentLoaded fired');
+      console.log('Mermaid available:', typeof mermaid);
+      
+      // Initialize Mermaid with automatic rendering and minimal padding
+      try {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: 'default',
+          securityLevel: 'loose',
+          fontFamily: 'Arial, sans-serif',
+          // Global settings for all diagram types
+          useMaxWidth: true,
+          // Flowchart settings - optimized for Mermaid 10.7.0
+          // Critical: padding must be set to ensure viewBox includes all content
+          flowchart: {
+            padding: 20, // Increased padding to ensure all content is in viewBox
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis',
+            nodeSpacing: 50,
+            rankSpacing: 50,
+            wrap: false
+          },
+          // Sequence diagram settings
+          sequence: {
+            diagramMarginX: 10,
+            diagramMarginY: 10,
+            actorMargin: 50,
+            width: 150,
+            height: 65,
+            boxMargin: 10,
+            boxTextMargin: 5,
+            noteMargin: 35,
+            messageMargin: 35,
+            mirrorActors: true,
+            bottomMarginAdj: 1,
+            useMaxWidth: true
+          },
+          // Class diagram settings
+          class: {
+            useMaxWidth: true,
+            padding: 10
+          },
+          // State diagram settings
+          state: {
+            useMaxWidth: true,
+            padding: 10
+          },
+          // Gantt chart settings
+          gantt: {
+            useMaxWidth: true
+          },
+          // Pie chart settings
+          pie: {
+            useMaxWidth: true
+          },
+          // Git graph settings
+          gitGraph: {
+            useMaxWidth: true
+          },
+          // ER diagram settings
+          er: {
+            useMaxWidth: true
+          },
+          // Journey diagram settings
+          journey: {
+            useMaxWidth: true
+          },
+          // C4 diagram settings
+          c4: {
+            useMaxWidth: true
+          }
+        });
+        console.log('Mermaid initialized successfully');
+        
+        // Simple approach: Just ensure diagrams are properly displayed after Mermaid renders
+        // Wait for Mermaid to render all diagrams, then ensure they're visible
+        setTimeout(function() {
+          console.log('Ensuring all diagrams are properly displayed');
+          
+          // Find all Mermaid diagrams
+          const mermaidContainers = document.querySelectorAll('.mermaid-diagram');
+          mermaidContainers.forEach(function(container) {
+            const diagramId = container.id.replace('diagram-', '');
+            const diagram = document.getElementById(diagramId);
+            const zoomIndicator = document.getElementById('zoom-' + diagramId);
+            
+            if (diagram && container) {
+              // Check if this is a sequence diagram
+              const svg = container.querySelector('svg');
+              let isSequenceDiagram = false;
+              if (svg) {
+                // Detect sequence diagrams
+                const hasSequenceElements = svg.querySelector('g.actor, g.note, g.activation, g[class*="sequence"]');
+                if (hasSequenceElements) {
+                  isSequenceDiagram = true;
+                  container.classList.add('sequence-diagram-container');
+                }
+              }
+              
+              // Initialize zoom level to 100%
+              window.zoomLevels = window.zoomLevels || {};
+              window.zoomLevels[diagramId] = 1;
+              
+              // Reset diagram to 100% scale
+              diagram.style.transform = 'scale(1)';
+              diagram.style.transformOrigin = 'top left';
+              
+              // CRITICAL FIX for Mermaid 10.7.0: Ensure container and SVG can display full content
+              // Remove ALL height and overflow constraints
+              container.style.cssText = `
+                overflow: visible !important;
+                height: auto !important;
+                max-height: none !important;
+                min-height: auto !important;
+                margin: 1rem 0 !important;
+                padding: 0.75rem 1rem !important;
+                background: #f8f9fa !important;
+                border-radius: 8px !important;
+                border: 1px solid #e9ecef !important;
+                position: relative !important;
+                z-index: 1 !important;
+              `;
+              
+              // CRITICAL FIX for Mermaid 10.7.0: Ensure SVG displays fully
+              // Issue: Mermaid 10.7.0 may generate viewBox that cuts off content or has wrong aspect ratio
+              if (svg) {
+                // Use multiple attempts to ensure SVG is fully rendered
+                function fixSvgDimensions() {
+                  const viewBox = svg.viewBox.baseVal;
+                  
+                  if (viewBox && viewBox.width > 0 && viewBox.height > 0) {
+                    // Remove any explicit width/height attributes that might conflict
+                    // Let CSS handle sizing based on viewBox
+                    svg.removeAttribute('width');
+                    svg.removeAttribute('height');
+                    
+                    // Ensure preserveAspectRatio is set correctly
+                    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                    
+                    // Set styles to ensure full content is visible
+                    // Use viewBox-based sizing (browser will calculate height from aspect ratio)
+                    svg.style.cssText = `
+                      display: block !important;
+                      margin: 0 auto !important;
+                      width: 100% !important;
+                      max-width: 100% !important;
+                      height: auto !important;
+                      min-height: auto !important;
+                      max-height: none !important;
+                      overflow: visible !important;
+                      box-sizing: border-box !important;
+                    `;
+                    
+                    // Verify content is not cut off by checking bounding box
+                    try {
+                      const bbox = svg.getBBox();
+                      if (bbox) {
+                        // If content extends beyond viewBox, we need to expand it
+                        const contentRight = bbox.x + bbox.width;
+                        const contentBottom = bbox.y + bbox.height;
+                        const viewBoxRight = viewBox.x + viewBox.width;
+                        const viewBoxBottom = viewBox.y + viewBox.height;
+                        
+                        // If content is cut off, expand viewBox
+                        if (contentRight > viewBoxRight || contentBottom > viewBoxBottom) {
+                          const newX = Math.min(viewBox.x, bbox.x - 10);
+                          const newY = Math.min(viewBox.y, bbox.y - 10);
+                          const newWidth = Math.max(viewBox.width, contentRight - newX + 10);
+                          const newHeight = Math.max(viewBox.height, contentBottom - newY + 10);
+                          
+                          svg.setAttribute('viewBox', `${newX} ${newY} ${newWidth} ${newHeight}`);
+                          console.log('Expanded viewBox for', diagramId, 'to show full content');
+                        }
+                      }
+                    } catch (e) {
+                      // getBBox might fail if SVG is not fully rendered, that's OK
+                    }
+                  }
+                }
+                
+                // Try immediately
+                fixSvgDimensions();
+                
+                // Try again after a short delay (Mermaid might still be rendering)
+                setTimeout(fixSvgDimensions, 100);
+                setTimeout(fixSvgDimensions, 500);
+              }
+              
+              // Also ensure the mermaid element itself doesn't constrain
+              const mermaidEl = container.querySelector('.mermaid');
+              if (mermaidEl) {
+                mermaidEl.style.cssText = `
+                  text-align: center !important;
+                  display: block !important;
+                  width: 100% !important;
+                  height: auto !important;
+                  max-height: none !important;
+                  overflow: visible !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
+                `;
+              }
+              
+              // Re-apply reduced padding for sequence diagrams
+              if (isSequenceDiagram) {
+                container.style.padding = '0.4rem 1rem';
+              }
+              
+              // Update zoom indicator
+              if (zoomIndicator) {
+                zoomIndicator.textContent = '100%';
+              }
+            }
+          });
+        }, 1000); // Wait 1 second for Mermaid to finish rendering
+        
+      } catch (error) {
+        console.error('Mermaid initialization failed:', error);
+      }
+      
+      // Check if content is visible
+      const contentWrapper = document.querySelector('.article-content-wrapper');
+      console.log('Content wrapper found:', contentWrapper);
+      if (contentWrapper) {
+        console.log('Content wrapper visible:', contentWrapper.offsetHeight > 0);
+        console.log('Content wrapper display:', window.getComputedStyle(contentWrapper).display);
+      }
+      
+      // Reading mode toggle
+      const toggleReadingMode = document.getElementById('toggleReadingMode');
+      const toggleSidebar = document.getElementById('toggleSidebar');
+      const articleLayout = document.getElementById('articleLayout');
+      const articleSidebar = document.getElementById('articleSidebar');
+      
+      toggleReadingMode.addEventListener('click', function() {
+        articleLayout.classList.toggle('full-screen');
+        const isFullScreen = articleLayout.classList.contains('full-screen');
+        
+        if (isFullScreen) {
+          toggleReadingMode.querySelector('.reading-mode-text').textContent = 'Exit Full Screen';
+          articleSidebar.style.display = 'none';
+        } else {
+          toggleReadingMode.querySelector('.reading-mode-text').textContent = 'Full Screen';
+          articleSidebar.style.display = 'block';
+        }
+      });
+      
+      toggleSidebar.addEventListener('click', function() {
+        const isHidden = articleSidebar.style.display === 'none';
+        articleSidebar.style.display = isHidden ? 'block' : 'none';
+        toggleSidebar.querySelector('.sidebar-text').textContent = isHidden ? 'Hide Sidebar' : 'Show Sidebar';
+      });
+      
+      // Generate Table of Contents
+      function generateTOC() {
+        const headings = document.querySelectorAll('.article-content-wrapper h1, .article-content-wrapper h2, .article-content-wrapper h3');
+        const tocContainer = document.getElementById('tableOfContents');
+        
+        if (headings.length === 0) return;
+        
+        let tocHTML = '<ul>';
+        headings.forEach((heading, index) => {
+          const id = `heading-${index}`;
+          heading.id = id;
+          
+          const level = parseInt(heading.tagName.charAt(1));
+          const indent = level > 2 ? 'style="margin-left: ' + ((level - 2) * 20) + 'px;"' : '';
+          
+          tocHTML += `<li ${indent}><a href="#${id}">${heading.textContent}</a></li>`;
+        });
+        tocHTML += '</ul>';
+        
+        tocContainer.innerHTML = tocHTML;
+      }
+      
+      // Smooth scrolling for TOC links
+      function addSmoothScrolling() {
+        document.querySelectorAll('.article-toc a').forEach(link => {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+              target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }
+          });
+        });
+      }
+      
+      // Copy code functionality
+      function addCopyCodeButtons() {
+        document.querySelectorAll('.code-copy').forEach(button => {
+          button.addEventListener('click', function() {
+            const codeBlock = this.closest('.code-example').querySelector('code');
+            const text = codeBlock.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+              this.textContent = 'Copied!';
+              setTimeout(() => {
+                this.textContent = 'Copy';
+              }, 2000);
+            });
+          });
+        });
+      }
+      
+      // Initialize functionality
+      generateTOC();
+      setTimeout(() => {
+        addSmoothScrolling();
+        addCopyCodeButtons();
+      }, 100);
+    });
+
+  </script>
+</body>
+</html> 

@@ -117,3 +117,7 @@ dev/
 .aosp-repo/
 
 
+.vercel
+.env*.local
+.aosp-repo/
+.aosp-cache/

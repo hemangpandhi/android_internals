@@ -1,0 +1,85 @@
+# Vercel ignore file - exclude large/unnecessary files from deployment
+
+# AOSP Repository (10GB+ - MUST EXCLUDE)
+.aosp-repo/
+**/.aosp-repo/
+.aosp-cache/
+**/.aosp-cache/
+*.jar
+*.apk
+*.compiled
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build artifacts that shouldn't be deployed
+build/.git/
+build/node_modules/
+
+# Large data files
+data/subscribers.json
+data/newsletter-queue.json
+*.csv
+*.xlsx
+
+# Development files
+.env
+.env.local
+.env.*.local
+*.log
+npm-debug.log*
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentation (not needed in deployment)
+docs/
+*.md
+!README.md
+
+# Test files
+test/
+tests/
+__tests__/
+*.test.js
+*.spec.js
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.cache/
+
+# Large media files (if any)
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.zip
+*.tar.gz
+*.rar
+
+# Source files (only deploy build output)
+content/
+templates/
+tools/
+src/
+
+# Config files that shouldn't be deployed
+config.js
+config.example.js
+.vercel/
+
+# Build trigger files
+.build-trigger
+

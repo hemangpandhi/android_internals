@@ -48,8 +48,8 @@ jobs:
         continue-on-error: true
       
       - name: Fallback: Sync from CSV (if API failed)
-        if: steps.api_sync.outputs.api_available != 'true' || steps.api_sync.outputs.api_failed == 'true'
         id: check_csv
+        if: steps.api_sync.outputs.api_available != 'true' || steps.api_sync.outputs.api_failed == 'true'
         run: |
           if [ -f "emailjs-contacts.csv" ]; then
             echo "csv_exists=true" >> $GITHUB_OUTPUT

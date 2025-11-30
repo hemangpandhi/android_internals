@@ -216,6 +216,71 @@
             }
         }
         
+        async function testNewsletterTemplate() {
+            const email = document.getElementById('testNewsletterEmail').value;
+            const articleTitle = document.getElementById('testArticleTitle').value;
+            const articleDescription = document.getElementById('testArticleDescription').value;
+            const articleUrl = document.getElementById('testArticleUrl').value;
+            const articleDate = document.getElementById('testArticleDate').value;
+            
+            if (!email || !articleTitle || !articleDescription || !articleUrl) {
+                alert('Please fill in all required fields (email, title, description, URL)');
+                return;
+            }
+            
+            const config = window.EMAILJS_CONFIG;
+            if (!config || !config.serviceId || !config.newsletterTemplate) {
+                alert('EmailJS is not properly configured. Please check the configuration first.');
+                return;
+            }
+            
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            
+            // Extract name from email (before @) or use email as name
+            const toName = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            
+            const templateParams = {
+                to_email: email,
+                to_name: toName,
+                from_name: 'Android Internals Newsletter',
+                from_email: 'noreply@hemangpandhi.com',
+                subject: `New Article: ${articleTitle}`,
+                message: `Hi ${toName},\n\nWe've just published a new article on Android Internals. Check it out!\n\nBest regards,\nAndroid Internals Team`,
+                reply_to: 'noreply@hemangpandhi.com',
+                // Newsletter template variables
+                articleTitle: articleTitle,
+                articleDescription: articleDescription,
+                articleUrl: articleUrl,
+                articleDate: articleDate || new Date().toLocaleDateString(),
+                unsubscribeUrl: `https://www.hemangpandhi.com/unsubscribe?email=${encodeURIComponent(email)}`,
+                // Alternative parameter names
+                email: email,
+                name: toName,
+                recipient_email: email,
+                recipient_name: toName,
+                to: email,
+                recipient: email
+            };
+            
+            try {
+                const response = await emailjs.send(config.serviceId, config.newsletterTemplate, templateParams);
+                addResult('success', '✅ Newsletter Template Test', `Newsletter article email sent successfully to ${email}! Status: ${response.status}`);
+                addResult('info', '📧 Email Details', `
+                    <strong>Sent to:</strong> ${email}<br>
+                    <strong>Article:</strong> ${articleTitle}<br>
+                    <strong>URL:</strong> ${articleUrl}
+                `);
+            } catch (error) {
+                addResult('error', '❌ Newsletter Template Test Failed', `Error: ${error.text || error.message || JSON.stringify(error)}`);
+                console.error('Newsletter template test error:', error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Test Newsletter Template (Send Article)';
+            }
+        }
+        
         async function testContact() {
             const name = document.getElementById('testName').value;
             const email = document.getElementById('testContactEmail').value;

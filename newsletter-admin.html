@@ -461,11 +461,18 @@
                 try {
                     response = await fetch('./data/newsletter-queue.json');
                     if (response.ok) {
-                        queue = await response.json();
-                        console.log('✅ Loaded newsletter queue from ./data/newsletter-queue.json');
+                        const data = await response.json();
+                        if (data && data.article) {
+                            queue = data;
+                            console.log('✅ Loaded newsletter queue from ./data/newsletter-queue.json');
+                        } else {
+                            console.log('⚠️ Response from ./data/newsletter-queue.json is empty or invalid');
+                        }
+                    } else {
+                        console.log(`⚠️ Response from ./data/newsletter-queue.json not OK: ${response.status}`);
                     }
                 } catch (e) {
-                    console.log('Failed to load from ./data/newsletter-queue.json:', e);
+                    console.log('❌ Failed to load from ./data/newsletter-queue.json:', e.message);
                 }
                 
                 // Try root path
@@ -473,11 +480,18 @@
                     try {
                         response = await fetch('/data/newsletter-queue.json');
                         if (response.ok) {
-                            queue = await response.json();
-                            console.log('✅ Loaded newsletter queue from /data/newsletter-queue.json');
+                            const data = await response.json();
+                            if (data && data.article) {
+                                queue = data;
+                                console.log('✅ Loaded newsletter queue from /data/newsletter-queue.json');
+                            } else {
+                                console.log('⚠️ Response from /data/newsletter-queue.json is empty or invalid');
+                            }
+                        } else {
+                            console.log(`⚠️ Response from /data/newsletter-queue.json not OK: ${response.status}`);
                         }
                     } catch (e) {
-                        console.log('Failed to load from /data/newsletter-queue.json:', e);
+                        console.log('❌ Failed to load from /data/newsletter-queue.json:', e.message);
                     }
                 }
                 
@@ -487,15 +501,24 @@
                         const baseUrl = window.location.origin;
                         response = await fetch(`${baseUrl}/data/newsletter-queue.json`);
                         if (response.ok) {
-                            queue = await response.json();
-                            console.log('✅ Loaded newsletter queue from absolute path');
+                            const data = await response.json();
+                            if (data && data.article) {
+                                queue = data;
+                                console.log('✅ Loaded newsletter queue from absolute path');
+                            } else {
+                                console.log('⚠️ Response from absolute path is empty or invalid');
+                            }
+                        } else {
+                            console.log(`⚠️ Response from absolute path not OK: ${response.status} ${response.statusText}`);
                         }
                     } catch (e) {
-                        console.log('Failed to load from absolute path:', e);
+                        console.log('❌ Failed to load from absolute path:', e.message);
                     }
                 }
                 
                 if (!queue) {
+                    // This is OK - no pending newsletters
+                    console.log('ℹ️ No newsletter queue found (this is normal if no articles are queued)');
                     throw new Error('No newsletter queue found');
                 }
                 

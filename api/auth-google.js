@@ -1,5 +1,8 @@
 // Google OAuth Authentication Serverless Function
 // Handles Google SSO login for website users
+// Uses signed JWT tokens and httpOnly cookies for security
+
+const { createAccessToken, createRefreshToken, verifyToken } = require('./jwt-utils');
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -11,12 +14,19 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SITE_URL } = process.env;
+  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SITE_URL, JWT_SECRET } = process.env;
 
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     return res.status(500).json({ 
       error: 'Google OAuth not configured',
       message: 'Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables'
+    });
+  }
+
+  if (!JWT_SECRET) {
+    return res.status(500).json({ 
+      error: 'JWT secret not configured',
+      message: 'Set JWT_SECRET environment variable'
     });
   }
 
@@ -91,33 +101,55 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Failed to get user info' });
       }
 
-      // Create session token (simple JWT-like token)
-      const sessionToken = Buffer.from(JSON.stringify({
+      // Create user data object
+      const userInfo = {
         provider: 'google',
         email: userData.email,
         name: userData.name || userData.email.split('@')[0],
         picture: userData.picture,
-        id: userData.id,
-        exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
-      })).toString('base64');
+        avatar: userData.picture,
+        id: userData.id.toString()
+      };
 
-      // Redirect to original page with token
-      // Parse URL to avoid appending multiple tokens
+      // Create signed JWT tokens
+      const accessToken = createAccessToken(userInfo, JWT_SECRET);
+      const refreshToken = createRefreshToken(userInfo, JWT_SECRET);
+
+      // Set httpOnly cookies (secure, httpOnly, sameSite)
+      const cookieOptions = {
+        httpOnly: true,
+        secure: true, // HTTPS only
+        sameSite: 'lax',
+        maxAge: 15 * 60 * 1000, // 15 minutes for access token
+        path: '/'
+      };
+
+      const refreshCookieOptions = {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days for refresh token
+        path: '/'
+      };
+
+      // Set cookies
+      res.setHeader('Set-Cookie', [
+        `auth_token=${accessToken}; ${Object.entries(cookieOptions).map(([k, v]) => `${k}=${v}`).join('; ')}`,
+        `refresh_token=${refreshToken}; ${Object.entries(refreshCookieOptions).map(([k, v]) => `${k}=${v}`).join('; ')}`
+      ]);
+
+      // Clean redirect URL (no tokens in URL)
       try {
         const url = new URL(redirectTo);
-        // Remove existing token and provider params
         url.searchParams.delete('token');
         url.searchParams.delete('provider');
-        // Add new token and provider
-        url.searchParams.set('token', sessionToken);
-        url.searchParams.set('provider', 'google');
-        return res.redirect(url.toString());
+        redirectTo = url.toString();
       } catch (e) {
-        // Fallback if URL parsing fails
-        const cleanUrl = redirectTo.split('?')[0].split('#')[0];
-        const returnUrl = `${cleanUrl}?token=${sessionToken}&provider=google`;
-        return res.redirect(returnUrl);
+        redirectTo = redirectTo.split('?')[0].split('#')[0];
       }
+
+      // Redirect to original page (cookies are set, no token in URL)
+      return res.redirect(redirectTo);
 
     } catch (error) {
       console.error('OAuth error:', error);
@@ -125,19 +157,20 @@ export default async function handler(req, res) {
     }
   }
 
-  // Step 3: Verify session token
+  // Step 3: Verify session token (from cookie or body)
   if (req.method === 'POST' && req.query.action === 'verify') {
     try {
-      const { token } = req.body;
+      // Try to get token from cookie first, then from body (for backward compatibility)
+      let token = req.cookies?.auth_token || req.body?.token;
 
       if (!token) {
         return res.status(401).json({ authenticated: false, error: 'Token missing' });
       }
 
-      const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
+      const decoded = verifyToken(token, JWT_SECRET);
       
-      if (decoded.exp && decoded.exp < Date.now()) {
-        return res.status(401).json({ authenticated: false, error: 'Token expired' });
+      if (!decoded || decoded.type !== 'access') {
+        return res.status(401).json({ authenticated: false, error: 'Invalid or expired token' });
       }
 
       return res.status(200).json({ 
@@ -157,8 +190,59 @@ export default async function handler(req, res) {
     }
   }
 
-  // Step 4: Logout
+  // Step 4: Refresh access token
+  if (req.method === 'POST' && req.query.action === 'refresh') {
+    try {
+      const refreshToken = req.cookies?.refresh_token || req.body?.refresh_token;
+
+      if (!refreshToken) {
+        return res.status(401).json({ authenticated: false, error: 'Refresh token missing' });
+      }
+
+      const decoded = verifyToken(refreshToken, JWT_SECRET);
+      
+      if (!decoded || decoded.type !== 'refresh') {
+        return res.status(401).json({ authenticated: false, error: 'Invalid or expired refresh token' });
+      }
+
+      // Get full user info (we only stored id and provider in refresh token)
+      const userInfo = {
+        provider: decoded.provider,
+        id: decoded.id.toString()
+      };
+
+      const newAccessToken = createAccessToken(userInfo, JWT_SECRET);
+
+      // Set new access token cookie
+      const cookieOptions = {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        maxAge: 15 * 60 * 1000,
+        path: '/'
+      };
+
+      res.setHeader('Set-Cookie', [
+        `auth_token=${newAccessToken}; ${Object.entries(cookieOptions).map(([k, v]) => `${k}=${v}`).join('; ')}`
+      ]);
+
+      return res.status(200).json({ 
+        authenticated: true,
+        message: 'Token refreshed'
+      });
+
+    } catch (error) {
+      return res.status(401).json({ authenticated: false, error: 'Invalid refresh token' });
+    }
+  }
+
+  // Step 5: Logout (clear cookies)
   if (req.method === 'POST' && req.query.action === 'logout') {
+    // Clear cookies by setting them to expire
+    res.setHeader('Set-Cookie', [
+      'auth_token=; httpOnly=true; secure=true; sameSite=lax; maxAge=0; path=/',
+      'refresh_token=; httpOnly=true; secure=true; sameSite=lax; maxAge=0; path=/'
+    ]);
     return res.status(200).json({ success: true, message: 'Logged out' });
   }
 

@@ -10,22 +10,9 @@ class UserAuth {
     }
 
     init() {
-        // Check for token in URL (from OAuth callback)
+        // Check for OAuth error in URL
         const urlParams = new URLSearchParams(window.location.search);
-        let token = urlParams.get('token');
-        let provider = urlParams.get('provider') || 'github';
         const error = urlParams.get('error');
-
-        // Also check sessionStorage as backup (in case URL was already cleaned)
-        if (!token) {
-            token = sessionStorage.getItem('pending_auth_token');
-            provider = sessionStorage.getItem('pending_auth_provider') || provider;
-            if (token) {
-                console.log('Found token in sessionStorage');
-                sessionStorage.removeItem('pending_auth_token');
-                sessionStorage.removeItem('pending_auth_provider');
-            }
-        }
 
         if (error) {
             console.error('OAuth error:', error);
@@ -36,135 +23,83 @@ class UserAuth {
             return;
         }
 
-        if (token) {
-            console.log('Token found, processing authentication...');
-            this.handleAuthCallback(token, provider).then(() => {
-                // Clean URL after processing
-                window.history.replaceState({}, document.title, window.location.pathname);
-            });
-        } else {
-            // Check for existing session
-            console.log('No token in URL, checking for existing session...');
-            this.loadUserSession();
-            // Update UI even if no session
-            this.onUserChange();
+        // Check for OAuth callback (cookies are set by server, no token in URL)
+        // If we just came from OAuth, cookies should be set
+        const isOAuthCallback = urlParams.has('code') || document.referrer.includes('github.com') || document.referrer.includes('google.com');
+        
+        if (isOAuthCallback) {
+            // Clean URL immediately (cookies are already set)
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
+
+        // Check for existing session (cookies or localStorage fallback)
+        console.log('🔐 [AUTH] Checking for existing session...');
+        this.checkSession();
     }
 
-    async handleAuthCallback(token, provider) {
+    async checkSession() {
+        // Try to verify session using cookies (httpOnly cookies sent automatically)
         try {
-            console.log('🔐 [AUTH] Handling auth callback for provider:', provider);
-            console.log('🔐 [AUTH] Token (first 50 chars):', token ? token.substring(0, 50) + '...' : 'MISSING');
-            
-            const apiUrl = provider === 'google' ? this.googleAuthApiUrl : this.authApiUrl;
-            console.log('🔐 [AUTH] Verifying token with API:', apiUrl);
-            
-            console.log('🔐 [AUTH] Making fetch request to:', `${apiUrl}?action=verify`);
-            console.log('🔐 [AUTH] Request method: POST');
-            console.log('🔐 [AUTH] Request body:', JSON.stringify({ token: token ? token.substring(0, 20) + '...' : 'MISSING' }));
-            
-            let response;
-            try {
-                response = await fetch(`${apiUrl}?action=verify`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ token })
-                });
-            } catch (fetchError) {
-                console.error('🔐 [AUTH] ❌ Fetch error (network/CORS):', fetchError);
-                console.error('🔐 [AUTH] Error name:', fetchError.name);
-                console.error('🔐 [AUTH] Error message:', fetchError.message);
-                console.error('🔐 [AUTH] Error stack:', fetchError.stack);
-                throw new Error(`Network error: ${fetchError.message}. Check if API endpoint is accessible: ${apiUrl}`);
-            }
+            const apiUrl = this.authApiUrl; // Use GitHub API for verification (works for both)
+            const response = await fetch(`${apiUrl}?action=verify`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include', // Include cookies
+                body: JSON.stringify({}) // Empty body, token comes from cookie
+            });
 
-            console.log('🔐 [AUTH] Response received');
-            console.log('🔐 [AUTH] Response status:', response.status, response.statusText);
-            console.log('🔐 [AUTH] Response headers:', Object.fromEntries(response.headers.entries()));
-
-            if (!response.ok) {
-                let errorText;
-                try {
-                    errorText = await response.text();
-                } catch (e) {
-                    errorText = 'Could not read error response';
+            if (response.ok) {
+                const data = await response.json();
+                if (data.authenticated && data.user) {
+                    console.log('🔐 [AUTH] ✅ Session verified via cookies');
+                    this.currentUser = {
+                        ...data.user,
+                        avatar: data.user.avatar || data.user.picture,
+                        picture: data.user.picture || data.user.avatar
+                    };
+                    this.saveUserSession(); // Save to localStorage as backup
+                    this.onUserChange();
+                    return;
                 }
-                console.error('🔐 [AUTH] ❌ HTTP error response:', errorText);
-                throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
-            }
-
-            const data = await response.json();
-            console.log('🔐 [AUTH] Auth verification response:', JSON.stringify(data, null, 2));
-            
-            if (data.authenticated && data.user) {
-                console.log('🔐 [AUTH] ✅ Authentication successful!');
-                console.log('🔐 [AUTH] User data from API:', JSON.stringify(data.user, null, 2));
-                
-                this.currentUser = {
-                    ...data.user,
-                    provider: provider,
-                    token: token,
-                    // Normalize avatar/picture field
-                    avatar: data.user.avatar || data.user.picture,
-                    picture: data.user.picture || data.user.avatar
-                };
-                
-                console.log('🔐 [AUTH] Final user object:', JSON.stringify(this.currentUser, null, 2));
-                console.log('🔐 [AUTH] Avatar URL:', this.currentUser.avatar);
-                console.log('🔐 [AUTH] Picture URL:', this.currentUser.picture);
-                
-                this.saveUserSession();
-                console.log('🔐 [AUTH] Session saved, triggering UI update...');
-                this.onUserChange();
-                
-                // Force UI update after delays to ensure scripts are ready
-                setTimeout(() => {
-                    console.log('🔐 [AUTH] Delayed UI update (100ms)');
-                    this.onUserChange();
-                    window.dispatchEvent(new CustomEvent('userAuthReady'));
-                }, 100);
-                
-                setTimeout(() => {
-                    console.log('🔐 [AUTH] Delayed UI update (500ms)');
-                    this.onUserChange();
-                }, 500);
-                
-                setTimeout(() => {
-                    console.log('🔐 [AUTH] Delayed UI update (1000ms)');
-                    this.onUserChange();
-                }, 1000);
-                
-                return true;
-            } else {
-                console.error('🔐 [AUTH] ❌ Authentication failed - no user data');
-                console.error('🔐 [AUTH] Response data:', data);
-                alert('Authentication failed. Please try again.');
             }
         } catch (error) {
-            console.error('🔐 [AUTH] ❌ Auth verification failed:', error);
-            console.error('🔐 [AUTH] Error name:', error.name);
-            console.error('🔐 [AUTH] Error message:', error.message);
-            console.error('🔐 [AUTH] Error stack:', error.stack);
-            
-            // More detailed error message
-            let errorMsg = 'Network error during authentication. ';
-            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                errorMsg += 'The authentication API is not reachable. ';
-                errorMsg += `Please check if ${apiUrl} is accessible.`;
-            } else if (error.message.includes('CORS')) {
-                errorMsg += 'CORS error - the API may not be configured correctly.';
-            } else {
-                errorMsg += error.message;
-            }
-            
-            console.error('🔐 [AUTH] Showing error to user:', errorMsg);
-            alert(errorMsg);
+            console.log('🔐 [AUTH] Cookie verification failed, trying localStorage fallback:', error);
         }
-        this.onUserChange(); // Update UI even on failure
-        return false;
+
+        // Fallback to localStorage (for backward compatibility during transition)
+        this.loadUserSession();
+        this.onUserChange();
+    }
+
+    async refreshToken() {
+        // Refresh access token using refresh token cookie
+        try {
+            const apiUrl = this.authApiUrl;
+            const response = await fetch(`${apiUrl}?action=refresh`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include', // Include cookies
+                body: JSON.stringify({})
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.authenticated) {
+                    console.log('🔐 [AUTH] ✅ Token refreshed');
+                    // Re-verify to get user data
+                    await this.checkSession();
+                    return true;
+                }
+            }
+            return false;
+        } catch (error) {
+            console.error('🔐 [AUTH] ❌ Token refresh failed:', error);
+            return false;
+        }
     }
 
     loadUserSession() {

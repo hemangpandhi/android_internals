@@ -784,12 +784,12 @@ window.onclick = function(event) {
   if (event.target === modal) {
     closeProfileModal();
   }
-}
+};
 
 }); // End of DOMContentLoaded
 
 // ===== COOKIE CONSENT BANNER =====
-(function() {
+(function cookieConsentBanner() {
   'use strict';
   
   // Check if user has already accepted/declined cookies
@@ -1046,8 +1046,8 @@ window.onclick = function(event) {
   }
 })();
 
-  // ===== PREFERENCES MODAL =====
-  function showPreferencesModal() {
+// ===== PREFERENCES MODAL =====
+function showPreferencesModal() {
     const userAuth = window.userAuth;
     if (!userAuth || !userAuth.isAuthenticated()) {
       alert('Please sign in to access preferences');

@@ -281,7 +281,27 @@
                     <button class="btn btn-secondary" onclick="refreshSubscribers()">🔄 Refresh</button>
                     <button class="btn btn-secondary" onclick="downloadAllSubscribers()">📥 Download JSON</button>
                     <button class="btn" onclick="showAddSubscriberForm()">➕ Add Subscriber</button>
+                    <button class="btn btn-secondary" onclick="showSyncFromEmailJS()">🔄 Sync from EmailJS</button>
                     <div class="selected-count" id="selected-count">0 selected</div>
+                </div>
+                
+                <!-- Sync from EmailJS Form (hidden by default) -->
+                <div id="sync-emailjs-form" style="display: none; margin-top: 1rem; padding: 1rem; background: #0d1117; border: 1px solid #30363d; border-radius: 4px;">
+                    <h4 style="margin-bottom: 1rem;">Sync from EmailJS Contacts</h4>
+                    <p style="color: #8b949e; margin-bottom: 1rem; font-size: 0.9rem;">
+                        To sync subscribers from EmailJS:<br>
+                        1. Go to EmailJS Dashboard → Contacts<br>
+                        2. Export contacts as CSV<br>
+                        3. Upload the CSV file below
+                    </p>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                        <input type="file" id="emailjs-csv-file" accept=".csv" style="padding: 0.5rem; border-radius: 4px; border: 1px solid #30363d; background: #161b22; color: #f0f6fc; flex: 1; min-width: 200px;">
+                        <button class="btn" onclick="importFromEmailJSCSV()">📥 Import CSV</button>
+                        <button class="btn btn-secondary" onclick="hideSyncFromEmailJS()">Cancel</button>
+                    </div>
+                    <p style="color: #3ddc84; margin-top: 0.5rem; font-size: 0.85rem;">
+                        💡 Tip: Enable "Save Contacts" in your EmailJS template settings to automatically collect subscribers.
+                    </p>
                 </div>
                 
                 <!-- Add Subscriber Form (hidden by default) -->
@@ -837,6 +857,109 @@
             downloadAllSubscribers();
             
             alert(`✅ Subscriber ${email} added successfully!\n\n📥 Updated subscribers.json has been downloaded.\n\nPlease replace /data/subscribers.json with the downloaded file on your server.`);
+        }
+
+        function showSyncFromEmailJS() {
+            document.getElementById('sync-emailjs-form').style.display = 'block';
+        }
+
+        function hideSyncFromEmailJS() {
+            document.getElementById('sync-emailjs-form').style.display = 'none';
+            document.getElementById('emailjs-csv-file').value = '';
+        }
+
+        function importFromEmailJSCSV() {
+            const fileInput = document.getElementById('emailjs-csv-file');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a CSV file to import');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csvText = e.target.result;
+                    const lines = csvText.split('\n');
+                    
+                    if (lines.length < 2) {
+                        alert('CSV file appears to be empty or invalid');
+                        return;
+                    }
+                    
+                    // Parse CSV header
+                    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                    const emailIndex = headers.findIndex(h => h.toLowerCase().includes('email'));
+                    const nameIndex = headers.findIndex(h => h.toLowerCase().includes('name') || h.toLowerCase().includes('contact'));
+                    
+                    if (emailIndex === -1) {
+                        alert('CSV file must contain an email column');
+                        return;
+                    }
+                    
+                    let imported = 0;
+                    let updated = 0;
+                    let skipped = 0;
+                    
+                    // Parse CSV rows (skip header)
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (!line) continue;
+                        
+                        const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+                        const email = values[emailIndex];
+                        const name = nameIndex !== -1 ? values[nameIndex] : '';
+                        
+                        if (!email || !email.includes('@')) {
+                            skipped++;
+                            continue;
+                        }
+                        
+                        // Check if subscriber already exists
+                        const existingIndex = allSubscribers.findIndex(sub => sub.email.toLowerCase() === email.toLowerCase());
+                        if (existingIndex !== -1) {
+                            // Update existing
+                            allSubscribers[existingIndex].active = true;
+                            allSubscribers[existingIndex].updatedAt = new Date().toISOString();
+                            if (name) {
+                                allSubscribers[existingIndex].name = name;
+                            }
+                            updated++;
+                            log(`🔄 Updated existing subscriber: ${email}`);
+                        } else {
+                            // Add new
+                            allSubscribers.push({
+                                email: email,
+                                name: name || email.split('@')[0],
+                                subscribedAt: new Date().toISOString(),
+                                updatedAt: new Date().toISOString(),
+                                active: true
+                            });
+                            imported++;
+                            log(`✅ Imported new subscriber: ${email}`);
+                        }
+                    }
+                    
+                    // Update UI
+                    renderSubscriberList();
+                    hideSyncFromEmailJS();
+                    
+                    // Download updated file
+                    downloadAllSubscribers();
+                    
+                    alert(`✅ Import completed!\n\n📊 Imported: ${imported} new\n🔄 Updated: ${updated} existing\n⏭️ Skipped: ${skipped} invalid\n\n📥 Updated subscribers.json has been downloaded.`);
+                } catch (error) {
+                    console.error('CSV import error:', error);
+                    alert('Error importing CSV file: ' + error.message);
+                }
+            };
+            
+            reader.onerror = function() {
+                alert('Error reading file');
+            };
+            
+            reader.readAsText(file);
         }
 
         async function sendNewsletters() {

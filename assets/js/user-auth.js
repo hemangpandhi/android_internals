@@ -10,37 +10,56 @@ class UserAuth {
     }
 
     init() {
-        // Check for OAuth error in URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const error = urlParams.get('error');
+        try {
+            // Check for OAuth error in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
 
-        if (error) {
-            console.error('OAuth error:', error);
-            alert(`Login failed: ${error}`);
-            // Clean URL
-            window.history.replaceState({}, document.title, window.location.pathname);
-            this.onUserChange(); // Update UI to show logged out state
-            return;
+            if (error) {
+                console.error('OAuth error:', error);
+                alert(`Login failed: ${error}`);
+                // Clean URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                this.onUserChange(); // Update UI to show logged out state
+                return;
+            }
+
+            // Check for OAuth callback (cookies are set by server, no token in URL)
+            // If we just came from OAuth, cookies should be set
+            const isOAuthCallback = urlParams.has('code') || (document.referrer && (document.referrer.includes('github.com') || document.referrer.includes('google.com')));
+            
+            if (isOAuthCallback) {
+                // Clean URL immediately (cookies are already set)
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            // Check for existing session (cookies or localStorage fallback)
+            console.log('🔐 [AUTH] Checking for existing session...');
+            this.checkSession().catch(error => {
+                console.error('🔐 [AUTH] Error in checkSession:', error);
+                // Don't let this break the UI
+                this.currentUser = null;
+                this.onUserChange();
+            });
+        } catch (error) {
+            console.error('🔐 [AUTH] Error in init:', error);
+            // Don't let initialization errors break the UI
+            this.currentUser = null;
+            this.onUserChange();
         }
-
-        // Check for OAuth callback (cookies are set by server, no token in URL)
-        // If we just came from OAuth, cookies should be set
-        const isOAuthCallback = urlParams.has('code') || document.referrer.includes('github.com') || document.referrer.includes('google.com');
-        
-        if (isOAuthCallback) {
-            // Clean URL immediately (cookies are already set)
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        // Check for existing session (cookies or localStorage fallback)
-        console.log('🔐 [AUTH] Checking for existing session...');
-        this.checkSession();
     }
 
     async checkSession() {
         // Try to verify session using cookies (httpOnly cookies sent automatically)
         try {
             const apiUrl = this.authApiUrl; // Use GitHub API for verification (works for both)
+            if (!apiUrl) {
+                console.warn('🔐 [AUTH] No auth API URL, using localStorage fallback');
+                this.loadUserSession();
+                this.onUserChange();
+                return;
+            }
+
             const response = await fetch(`${apiUrl}?action=verify`, {
                 method: 'POST',
                 headers: {
@@ -65,12 +84,19 @@ class UserAuth {
                 }
             }
         } catch (error) {
-            console.log('🔐 [AUTH] Cookie verification failed, trying localStorage fallback:', error);
+            console.log('🔐 [AUTH] Cookie verification failed, trying localStorage fallback:', error.message || error);
+            // Don't let errors break the UI - continue with fallback
         }
 
         // Fallback to localStorage (for backward compatibility during transition)
-        this.loadUserSession();
-        this.onUserChange();
+        try {
+            this.loadUserSession();
+            this.onUserChange();
+        } catch (error) {
+            console.error('🔐 [AUTH] Error loading session from localStorage:', error);
+            // Even if this fails, don't break the UI
+            this.currentUser = null;
+        }
     }
 
     async refreshToken() {

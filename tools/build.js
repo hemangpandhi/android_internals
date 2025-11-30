@@ -1230,13 +1230,15 @@ function copyAssets() {
   });
   
   // Copy JS files
-  const jsFiles = ['scripts.js'];
+  const jsFiles = ['scripts.js', 'user-auth.js'];
   jsFiles.forEach(file => {
     const source = path.join(rootDir, 'assets', 'js', file);
     const dest = path.join(buildJsDir, file);
     if (fs.existsSync(source)) {
       fs.copyFileSync(source, dest);
       console.log(`  ✅ Copied: assets/js/${file}`);
+    } else {
+      console.log(`  ⚠️  Warning: assets/js/${file} not found`);
     }
   });
   

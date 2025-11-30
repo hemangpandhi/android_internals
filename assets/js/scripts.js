@@ -1044,6 +1044,82 @@ window.onclick = function(event) {
   }
 })();
 
+// ===== BOOKMARKS MODAL =====
+function showBookmarksModal() {
+  const userAuth = window.userAuth;
+  if (!userAuth || !userAuth.isAuthenticated()) {
+    alert('Please sign in to view your bookmarks');
+    return;
+  }
+
+  const bookmarks = userAuth.getBookmarks();
+  console.log('📖 [BOOKMARKS] Showing bookmarks modal, count:', bookmarks.length);
+  
+  const modal = document.createElement('div');
+  modal.className = 'login-modal';
+  modal.style.display = 'flex';
+  
+  if (bookmarks.length === 0) {
+    modal.innerHTML = `
+      <div class="login-modal-content" style="max-width: 500px;">
+        <button class="login-modal-close" onclick="this.closest('.login-modal').remove()">&times;</button>
+        <h2>My Bookmarks</h2>
+        <div style="text-align: center; padding: 2rem 1rem; color: var(--text-secondary);">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🔖</div>
+          <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No bookmarks yet</p>
+          <p style="font-size: 0.9rem;">Bookmark articles while reading to save them here</p>
+        </div>
+      </div>
+    `;
+  } else {
+    const bookmarksList = bookmarks.map((bookmark, index) => {
+      const date = new Date(bookmark.date).toLocaleDateString();
+      return `
+        <div class="bookmark-item" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border: 1px solid #30363d; border-radius: var(--radius-md); margin-bottom: 0.75rem; background: #0d1117;">
+          <div style="flex: 1; min-width: 0;">
+            <a href="${bookmark.url}" style="color: var(--text-primary); text-decoration: none; font-weight: 500; display: block; margin-bottom: 0.25rem; word-break: break-word;" target="_blank">
+              ${bookmark.title}
+            </a>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Saved on ${date}</div>
+          </div>
+          <button onclick="removeBookmark('${bookmark.id.replace(/'/g, "\\'")}')" style="background: #f85149; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: var(--radius-sm); cursor: pointer; margin-left: 1rem; font-size: 0.85rem; transition: var(--transition-fast);" onmouseover="this.style.background='#ff7b72'" onmouseout="this.style.background='#f85149'">
+            Remove
+          </button>
+        </div>
+      `;
+    }).join('');
+    
+    modal.innerHTML = `
+      <div class="login-modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+        <button class="login-modal-close" onclick="this.closest('.login-modal').remove()">&times;</button>
+        <h2>My Bookmarks (${bookmarks.length})</h2>
+        <div style="margin-top: 1.5rem;">
+          ${bookmarksList}
+        </div>
+      </div>
+    `;
+  }
+  
+  document.body.appendChild(modal);
+
+  // Close on outside click
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+  
+  // Remove bookmark function
+  window.removeBookmark = function(bookmarkId) {
+    if (confirm('Remove this bookmark?')) {
+      if (userAuth.removeBookmark(bookmarkId)) {
+        console.log('📖 [BOOKMARKS] Bookmark removed:', bookmarkId);
+        // Refresh the modal
+        modal.remove();
+        showBookmarksModal();
+      }
+    }
+  };
+}
+
 // ===== PREFERENCES MODAL =====
 function showPreferencesModal() {
     const userAuth = window.userAuth;

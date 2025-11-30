@@ -5,15 +5,40 @@ This guide explains how to automatically sync subscribers from EmailJS to your n
 
 ## Method 1: Enable EmailJS Contact Collection (Recommended)
 
-### Step 1: Enable Contact Collection in EmailJS
+### Important Note
+**EmailJS Contacts are NOT manually created** - they are automatically collected when emails are sent through templates that have "Save Contacts" enabled. You cannot manually add contacts in the EmailJS dashboard.
+
+### Step 1: Enable Contact Collection in EmailJS Templates
+
+You need to enable contact collection in **BOTH** templates:
+
+#### A. Contact Form Template (for newsletter subscriptions)
 1. Go to your [EmailJS Dashboard](https://dashboard.emailjs.com/)
-2. Navigate to **Email Templates** → Select your contact form template
-3. Click on the **Contacts** tab
-4. Enable **"Save Contacts"** option
+2. Navigate to **Email Templates** → Select your **Contact Template** (`template_7bzhk1x`)
+3. Click on the **Contacts** tab (or look for "Collecting contacts" section)
+4. Enable **"Save Contacts"** or **"Collecting contacts"** option
 5. Configure the contact fields:
-   - **Contact Email**: Map to `{{email}}` or `{{from_email}}`
-   - **Contact Name**: Map to `{{name}}` or `{{from_name}}` (optional)
+   - **Contact Email**: Map to `{{from_email}}` or `{{email}}` (the subscriber's email)
+   - **Contact Name**: Map to `{{from_name}}` or `{{name}}` (optional)
 6. Save the template
+
+#### B. Newsletter Template (for sending newsletters)
+1. Navigate to **Email Templates** → Select your **Newsletter Template** (`template_uwh1kil`)
+2. Click on the **Contacts** tab
+3. Enable **"Save Contacts"** option
+4. Configure the contact fields:
+   - **Contact Email**: Map to `{{to_email}}` or `{{email}}` (the recipient's email)
+   - **Contact Name**: Map to `{{to_name}}` or `{{name}}` (optional)
+5. Save the template
+
+### Step 2: Test Contact Collection
+1. Go to your website and subscribe to the newsletter with a test email
+2. Check EmailJS Dashboard → **Email History** to confirm the email was sent
+3. Go to **Contacts** section - the contact should appear automatically
+4. If contacts don't appear, verify:
+   - "Save Contacts" is enabled in the template
+   - The email field mapping is correct
+   - The email was actually sent (check Email History)
 
 ### Step 2: Sync Contacts to Admin Panel
 1. Go to EmailJS Dashboard → **Contacts** section
@@ -51,9 +76,12 @@ For automatic real-time sync, you can set up a serverless function or backend AP
 ## Troubleshooting
 
 ### Subscribers not appearing in EmailJS Contacts:
-- Check that "Save Contacts" is enabled in template settings
-- Verify the email field is correctly mapped in template
-- Ensure the template is being used (check EmailJS logs)
+- **Important**: Contacts are NOT manually created - they appear automatically when emails are sent
+- Check that "Save Contacts" / "Collecting contacts" is enabled in template settings
+- Verify the email field is correctly mapped in template (e.g., `{{from_email}}` or `{{to_email}}`)
+- Ensure the template is actually being used (check Email History to see if emails were sent)
+- Try subscribing with a test email and check if contact appears after email is sent
+- Make sure you're looking at the correct template's contacts (filter by template in Contacts page)
 
 ### CSV Import Issues:
 - Ensure CSV has an "email" column

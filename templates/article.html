@@ -204,6 +204,15 @@
       padding: 0 !important;
     }
     
+    /* Hide navigation bar when diagram is in fullscreen mode - especially important for mobile */
+    body.fullscreen-mode .main-nav {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+    }
+    
     .fullscreen-hidden {
       display: none !important;
     }
@@ -241,11 +250,23 @@
       /* Fullscreen mobile adjustments */
       .mermaid-diagram.fullscreen {
         padding: 10px !important;
+        /* Ensure fullscreen starts from very top on mobile */
+        top: 0 !important;
       }
       
       .mermaid-diagram.fullscreen .mermaid {
         max-width: 95vw !important;
         max-height: 95vh !important;
+      }
+      
+      /* Hide navigation bar on mobile when diagram is fullscreen */
+      body.fullscreen-mode .main-nav {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        transform: translateY(-100%) !important;
       }
     }
     
@@ -281,11 +302,23 @@
       /* Fullscreen mobile adjustments for very small screens */
       .mermaid-diagram.fullscreen {
         padding: 5px !important;
+        /* Ensure fullscreen starts from very top on small mobile */
+        top: 0 !important;
       }
       
       .mermaid-diagram.fullscreen .mermaid {
         max-width: 98vw !important;
         max-height: 98vh !important;
+      }
+      
+      /* Hide navigation bar on small mobile when diagram is fullscreen */
+      body.fullscreen-mode .main-nav {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        transform: translateY(-100%) !important;
       }
     }
   </style>
@@ -672,6 +705,17 @@
       if (isFullscreen) {
         // Exit fullscreen
         console.log('Exiting fullscreen');
+        
+        // Show navigation bar again
+        const mainNav = document.querySelector('.main-nav');
+        if (mainNav) {
+          mainNav.style.display = '';
+          mainNav.style.visibility = '';
+          mainNav.style.opacity = '';
+          mainNav.style.height = '';
+          mainNav.style.overflow = '';
+        }
+        
         container.style.cssText = '';
         document.body.style.overflow = '';
         document.body.classList.remove('fullscreen-mode');
@@ -690,6 +734,17 @@
       } else {
         // Enter fullscreen
         console.log('Entering fullscreen');
+        
+        // Hide navigation bar explicitly (especially important for mobile)
+        const mainNav = document.querySelector('.main-nav');
+        if (mainNav) {
+          mainNav.style.display = 'none';
+          mainNav.style.visibility = 'hidden';
+          mainNav.style.opacity = '0';
+          mainNav.style.height = '0';
+          mainNav.style.overflow = 'hidden';
+        }
+        
         container.style.cssText = `
           position: fixed !important;
           top: 0 !important;

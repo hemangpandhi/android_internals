@@ -159,33 +159,46 @@ class UserAuth {
     }
 
     async logout() {
-        if (confirm('Are you sure you want to sign out?')) {
-            console.log('🔐 [AUTH] Logging out...');
-            
-            // Call logout endpoint to clear cookies
-            try {
-                const apiUrl = this.authApiUrl;
-                await fetch(`${apiUrl}?action=logout`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include' // Include cookies
-                });
-            } catch (error) {
-                console.error('🔐 [AUTH] Logout API call failed:', error);
-            }
-            
-            // Clear local storage
-            this.currentUser = null;
-            localStorage.removeItem('user_session');
-            // Keep preferences (user might want them after re-login)
-            // localStorage.removeItem('user_preferences');
-            
-            this.onUserChange();
-            // Reload to clear any user-specific state
-            window.location.href = window.location.pathname;
+        if (!confirm('Are you sure you want to sign out?')) {
+            return; // User cancelled
         }
+        
+        console.log('🔐 [AUTH] Logging out...');
+        
+        // Call logout endpoint to clear cookies
+        try {
+            const apiUrl = this.authApiUrl;
+            const response = await fetch(`${apiUrl}?action=logout`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include' // Include cookies
+            });
+            
+            if (!response.ok) {
+                console.warn('🔐 [AUTH] Logout API returned non-OK status:', response.status);
+            } else {
+                console.log('🔐 [AUTH] ✅ Logout API call successful');
+            }
+        } catch (error) {
+            console.error('🔐 [AUTH] ❌ Logout API call failed:', error);
+            // Continue with logout even if API call fails
+        }
+        
+        // Clear local storage
+        this.currentUser = null;
+        localStorage.removeItem('user_session');
+        // Keep preferences (user might want them after re-login)
+        // localStorage.removeItem('user_preferences');
+        
+        // Update UI immediately
+        this.onUserChange();
+        
+        // Small delay to ensure UI updates, then reload
+        setTimeout(() => {
+            window.location.href = window.location.pathname;
+        }, 100);
     }
 
     isAuthenticated() {

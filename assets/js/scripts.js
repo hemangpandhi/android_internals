@@ -957,10 +957,11 @@ window.onclick = function(event) {
 
     // Logout
     if (menuLogout) {
-      menuLogout.addEventListener('click', () => {
-        if (confirm('Are you sure you want to sign out?')) {
-          userAuth.logout();
-        }
+      menuLogout.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // logout() function has its own confirm dialog, so don't double-confirm
+        await userAuth.logout();
       });
     }
 

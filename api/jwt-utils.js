@@ -10,8 +10,8 @@ import crypto from 'crypto';
  * @returns {string} Signed JWT token
  */
 function signToken(payload, secret) {
-  if (!secret) {
-    throw new Error('JWT_SECRET environment variable is required');
+  if (!secret || secret.trim() === '') {
+    throw new Error('JWT_SECRET is required but not set. Please set JWT_SECRET environment variable in Vercel.');
   }
 
   const header = {

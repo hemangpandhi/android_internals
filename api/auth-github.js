@@ -42,10 +42,11 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!JWT_SECRET) {
+  if (!JWT_SECRET || JWT_SECRET.trim() === '') {
+    console.error('JWT_SECRET is not set in environment variables');
     return res.status(500).json({ 
       error: 'JWT secret not configured',
-      message: 'Set JWT_SECRET environment variable'
+      message: 'Set JWT_SECRET environment variable in Vercel project settings. Generate with: openssl rand -base64 32'
     });
   }
 

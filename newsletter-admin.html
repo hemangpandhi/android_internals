@@ -485,9 +485,19 @@
                     return;
                 }
                 
-                const activeCount = allSubscribers.filter(sub => sub.active !== false).length;
-                statsElement.innerHTML = `📊 ${activeCount} active / ${allSubscribers.length} total subscribers`;
-                statsElement.className = 'status completed';
+                // Count active subscribers more accurately
+                const activeCount = allSubscribers.filter(sub => {
+                    return sub.active === true || (sub.active !== false && sub.active !== 'false' && sub.active !== undefined);
+                }).length;
+                const inactiveCount = allSubscribers.length - activeCount;
+                
+                if (activeCount === 0) {
+                    statsElement.innerHTML = `📊 ${allSubscribers.length} subscriber(s) - All inactive`;
+                    statsElement.className = 'status error';
+                } else {
+                    statsElement.innerHTML = `📊 ${activeCount} active${inactiveCount > 0 ? ` / ${inactiveCount} inactive` : ''} / ${allSubscribers.length} total`;
+                    statsElement.className = 'status completed';
+                }
                 
                 // Render subscriber list with checkboxes
                 renderSubscriberList();
@@ -515,17 +525,49 @@
                 return;
             }
             
-            listElement.innerHTML = allSubscribers.map((sub, index) => {
+            // Sort: active first, then by date (newest first)
+            const sortedSubscribers = [...allSubscribers].sort((a, b) => {
+                const aActive = a.active !== false ? 1 : 0;
+                const bActive = b.active !== false ? 1 : 0;
+                if (aActive !== bActive) return bActive - aActive;
+                const aDate = new Date(a.subscribedAt || a.updatedAt || 0);
+                const bDate = new Date(b.subscribedAt || b.updatedAt || 0);
+                return bDate - aDate;
+            });
+            
+            listElement.innerHTML = sortedSubscribers.map((sub, index) => {
                 const isSelected = selectedSubscribers.has(sub.email);
-                const isActive = sub.active !== false;
-                const subscribedDate = new Date(sub.subscribedAt).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'short', 
-                    day: 'numeric' 
-                });
+                // Check active status more carefully
+                const isActive = sub.active === true || (sub.active !== false && sub.active !== 'false');
+                
+                // Parse date more safely
+                let subscribedDate = 'Unknown';
+                try {
+                    const dateStr = sub.subscribedAt || sub.updatedAt || sub.date;
+                    if (dateStr) {
+                        const date = new Date(dateStr);
+                        if (!isNaN(date.getTime())) {
+                            subscribedDate = date.toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: 'numeric' 
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.error('Date parsing error:', e);
+                }
+                
+                // Determine status badge
+                let statusBadge = '';
+                if (isActive) {
+                    statusBadge = '<span style="color: #3ddc84; font-size: 0.85rem; font-weight: 600;">✓ Active</span>';
+                } else {
+                    statusBadge = '<span style="color: #8b949e; font-size: 0.85rem;">✗ Inactive</span>';
+                }
                 
                 return `
-                    <div class="email-item" style="${!isActive ? 'opacity: 0.6;' : ''}">
+                    <div class="email-item" style="${!isActive ? 'opacity: 0.6; border-color: #484f58;' : ''}">
                         <input 
                             type="checkbox" 
                             id="subscriber-${index}" 
@@ -534,9 +576,10 @@
                             onchange="toggleSubscriber('${sub.email}', ${index})"
                         >
                         <div class="email-info">
-                            <span class="email">${sub.email} ${!isActive ? '(Inactive)' : ''}</span>
+                            <span class="email">${sub.email}</span>
                             <span class="name">${sub.name || 'No name'}</span>
                             <span class="date">${subscribedDate}</span>
+                            ${statusBadge}
                         </div>
                         <div class="actions">
                             ${isActive ? `

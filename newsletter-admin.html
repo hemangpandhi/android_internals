@@ -855,7 +855,18 @@
                 if (subscribers.length === 0 && source === 'unknown') {
                     console.warn('⚠️ No subscribers loaded - using protected API or EmailJS API required');
                     console.warn('💡 Configure EmailJS API proxy or protected subscribers API');
-                    throw new Error('No subscribers found. Use EmailJS API sync or CSV import.');
+                    console.warn('💡 Alternative: Use CSV import from EmailJS Dashboard');
+                    
+                    // Show helpful error message with instructions
+                    const errorMsg = 'No subscribers found.\n\n' +
+                        'Options:\n' +
+                        '1. Use "📥 Import from EmailJS CSV" button (top right)\n' +
+                        '2. Or fix EmailJS API credentials in Vercel:\n' +
+                        '   - Set EMAILJS_PRIVATE_KEY\n' +
+                        '   - Set EMAILJS_USER_ID\n' +
+                        '   - Then click "⚡ Live Sync"';
+                    
+                    throw new Error(errorMsg);
                 }
                 
                 console.log(`✅ Loaded ${subscribers.length} subscriber(s) from ${source}`);

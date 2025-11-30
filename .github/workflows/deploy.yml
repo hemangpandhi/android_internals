@@ -76,6 +76,28 @@ jobs:
         echo "📋 Config file preview (first 5 lines):"
         head -5 config.js | sed 's/publicKey:.*/publicKey: [REDACTED]/' | sed 's/serviceId:.*/serviceId: [REDACTED]/'
         
+    - name: Inject admin password into newsletter-admin.html
+      run: |
+        # Check if ADMIN_PASSWORD secret is set
+        if [ -z "${{ secrets.ADMIN_PASSWORD }}" ]; then
+          echo "⚠️  WARNING: ADMIN_PASSWORD secret is not set!"
+          echo "⚠️  Using default password. Set ADMIN_PASSWORD secret for production."
+          ADMIN_PASSWORD_VALUE="CHANGE_THIS_PASSWORD_IN_PRODUCTION"
+        else
+          ADMIN_PASSWORD_VALUE="${{ secrets.ADMIN_PASSWORD }}"
+          echo "✅ Admin password secret found (length: ${#ADMIN_PASSWORD_VALUE} characters)"
+        fi
+        
+        # Inject password into newsletter-admin.html
+        if [ -f "newsletter-admin.html" ]; then
+          # Escape special characters for sed
+          ESCAPED_PASSWORD=$(echo "$ADMIN_PASSWORD_VALUE" | sed 's/[[\.*^$()+?{|]/\\&/g')
+          sed -i "s|'{{ADMIN_PASSWORD}}'|'${ESCAPED_PASSWORD}'|g" newsletter-admin.html
+          echo "✅ Admin password injected into newsletter-admin.html"
+        else
+          echo "⚠️  newsletter-admin.html not found"
+        fi
+        
     - name: Build website
       run: node tools/build.js
       

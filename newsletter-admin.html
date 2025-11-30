@@ -436,10 +436,10 @@
     <script type="text/javascript">
         
         // Password Protection
-        // Priority: 1. URL parameter (?pwd=...), 2. config.js, 3. default
+        // Priority: 1. URL parameter (?pwd=...), 2. config.js, 3. injected during build
         const ADMIN_PASSWORD = new URLSearchParams(window.location.search).get('pwd') ||
                               window.EMAILJS_CONFIG?.adminPassword || 
-                              'AndroidInternals@2025';
+                              '{{ADMIN_PASSWORD}}';
         
         // Check if already authenticated
         function isAuthenticated() {

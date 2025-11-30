@@ -537,8 +537,12 @@
                 }
                 
                 if (!subscribers || subscribers.length === 0) {
+                    console.error('❌ No subscribers loaded from any path');
+                    console.error('Tried paths: /data/subscribers.json, data/subscribers.json, and absolute path');
                     throw new Error('No subscribers found or file not accessible');
                 }
+                
+                console.log(`✅ Loaded ${subscribers.length} subscriber(s) from JSON file`);
                 
                 // Store all subscribers (including inactive for management)
                 allSubscribers = Array.isArray(subscribers) ? subscribers : [];
@@ -570,16 +574,28 @@
                 renderSubscriberList();
                 
             } catch (error) {
-                console.error('Error loading subscribers:', error);
+                console.error('❌ Error loading subscribers:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    url: window.location.href
+                });
                 statsElement.innerHTML = '❌ Error loading subscribers: ' + error.message;
                 statsElement.className = 'status error';
                 listElement.innerHTML = `
                     <div style="padding: 1rem; text-align: center; color: #8b949e;">
-                        <p>Error loading subscribers from /data/subscribers.json</p>
-                        <p>Make sure the file exists and is accessible.</p>
+                        <p>Error loading subscribers from subscribers.json</p>
+                        <p>Error: ${error.message}</p>
+                        <p>Check browser console for details.</p>
+                        <p style="margin-top: 1rem;">
+                            <button class="btn btn-secondary" onclick="refreshSubscribers()" style="padding: 0.5rem 1rem;">
+                                🔄 Retry
+                            </button>
+                        </p>
                     </div>
                 `;
                 listElement.style.display = 'block';
+                log(`❌ Failed to load subscribers: ${error.message}`);
             }
         }
 

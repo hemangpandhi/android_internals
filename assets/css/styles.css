@@ -323,13 +323,14 @@ main {
 
 .nav-container {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 0.5rem 1.5rem 0.5rem 1rem;
   max-width: 1200px;
   margin: 0 auto;
   height: 80px;
   overflow: visible;
+  gap: 1rem;
+  position: relative;
 }
 
 .nav-logo-link {
@@ -344,6 +345,7 @@ main {
   border-radius: var(--radius-md);
   padding: var(--space-sm);
   margin-left: -0.5rem;
+  flex-shrink: 0; /* Don't shrink logo */
 }
 
 .nav-logo-link:hover {
@@ -390,6 +392,10 @@ main {
   gap: var(--space-md);
   align-items: center;
   flex-wrap: wrap;
+  flex: 1;
+  justify-content: flex-start;
+  margin-left: 1rem;
+  min-width: 0; /* Allow shrinking */
 }
 
 .nav-link {
@@ -7284,7 +7290,15 @@ del {
   position: relative;
   display: flex;
   align-items: center;
-  margin-left: 1rem;
+  flex-shrink: 0; /* Don't shrink */
+  margin-left: auto; /* Push to right */
+  z-index: 100;
+  order: 3; /* After nav-links, before mobile toggle */
+}
+
+.mobile-menu-toggle {
+  flex-shrink: 0;
+  order: 4; /* Last item */
 }
 
 .btn-login {
@@ -7523,10 +7537,11 @@ del {
   flex-shrink: 0;
 }
 
-/* Ensure user auth menu is visible */
+/* Ensure user auth menu is visible and doesn't break layout */
 .user-auth-menu {
   z-index: 100;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .user-menu-logged-out {
@@ -7539,6 +7554,16 @@ del {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+  .nav-container {
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+  }
+  
+  .nav-links {
+    margin-left: 0;
+    order: 5; /* Move to end on mobile (hidden by default) */
+  }
+  
   .user-auth-menu {
     margin-left: 0.5rem;
     order: 2; /* Show before mobile menu toggle */
@@ -7559,12 +7584,7 @@ del {
     min-width: 200px;
   }
   
-  /* On mobile, show user menu before mobile toggle */
-  .nav-container {
-    flex-wrap: wrap;
-  }
-  
-  .user-auth-menu {
-    margin-right: 0.5rem;
+  .mobile-menu-toggle {
+    order: 3; /* After user menu */
   }
 }

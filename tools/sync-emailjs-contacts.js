@@ -67,6 +67,8 @@ class EmailJSSync {
         // EmailJS API endpoint for contacts
         // Note: The user_id parameter should match your EmailJS account User ID
         // This is typically the same as your Public Key, but verify in EmailJS Dashboard
+        // EmailJS API authentication - try different methods
+        // Method 1: Standard Bearer token
         const options = {
           hostname: 'api.emailjs.com',
           path: `/api/v1.0/contacts?user_id=${EMAILJS_USER_ID}`,
@@ -80,6 +82,8 @@ class EmailJSSync {
         
         console.log(`   API Path: ${options.path}`);
         console.log(`   Authorization: Bearer ${EMAILJS_PRIVATE_KEY.substring(0, 10)}...`);
+        console.log(`   ⚠️  Note: EmailJS may not have a public contacts API endpoint`);
+        console.log(`   📋 If this fails, use CSV export method instead`);
 
         const req = https.request(options, (res) => {
           let data = '';

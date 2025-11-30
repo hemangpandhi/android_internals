@@ -576,6 +576,43 @@
       </div>
     </div>
 
+    <!-- Global login functions - must be defined before buttons are clicked -->
+    <script>
+      // Global login functions (available immediately, before user-auth.js loads)
+      // These work even if config.js hasn't loaded yet
+      window.loginWithGitHub = function() {
+        try {
+          const redirectTo = encodeURIComponent(window.location.href);
+          // Try to get from config, fallback to hardcoded URL
+          const authApiUrl = (window.EMAILJS_CONFIG && window.EMAILJS_CONFIG.authApiUrl) || 
+                            'https://android-internals.vercel.app/api/auth-github';
+          console.log('Login with GitHub:', authApiUrl);
+          window.location.href = authApiUrl + '?action=login&redirect_to=' + redirectTo;
+        } catch (e) {
+          console.error('Error in loginWithGitHub:', e);
+          // Fallback redirect
+          const redirectTo = encodeURIComponent(window.location.href);
+          window.location.href = 'https://android-internals.vercel.app/api/auth-github?action=login&redirect_to=' + redirectTo;
+        }
+      };
+
+      window.loginWithGoogle = function() {
+        try {
+          const redirectTo = encodeURIComponent(window.location.href);
+          // Try to get from config, fallback to hardcoded URL
+          const googleAuthApiUrl = (window.EMAILJS_CONFIG && window.EMAILJS_CONFIG.googleAuthApiUrl) || 
+                                   'https://android-internals.vercel.app/api/auth-google';
+          console.log('Login with Google:', googleAuthApiUrl);
+          window.location.href = googleAuthApiUrl + '?action=login&redirect_to=' + redirectTo;
+        } catch (e) {
+          console.error('Error in loginWithGoogle:', e);
+          // Fallback redirect
+          const redirectTo = encodeURIComponent(window.location.href);
+          window.location.href = 'https://android-internals.vercel.app/api/auth-google?action=login&redirect_to=' + redirectTo;
+        }
+      };
+    </script>
+    
     <script src="assets/js/user-auth.js" defer></script>
     <script src="assets/js/scripts.js" defer></script>
     

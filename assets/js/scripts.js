@@ -969,11 +969,9 @@ window.onclick = function(event) {
     if (menuBookmarks) {
       menuBookmarks.addEventListener('click', (e) => {
         e.preventDefault();
-        // Scroll to bookmarks section or show bookmarks modal
-        const bookmarksSection = document.getElementById('bookmarks-section');
-        if (bookmarksSection) {
-          bookmarksSection.scrollIntoView({ behavior: 'smooth' });
-        }
+        e.stopPropagation();
+        console.log('📖 [BOOKMARKS] Bookmarks menu clicked');
+        showBookmarksModal();
       });
     }
 

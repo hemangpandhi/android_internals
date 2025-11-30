@@ -858,3 +858,186 @@ window.onclick = function(event) {
     }
   });
 })(); 
+  // ===== USER AUTHENTICATION UI =====
+  function initUserAuthUI() {
+    const userAuth = window.userAuth;
+    if (!userAuth) return;
+
+    const btnLogin = document.getElementById('btnLogin');
+    const loginModal = document.getElementById('loginModal');
+    const loginModalClose = document.getElementById('loginModalClose');
+    const userMenuLoggedOut = document.getElementById('userMenuLoggedOut');
+    const userMenuLoggedIn = document.getElementById('userMenuLoggedIn');
+    const userAvatarImg = document.getElementById('userAvatarImg');
+    const userAvatarInitial = document.getElementById('userAvatarInitial');
+    const userName = document.getElementById('userName');
+    const userEmail = document.getElementById('userEmail');
+    const menuLogout = document.getElementById('menuLogout');
+
+    function updateUserUI() {
+      if (userAuth.isAuthenticated()) {
+        const user = userAuth.getUser();
+        userMenuLoggedOut.style.display = 'none';
+        userMenuLoggedIn.style.display = 'block';
+        
+        if (user.picture || user.avatar) {
+          userAvatarImg.src = user.picture || user.avatar;
+          userAvatarImg.style.display = 'block';
+          userAvatarInitial.style.display = 'none';
+        } else {
+          userAvatarImg.style.display = 'none';
+          userAvatarInitial.style.display = 'block';
+          userAvatarInitial.textContent = (user.name || user.email || 'U').charAt(0).toUpperCase();
+        }
+        
+        userName.textContent = user.name || user.email || 'User';
+        userEmail.textContent = user.email || '';
+      } else {
+        userMenuLoggedOut.style.display = 'block';
+        userMenuLoggedIn.style.display = 'none';
+      }
+    }
+
+    // Listen for auth changes
+    window.addEventListener('userAuthChange', updateUserUI);
+    
+    // Initial update
+    updateUserUI();
+
+    // Login button
+    if (btnLogin) {
+      btnLogin.addEventListener('click', () => {
+        loginModal.style.display = 'flex';
+      });
+    }
+
+    // Close modal
+    if (loginModalClose) {
+      loginModalClose.addEventListener('click', () => {
+        loginModal.style.display = 'none';
+      });
+    }
+
+    // Close modal on outside click
+    if (loginModal) {
+      loginModal.addEventListener('click', (e) => {
+        if (e.target === loginModal) {
+          loginModal.style.display = 'none';
+        }
+      });
+    }
+
+    // Logout
+    if (menuLogout) {
+      menuLogout.addEventListener('click', () => {
+        if (confirm('Are you sure you want to sign out?')) {
+          userAuth.logout();
+        }
+      });
+    }
+
+    // Bookmarks menu
+    const menuBookmarks = document.getElementById('menuBookmarks');
+    if (menuBookmarks) {
+      menuBookmarks.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Scroll to bookmarks section or show bookmarks modal
+        const bookmarksSection = document.getElementById('bookmarks-section');
+        if (bookmarksSection) {
+          bookmarksSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    }
+
+    // Preferences menu
+    const menuPreferences = document.getElementById('menuPreferences');
+    if (menuPreferences) {
+      menuPreferences.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Show preferences modal
+        showPreferencesModal();
+      });
+    }
+  }
+
+  // Initialize user auth UI when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initUserAuthUI);
+  } else {
+    initUserAuthUI();
+  }
+
+  // ===== PREFERENCES MODAL =====
+  function showPreferencesModal() {
+    const userAuth = window.userAuth;
+    if (!userAuth || !userAuth.isAuthenticated()) {
+      alert('Please sign in to access preferences');
+      return;
+    }
+
+    const prefs = userAuth.getPreferences();
+    const modal = document.createElement('div');
+    modal.className = 'login-modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+      <div class="login-modal-content" style="max-width: 500px;">
+        <button class="login-modal-close" onclick="this.closest('.login-modal').remove()">&times;</button>
+        <h2>Preferences</h2>
+        <div style="margin-top: 1.5rem;">
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">
+            Theme
+          </label>
+          <select id="themeSelect" style="width: 100%; padding: 0.75rem; border: 1px solid #30363d; border-radius: var(--radius-md); background: #0d1117; color: var(--text-primary);">
+            <option value="dark" ${prefs.theme === 'dark' ? 'selected' : ''}>Dark</option>
+            <option value="light" ${prefs.theme === 'light' ? 'selected' : ''}>Light</option>
+            <option value="auto" ${prefs.theme === 'auto' ? 'selected' : ''}>Auto (System)</option>
+          </select>
+        </div>
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #30363d;">
+          <button class="btn-login" onclick="savePreferences()" style="width: 100%;">Save Preferences</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Close on outside click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.remove();
+    });
+
+    // Save function
+    window.savePreferences = function() {
+      const theme = document.getElementById('themeSelect').value;
+      userAuth.updateTheme(theme);
+      modal.remove();
+      alert('Preferences saved!');
+    };
+  }
+
+  // Apply theme on load
+  function applyTheme() {
+    const userAuth = window.userAuth;
+    if (userAuth) {
+      const prefs = userAuth.getPreferences();
+      const theme = prefs.theme || 'dark';
+      
+      if (theme === 'auto') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+    }
+  }
+
+  // Listen for theme changes
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+  }
+
+  // Apply theme on load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyTheme);
+  } else {
+    applyTheme();
+  }

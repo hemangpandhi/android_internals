@@ -16,6 +16,14 @@ window.EMAILJS_CONFIG = {
   newsletterFromName: 'Android Internals Newsletter',
   apiServer: 'https://your-api-server.com',
   
+  // Vercel API Endpoints (for Option 1: Hybrid Setup)
+  // Update these with your actual Vercel project URL
+  // Find it at: https://vercel.com/androidinternals-projects/android-internals
+  // Example: 'https://android-internals.vercel.app/api/auth-github'
+  authApiUrl: 'https://YOUR_VERCEL_PROJECT.vercel.app/api/auth-github',
+  apiProxyUrl: 'https://YOUR_VERCEL_PROJECT.vercel.app/api/emailjs-contacts',
+  subscribersApiUrl: 'https://YOUR_VERCEL_PROJECT.vercel.app/api/subscribers-db',
+  
   // Feature Flags
   enableNewsletter: true,
   enableContactForm: true,

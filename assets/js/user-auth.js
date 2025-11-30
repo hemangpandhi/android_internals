@@ -59,17 +59,40 @@ class UserAuth {
             const apiUrl = provider === 'google' ? this.googleAuthApiUrl : this.authApiUrl;
             console.log('🔐 [AUTH] Verifying token with API:', apiUrl);
             
-            const response = await fetch(`${apiUrl}?action=verify`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token })
-            });
+            console.log('🔐 [AUTH] Making fetch request to:', `${apiUrl}?action=verify`);
+            console.log('🔐 [AUTH] Request method: POST');
+            console.log('🔐 [AUTH] Request body:', JSON.stringify({ token: token ? token.substring(0, 20) + '...' : 'MISSING' }));
+            
+            let response;
+            try {
+                response = await fetch(`${apiUrl}?action=verify`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ token })
+                });
+            } catch (fetchError) {
+                console.error('🔐 [AUTH] ❌ Fetch error (network/CORS):', fetchError);
+                console.error('🔐 [AUTH] Error name:', fetchError.name);
+                console.error('🔐 [AUTH] Error message:', fetchError.message);
+                console.error('🔐 [AUTH] Error stack:', fetchError.stack);
+                throw new Error(`Network error: ${fetchError.message}. Check if API endpoint is accessible: ${apiUrl}`);
+            }
 
+            console.log('🔐 [AUTH] Response received');
             console.log('🔐 [AUTH] Response status:', response.status, response.statusText);
+            console.log('🔐 [AUTH] Response headers:', Object.fromEntries(response.headers.entries()));
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('🔐 [AUTH] HTTP error response:', errorText);
+                let errorText;
+                try {
+                    errorText = await response.text();
+                } catch (e) {
+                    errorText = 'Could not read error response';
+                }
+                console.error('🔐 [AUTH] ❌ HTTP error response:', errorText);
                 throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
             }
 
@@ -122,8 +145,23 @@ class UserAuth {
             }
         } catch (error) {
             console.error('🔐 [AUTH] ❌ Auth verification failed:', error);
+            console.error('🔐 [AUTH] Error name:', error.name);
+            console.error('🔐 [AUTH] Error message:', error.message);
             console.error('🔐 [AUTH] Error stack:', error.stack);
-            alert('Network error during authentication. Please check console for details.');
+            
+            // More detailed error message
+            let errorMsg = 'Network error during authentication. ';
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                errorMsg += 'The authentication API is not reachable. ';
+                errorMsg += `Please check if ${apiUrl} is accessible.`;
+            } else if (error.message.includes('CORS')) {
+                errorMsg += 'CORS error - the API may not be configured correctly.';
+            } else {
+                errorMsg += error.message;
+            }
+            
+            console.error('🔐 [AUTH] Showing error to user:', errorMsg);
+            alert(errorMsg);
         }
         this.onUserChange(); // Update UI even on failure
         return false;

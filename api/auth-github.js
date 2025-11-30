@@ -1,0 +1,144 @@
+// GitHub OAuth Authentication Serverless Function
+// Handles GitHub SSO login for admin panel
+
+export default async function handler(req, res) {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  const { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, ALLOWED_GITHUB_USERS } = process.env;
+
+  if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
+    return res.status(500).json({ 
+      error: 'GitHub OAuth not configured',
+      message: 'Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET environment variables'
+    });
+  }
+
+  // Step 1: Initiate OAuth flow (redirect to GitHub)
+  if (req.method === 'GET' && req.query.action === 'login') {
+    const redirectUri = `${req.headers.origin || 'https://www.hemangpandhi.com'}/api/auth-github?action=callback`;
+    const scope = 'read:user';
+    const state = req.query.state || Math.random().toString(36).substring(7);
+    
+    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}`;
+    
+    return res.redirect(githubAuthUrl);
+  }
+
+  // Step 2: Handle OAuth callback
+  if (req.method === 'GET' && req.query.action === 'callback') {
+    const { code, state } = req.query;
+
+    if (!code) {
+      return res.status(400).json({ error: 'Authorization code missing' });
+    }
+
+    try {
+      // Exchange code for access token
+      const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          client_id: GITHUB_CLIENT_ID,
+          client_secret: GITHUB_CLIENT_SECRET,
+          code: code
+        })
+      });
+
+      const tokenData = await tokenResponse.json();
+
+      if (tokenData.error) {
+        return res.status(400).json({ error: tokenData.error_description || 'OAuth error' });
+      }
+
+      const accessToken = tokenData.access_token;
+
+      // Get user info from GitHub
+      const userResponse = await fetch('https://api.github.com/user', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+
+      const userData = await userResponse.json();
+
+      if (!userData.login) {
+        return res.status(400).json({ error: 'Failed to get user info' });
+      }
+
+      // Check if user is allowed
+      const allowedUsers = ALLOWED_GITHUB_USERS ? ALLOWED_GITHUB_USERS.split(',').map(u => u.trim()) : [];
+      
+      if (allowedUsers.length > 0 && !allowedUsers.includes(userData.login)) {
+        return res.status(403).json({ 
+          error: 'Access denied',
+          message: `User ${userData.login} is not authorized to access the admin panel`
+        });
+      }
+
+      // Create session token (simple JWT-like token)
+      const sessionToken = Buffer.from(JSON.stringify({
+        username: userData.login,
+        name: userData.name || userData.login,
+        avatar: userData.avatar_url,
+        exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+      })).toString('base64');
+
+      // Redirect to admin panel with token
+      const adminUrl = `${req.headers.origin || 'https://www.hemangpandhi.com'}/newsletter-admin.html?token=${sessionToken}`;
+      
+      return res.redirect(adminUrl);
+
+    } catch (error) {
+      console.error('OAuth error:', error);
+      return res.status(500).json({ error: 'Authentication failed', details: error.message });
+    }
+  }
+
+  // Step 3: Verify session token
+  if (req.method === 'POST' && req.query.action === 'verify') {
+    try {
+      const { token } = req.body;
+
+      if (!token) {
+        return res.status(401).json({ authenticated: false, error: 'Token missing' });
+      }
+
+      const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
+      
+      if (decoded.exp && decoded.exp < Date.now()) {
+        return res.status(401).json({ authenticated: false, error: 'Token expired' });
+      }
+
+      return res.status(200).json({ 
+        authenticated: true, 
+        user: {
+          username: decoded.username,
+          name: decoded.name,
+          avatar: decoded.avatar
+        }
+      });
+
+    } catch (error) {
+      return res.status(401).json({ authenticated: false, error: 'Invalid token' });
+    }
+  }
+
+  // Step 4: Logout
+  if (req.method === 'POST' && req.query.action === 'logout') {
+    return res.status(200).json({ success: true, message: 'Logged out' });
+  }
+
+  return res.status(405).json({ error: 'Method not allowed' });
+}
+

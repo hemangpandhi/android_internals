@@ -316,15 +316,18 @@
     </style>
 </head>
 <body>
-    <!-- Password Protection Screen -->
+    <!-- GitHub SSO Authentication Screen -->
     <div id="password-protection">
         <div id="password-form">
             <h2>🔒 Admin Access Required</h2>
-            <p style="color: #8b949e; margin-bottom: 1.5rem;">Enter the admin password to access the newsletter admin panel.</p>
-            <input type="password" id="admin-password" placeholder="Enter admin password" autocomplete="off" autofocus>
-            <div id="password-error">❌ Incorrect password. Please try again.</div>
-            <button class="btn" onclick="checkPassword()" style="width: 100%; margin-top: 1rem;">🔓 Unlock Admin Panel</button>
-            <p style="color: #8b949e; margin-top: 1rem; font-size: 0.85rem;">Press Enter to submit</p>
+            <p style="color: #8b949e; margin-bottom: 1.5rem;">Sign in with your GitHub account to access the newsletter admin panel.</p>
+            <div id="auth-status" style="color: #8b949e; margin-bottom: 1rem; min-height: 1.5rem;"></div>
+            <button class="btn" onclick="loginWithGitHub()" style="width: 100%; margin-top: 1rem; background: #24292e; color: #fff;">
+                <span style="margin-right: 0.5rem;">🐙</span> Sign in with GitHub
+            </button>
+            <p style="color: #6e7681; margin-top: 1rem; font-size: 0.85rem;">
+                Only authorized GitHub users can access this panel
+            </p>
         </div>
     </div>
     
@@ -435,62 +438,132 @@
     <script type="text/javascript" src="config.js"></script>
     <script type="text/javascript">
         
-        // Password Protection
-        // Priority: 1. URL parameter (?pwd=...), 2. config.js, 3. injected during build
-        const ADMIN_PASSWORD = new URLSearchParams(window.location.search).get('pwd') ||
-                              window.EMAILJS_CONFIG?.adminPassword || 
-                              '{{ADMIN_PASSWORD}}';
+        // GitHub SSO Authentication
+        const AUTH_API_URL = window.EMAILJS_CONFIG?.authApiUrl || 
+                            localStorage.getItem('github_auth_api_url') ||
+                            'https://your-project.vercel.app/api/auth-github'; // Update this after deployment
         
-        // Check if already authenticated
-        function isAuthenticated() {
-            return sessionStorage.getItem('admin_authenticated') === 'true';
+        let currentUser = null;
+        
+        // Check if already authenticated via token in URL
+        async function checkAuthentication() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            
+            if (token) {
+                // Verify token with server
+                try {
+                    const response = await fetch(`${AUTH_API_URL}?action=verify`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ token })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.authenticated) {
+                        currentUser = data.user;
+                        sessionStorage.setItem('github_token', token);
+                        sessionStorage.setItem('github_user', JSON.stringify(data.user));
+                        // Remove token from URL
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        showAdminPanel();
+                        return true;
+                    }
+                } catch (error) {
+                    console.error('Token verification failed:', error);
+                    showError('Failed to verify authentication. Please try again.');
+                }
+            } else {
+                // Check session storage
+                const storedToken = sessionStorage.getItem('github_token');
+                const storedUser = sessionStorage.getItem('github_user');
+                
+                if (storedToken && storedUser) {
+                    // Verify token is still valid
+                    try {
+                        const response = await fetch(`${AUTH_API_URL}?action=verify`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ token: storedToken })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.authenticated) {
+                            currentUser = JSON.parse(storedUser);
+                            showAdminPanel();
+                            return true;
+                        } else {
+                            // Token expired or invalid
+                            sessionStorage.removeItem('github_token');
+                            sessionStorage.removeItem('github_user');
+                        }
+                    } catch (error) {
+                        console.error('Token verification failed:', error);
+                    }
+                }
+            }
+            
+            return false;
         }
         
-        // Check password and authenticate
-        function checkPassword() {
-            const passwordInput = document.getElementById('admin-password');
-            const password = passwordInput.value;
-            const errorDiv = document.getElementById('password-error');
+        // Login with GitHub
+        function loginWithGitHub() {
+            const statusDiv = document.getElementById('auth-status');
+            statusDiv.textContent = '🔄 Redirecting to GitHub...';
+            statusDiv.style.color = '#3ddc84';
             
-            // Simple password check (in production, use proper hashing)
-            if (password === ADMIN_PASSWORD) {
-                sessionStorage.setItem('admin_authenticated', 'true');
-                showAdminPanel();
-            } else {
-                errorDiv.style.display = 'block';
-                passwordInput.value = '';
-                passwordInput.focus();
-                setTimeout(() => {
-                    errorDiv.style.display = 'none';
-                }, 3000);
-            }
+            // Redirect to GitHub OAuth
+            window.location.href = `${AUTH_API_URL}?action=login`;
         }
         
         // Show admin panel
         function showAdminPanel() {
             document.getElementById('password-protection').classList.add('hidden');
             document.getElementById('admin-content').classList.remove('hidden');
+            
+            // Update header with user info
+            if (currentUser) {
+                const header = document.querySelector('.header p');
+                if (header) {
+                    header.innerHTML = `Welcome, <strong>${currentUser.name || currentUser.username}</strong> | Manage subscribers and send newsletter emails`;
+                }
+            }
+        }
+        
+        // Show error
+        function showError(message) {
+            const statusDiv = document.getElementById('auth-status');
+            statusDiv.textContent = `❌ ${message}`;
+            statusDiv.style.color = '#ff7b72';
         }
         
         // Logout
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
-                sessionStorage.removeItem('admin_authenticated');
+                sessionStorage.removeItem('github_token');
+                sessionStorage.removeItem('github_user');
+                currentUser = null;
                 location.reload();
             }
         }
         
         // Check authentication on page load
-        if (isAuthenticated()) {
-            showAdminPanel();
-        } else {
-            // Allow Enter key to submit password
-            document.getElementById('admin-password').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    checkPassword();
+        checkAuthentication().then(authenticated => {
+            if (!authenticated) {
+                // Check if API URL needs to be configured
+                if (AUTH_API_URL.includes('your-project')) {
+                    const statusDiv = document.getElementById('auth-status');
+                    statusDiv.innerHTML = '⚠️ GitHub SSO not configured. <br><small style="color: #6e7681;">Set up the auth API URL in config.js or contact administrator.</small>';
+                    statusDiv.style.color = '#ffa657';
                 }
-            });
-        }
+            }
+        });
         
         let newsletterQueue = null;
         let emailStatuses = {};

@@ -974,6 +974,18 @@ window.onclick = function(event) {
     }
   }
 
+  // Global function for inline onclick handler (fallback)
+  window.showLoginModal = function() {
+    const loginModal = document.getElementById('loginModal');
+    if (loginModal) {
+      console.log('showLoginModal called');
+      loginModal.style.display = 'flex';
+      loginModal.style.visibility = 'visible';
+    } else {
+      console.error('Login modal not found!');
+    }
+  };
+
   // Initialize user auth UI - wait for user-auth.js to be ready
   function waitForUserAuth() {
     if (window.userAuth) {

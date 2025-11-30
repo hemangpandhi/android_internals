@@ -7294,8 +7294,9 @@ del {
   display: flex;
   align-items: center;
   flex-shrink: 0; /* Don't shrink */
-  z-index: 100;
+  z-index: 1000; /* Higher than nav to ensure clickable */
   margin-left: 1rem;
+  pointer-events: auto; /* Ensure clicks work */
 }
 
 .btn-login {
@@ -7308,6 +7309,9 @@ del {
   cursor: pointer;
   transition: var(--transition-fast);
   font-size: 0.9rem;
+  pointer-events: auto; /* Ensure button is clickable */
+  position: relative;
+  z-index: 1001; /* Above parent */
 }
 
 .btn-login:hover {

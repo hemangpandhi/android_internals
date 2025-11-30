@@ -1,54 +1,29 @@
 {
   "name": "android-internals",
   "version": "1.0.0",
-  "description": "Comprehensive guide to Android OS architecture and internals",
-  "main": "index.html",
+  "description": "Android Internals Website - Newsletter and Admin Panel",
+  "main": "tools/build.js",
   "scripts": {
     "build": "node tools/build.js",
-    "new-article": "node tools/new-article.js",
-    "dev": "python3 -m http.server 8000",
     "serve": "cd build && python3 -m http.server 8080",
     "preview": "npm run build && cd build && python3 -m http.server 8000",
     "deploy": "npm run build && echo 'Build completed. Deploy the build/ directory to your hosting service.'",
     "clean": "rm -rf build/",
-    "rebuild": "npm run clean && npm run build",
-    "newsletter": "node tools/newsletter-manager.js",
-    "api": "node tools/api-server.js",
-    "newsletter:add": "node tools/newsletter-manager.js add",
-    "newsletter:list": "node tools/newsletter-manager.js list",
-    "newsletter:count": "node tools/newsletter-manager.js count",
-    "newsletter:export": "node tools/newsletter-manager.js export",
-    "sync:emailjs": "node tools/sync-emailjs-contacts.js"
+    "rebuild": "npm run clean && npm run build"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "keywords": [
     "android",
     "internals",
-    "development",
-    "system-architecture",
-    "hal",
-    "framework",
-    "adb"
+    "newsletter",
+    "blog"
   ],
-  "author": "Android Internals Team",
+  "author": "Hemang Pandhi",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/android-internals.git"
-  },
-  "devDependencies": {
-    "marked": "^4.0.0"
-  },
-  "engines": {
-    "node": ">=14.0.0"
-  },
   "dependencies": {
-    "axios": "^1.11.0",
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.1",
-    "express": "^5.1.0",
-    "express-rate-limit": "^7.5.1",
-    "helmet": "^7.2.0",
-    "validator": "^13.15.15"
-  }
+    "marked": "^4.3.0"
+  },
+  "devDependencies": {}
 }

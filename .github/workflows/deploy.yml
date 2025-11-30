@@ -36,14 +36,34 @@ jobs:
       
     - name: Create config file
       run: |
+        # Check if required secrets are set
+        if [ -z "${{ secrets.EMAILJS_PUBLIC_KEY }}" ]; then
+          echo "⚠️  WARNING: EMAILJS_PUBLIC_KEY secret is not set!"
+          echo "⚠️  EmailJS forms will not work on production."
+        fi
+        if [ -z "${{ secrets.EMAILJS_SERVICE_ID }}" ]; then
+          echo "⚠️  WARNING: EMAILJS_SERVICE_ID secret is not set!"
+        fi
+        if [ -z "${{ secrets.EMAILJS_NEWSLETTER_TEMPLATE }}" ]; then
+          echo "⚠️  WARNING: EMAILJS_NEWSLETTER_TEMPLATE secret is not set!"
+        fi
+        if [ -z "${{ secrets.EMAILJS_CONTACT_TEMPLATE }}" ]; then
+          echo "⚠️  WARNING: EMAILJS_CONTACT_TEMPLATE secret is not set!"
+        fi
+        
         cp config.example.js config.js
-        # Replace placeholder values with GitHub Secrets
+        # Replace placeholder values with GitHub Secrets (use empty string if secret is not set)
         sed -i 's/YOUR_EMAILJS_PUBLIC_KEY_HERE/${{ secrets.EMAILJS_PUBLIC_KEY }}/g' config.js
         sed -i 's/YOUR_EMAILJS_SERVICE_ID_HERE/${{ secrets.EMAILJS_SERVICE_ID }}/g' config.js
         sed -i 's/YOUR_NEWSLETTER_TEMPLATE_ID_HERE/${{ secrets.EMAILJS_NEWSLETTER_TEMPLATE }}/g' config.js
         sed -i 's/YOUR_CONTACT_TEMPLATE_ID_HERE/${{ secrets.EMAILJS_CONTACT_TEMPLATE }}/g' config.js
-        sed -i 's|https://your-domain.com|${{ secrets.SITE_DOMAIN }}|g' config.js
-        sed -i 's/noreply@your-domain.com/${{ secrets.NEWSLETTER_FROM_EMAIL }}/g' config.js
+        sed -i 's|https://your-domain.com|${{ secrets.SITE_DOMAIN || "https://www.hemangpandhi.com" }}|g' config.js
+        sed -i 's/noreply@your-domain.com/${{ secrets.NEWSLETTER_FROM_EMAIL || "noreply@hemangpandhi.com" }}|g' config.js
+        
+        # Verify config.js was created and show first few lines (without exposing secrets)
+        echo "✅ Config file created"
+        echo "📋 Config file preview (first 5 lines):"
+        head -5 config.js | sed 's/publicKey:.*/publicKey: [REDACTED]/' | sed 's/serviceId:.*/serviceId: [REDACTED]/'
         
     - name: Build website
       run: node tools/build.js

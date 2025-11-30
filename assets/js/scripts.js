@@ -271,13 +271,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Ensure EmailJS is initialized
     if (window.EMAILJS_CONFIG && window.EMAILJS_CONFIG.publicKey) {
-      emailjs.init(window.EMAILJS_CONFIG.publicKey);
-      console.log('EmailJS initialized with key:', window.EMAILJS_CONFIG.publicKey);
+      // Check if publicKey is still a placeholder
+      if (window.EMAILJS_CONFIG.publicKey.includes('YOUR_EMAILJS') || 
+          window.EMAILJS_CONFIG.publicKey.includes('HERE')) {
+        console.error('⚠️ EmailJS configuration has placeholder values!');
+        console.error('⚠️ GitHub Secrets may not be set. Check: https://github.com/hemangpandhi/android_internals/settings/secrets/actions');
+        console.error('⚠️ EmailJS forms will not work until secrets are configured.');
+      } else {
+        emailjs.init(window.EMAILJS_CONFIG.publicKey);
+        console.log('✅ EmailJS initialized successfully');
+      }
     } else {
-      console.error('EmailJS config missing or invalid');
+      console.error('❌ EmailJS config missing or invalid');
+      console.error('Check if config.js is loading correctly');
     }
   } else {
-    console.error('EmailJS library not loaded');
+    console.error('❌ EmailJS library not loaded');
+    console.error('Check network tab for failed CDN requests');
   }
   
   // Test notification system
@@ -348,6 +358,17 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!window.EMAILJS_CONFIG.serviceId || !window.EMAILJS_CONFIG.newsletterTemplate) {
         console.error('EmailJS configuration missing');
         toast.error('Configuration Error', 'Email service not properly configured. Please try again later.');
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+        return;
+      }
+      
+      // Check if EmailJS library is loaded
+      if (typeof emailjs === 'undefined') {
+        console.error('EmailJS library is not loaded. Please refresh the page.');
+        toast.error('Email Service Error', 'Email service is not available. Please refresh the page and try again.');
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
         return;
       }
       
@@ -460,6 +481,15 @@ document.addEventListener('DOMContentLoaded', function() {
         to: 'info@hemangpandhi.com',
         recipient: 'info@hemangpandhi.com'
       };
+      
+      // Check if EmailJS library is loaded
+      if (typeof emailjs === 'undefined') {
+        console.error('EmailJS library is not loaded. Please refresh the page.');
+        toast.error('Email Service Error', 'Email service is not available. Please refresh the page and try again.');
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+        return;
+      }
       
       console.log('Sending contact EmailJS with template params:', templateParams);
       emailjs.send(window.EMAILJS_CONFIG.serviceId, window.EMAILJS_CONFIG.contactTemplate, templateParams)

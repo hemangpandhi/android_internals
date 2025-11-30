@@ -9,8 +9,8 @@
   <meta name="robots" content="index, follow">
   
       <!-- EmailJS Integration -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" integrity="sha384-8X4b8l4K2lI8v5vp3S2Q7zXWf+7F1oYFv4QyU8j8fwpdkO5GFvQq0s1hqTqA1hQy" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="config.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" integrity="sha384-8X4b8l4K2lI8v5vp3S2Q7zXWf+7F1oYFv4QyU8j8fwpdkO5GFvQq0s1hqTqA1hQy" crossorigin="anonymous" onerror="console.error('Failed to load EmailJS library')"></script>
+    <script type="text/javascript" src="config.js" onerror="console.error('Failed to load config.js')"></script>
   
   <!-- Security Headers -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://api.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.emailjs.com https://cdn.jsdelivr.net; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; media-src 'self'; worker-src 'self' blob:; manifest-src 'self';">

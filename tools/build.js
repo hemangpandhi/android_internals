@@ -200,13 +200,8 @@ function generateVideosHTML(sections, disclaimer = '') {
           <a href="index.html#topics" class="nav-link">Topics</a>
           <a href="index.html#blogs" class="nav-link">Blogs</a>
           <a href="index.html#about" class="nav-link">About</a>
-          <div class="nav-dropdown">
-            <a href="#" class="nav-link dropdown-toggle">Resources</a>
-            <div class="dropdown-menu">
-              <a href="books.html" class="dropdown-link">Books</a>
-              <a href="videos.html" class="dropdown-link">Videos</a>
-            </div>
-          </div>
+          <a href="books.html" class="nav-link">Reference Books</a>
+          <a href="videos.html" class="nav-link">Reference Videos</a>
         </div>
     </div>
   </nav>

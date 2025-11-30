@@ -47,7 +47,7 @@ jobs:
             node tools/sync-emailjs-contacts.js || echo "api_failed=true" >> $GITHUB_OUTPUT
           fi
       
-      - name: Fallback: Check for CSV file
+      - name: Fallback Check for CSV file
         if: always()
         id: check_csv
         run: |

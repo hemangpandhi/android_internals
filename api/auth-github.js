@@ -82,10 +82,12 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Failed to get user info' });
       }
 
-      // Check if user is allowed
+      // Check if this is for admin panel (check state or referer)
+      const isAdmin = req.query.admin === 'true' || req.headers.referer?.includes('newsletter-admin');
       const allowedUsers = ALLOWED_GITHUB_USERS ? ALLOWED_GITHUB_USERS.split(',').map(u => u.trim()) : [];
       
-      if (allowedUsers.length > 0 && !allowedUsers.includes(userData.login)) {
+      // For admin panel, check allowed users
+      if (isAdmin && allowedUsers.length > 0 && !allowedUsers.includes(userData.login)) {
         return res.status(403).json({ 
           error: 'Access denied',
           message: `User ${userData.login} is not authorized to access the admin panel`
@@ -94,19 +96,27 @@ export default async function handler(req, res) {
 
       // Create session token (simple JWT-like token)
       const sessionToken = Buffer.from(JSON.stringify({
+        provider: 'github',
         username: userData.login,
         name: userData.name || userData.login,
         avatar: userData.avatar_url,
+        email: userData.email || `${userData.login}@users.noreply.github.com`,
+        id: userData.id,
         exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
       })).toString('base64');
 
-      // Redirect to admin panel with token
-      // Always use production site URL (not from headers, which might be GitHub)
-      // Can be overridden with SITE_URL environment variable
+      // Redirect based on context
       const siteUrl = process.env.SITE_URL || 'https://www.hemangpandhi.com';
-      const adminUrl = `${siteUrl}/newsletter-admin.html?token=${sessionToken}`;
       
-      return res.redirect(adminUrl);
+      if (isAdmin) {
+        // Admin panel redirect
+        const adminUrl = `${siteUrl}/newsletter-admin.html?token=${sessionToken}`;
+        return res.redirect(adminUrl);
+      } else {
+        // Regular user redirect to homepage
+        const returnUrl = `${siteUrl}?token=${sessionToken}&provider=github`;
+        return res.redirect(returnUrl);
+      }
 
     } catch (error) {
       console.error('OAuth error:', error);
@@ -132,9 +142,12 @@ export default async function handler(req, res) {
       return res.status(200).json({ 
         authenticated: true, 
         user: {
+          provider: decoded.provider || 'github',
           username: decoded.username,
           name: decoded.name,
-          avatar: decoded.avatar
+          avatar: decoded.avatar,
+          email: decoded.email,
+          id: decoded.id
         }
       });
 

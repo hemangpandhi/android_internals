@@ -39,7 +39,8 @@ window.EMAILJS_CONFIG = {
     // EmailJS Configuration
     publicKey: 'LMsUX_rrpIYPFa76a',
     serviceId: 'service_dygzcoh',
-    newsletterTemplate: 'template_uwh1kil',
+    newsletterTemplate: 'template_uwh1kil', // Template for owner notification
+    newsletterConfirmationTemplate: 'template_uwh1kil', // Template for subscriber confirmation (update this with actual template ID)
     contactTemplate: 'template_7bzhk1x',
     
     // Site Configuration

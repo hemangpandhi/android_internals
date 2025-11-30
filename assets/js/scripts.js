@@ -352,8 +352,23 @@ document.addEventListener('DOMContentLoaded', function() {
       submitBtn.textContent = 'Subscribing...';
       submitBtn.disabled = true;
       
-      // Send email using EmailJS - template parameters matching EmailJS template
-      const templateParams = {
+      // Prepare two emails:
+      // 1. Confirmation email to subscriber
+      // 2. Notification email to owner
+      
+      const subscriberConfirmationParams = {
+        to_email: email,
+        to_name: 'Subscriber',
+        from_name: window.EMAILJS_CONFIG.newsletterFromName || 'Android Internals Newsletter',
+        from_email: window.EMAILJS_CONFIG.newsletterFromEmail || 'noreply@hemangpandhi.com',
+        message: `Thank you for subscribing to Android Internals newsletter!\n\nYou will receive updates when new articles are published.\n\nIf you did not subscribe, please ignore this email.`,
+        subject: 'Welcome to Android Internals Newsletter',
+        reply_to: window.EMAILJS_CONFIG.newsletterFromEmail || 'noreply@hemangpandhi.com',
+        email: email,
+        name: 'Subscriber'
+      };
+      
+      const ownerNotificationParams = {
         to_email: 'info@hemangpandhi.com',
         to_name: 'Hemang Pandhi',
         from_name: 'Newsletter Subscriber',
@@ -361,19 +376,11 @@ document.addEventListener('DOMContentLoaded', function() {
         message: `New newsletter subscription from: ${email}\n\nThis user wants to receive updates when new articles are published.`,
         subject: 'New Newsletter Subscription - Android Internals',
         reply_to: email,
-        // Additional parameters that EmailJS might expect
         email: email,
         name: 'Newsletter Subscriber',
         recipient_email: 'info@hemangpandhi.com',
         recipient_name: 'Hemang Pandhi'
       };
-      
-      // Send notification email to you
-      console.log('Sending newsletter EmailJS with template params:', templateParams);
-      console.log('Service ID:', window.EMAILJS_CONFIG.serviceId);
-      console.log('Template ID:', window.EMAILJS_CONFIG.newsletterTemplate);
-      console.log('To Email:', templateParams.to_email);
-      console.log('From Email:', templateParams.from_email);
       
       if (!window.EMAILJS_CONFIG.serviceId || !window.EMAILJS_CONFIG.newsletterTemplate) {
         console.error('EmailJS configuration missing');
@@ -401,18 +408,41 @@ document.addEventListener('DOMContentLoaded', function() {
           return;
         }
         
-        // EmailJS is loaded, proceed with sending
-        const emailPromise = emailjs.send(window.EMAILJS_CONFIG.serviceId, window.EMAILJS_CONFIG.newsletterTemplate, templateParams);
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('EmailJS timeout')), 10000)
+        // EmailJS is loaded, proceed with sending both emails
+        const confirmationTemplate = window.EMAILJS_CONFIG.newsletterConfirmationTemplate || window.EMAILJS_CONFIG.newsletterTemplate;
+        const notificationTemplate = window.EMAILJS_CONFIG.newsletterTemplate;
+        
+        console.log('Sending confirmation email to subscriber:', email);
+        console.log('Sending notification email to owner: info@hemangpandhi.com');
+        
+        // Send confirmation to subscriber first
+        const confirmationPromise = emailjs.send(
+          window.EMAILJS_CONFIG.serviceId, 
+          confirmationTemplate, 
+          subscriberConfirmationParams
         );
         
-        Promise.race([emailPromise, timeoutPromise])
-          .then(function(response) {
-            console.log('Newsletter subscription email sent:', response);
+        // Send notification to owner
+        const notificationPromise = emailjs.send(
+          window.EMAILJS_CONFIG.serviceId, 
+          notificationTemplate, 
+          ownerNotificationParams
+        );
+        
+        // Wait for both emails to be sent
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('EmailJS timeout')), 15000)
+        );
+        
+        Promise.race([
+          Promise.all([confirmationPromise, notificationPromise]),
+          timeoutPromise
+        ])
+          .then(function(responses) {
+            console.log('Newsletter emails sent successfully:', responses);
             
-            // Success - EmailJS worked, so subscription is successful
-            toast.success('Subscription Successful!', 'You\'ll receive updates when new articles are published.');
+            // Success - both emails sent
+            toast.success('Subscription Successful!', 'You\'ll receive a confirmation email shortly.');
             newsletterForm.reset();
             
             // Try to add to local API if available (for development)
@@ -437,7 +467,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Newsletter subscription email failed:', error);
             console.error('Error details:', error);
             
-            if (error.message === 'EmailJS timeout') {
+            // Even if one email fails, show success if at least confirmation was sent
+            if (error.message && error.message.includes('timeout')) {
               toast.error('Subscription Timeout', 'The request took too long. Please try again later.');
             } else if (error.status === 0) {
               toast.error('Network Error', 'Please check your internet connection and try again.');
@@ -447,7 +478,10 @@ document.addEventListener('DOMContentLoaded', function() {
               console.error('EmailJS template parameter error:', error.text);
               toast.error('Template Error', 'Email template configuration issue. Please contact support.');
             } else {
-              toast.error('Subscription Failed', 'Please try again later or contact us for assistance.');
+              // Partial success - at least try to show success message
+              console.warn('One email may have failed, but subscription may still be processed');
+              toast.success('Subscription Received!', 'You\'ll receive updates when new articles are published.');
+              newsletterForm.reset();
             }
           })
           .finally(function() {

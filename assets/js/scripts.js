@@ -910,16 +910,25 @@ window.onclick = function(event) {
       btnLogin.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
+        console.log('Sign In button clicked');
         if (loginModal) {
+          console.log('Showing login modal');
           loginModal.style.display = 'flex';
+          loginModal.style.visibility = 'visible';
+        } else {
+          console.error('Login modal not found!');
         }
       });
+    } else {
+      console.error('Sign In button not found!');
     }
 
     // Close modal
     if (loginModalClose) {
       loginModalClose.addEventListener('click', () => {
-        loginModal.style.display = 'none';
+        if (loginModal) {
+          loginModal.style.display = 'none';
+        }
       });
     }
 

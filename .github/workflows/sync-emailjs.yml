@@ -47,9 +47,9 @@ jobs:
           fi
         continue-on-error: true
       
-      - name: Fallback: Sync from CSV (if API failed)
-        if: steps.api_sync.outputs.api_available != 'true' || steps.api_sync.outputs.api_failed == 'true'
+      - name: Fallback: Check for CSV file
         id: check_csv
+        if: always() && (steps.api_sync.outputs.api_available != 'true' || steps.api_sync.outputs.api_failed == 'true')
         run: |
           if [ -f "emailjs-contacts.csv" ]; then
             echo "csv_exists=true" >> $GITHUB_OUTPUT
@@ -81,7 +81,7 @@ jobs:
           echo "✅ Sync completed - subscribers.json updated"
       
       - name: No sync method available
-        if: (steps.api_sync.outputs.api_available != 'true' || steps.api_sync.outputs.api_failed == 'true' || steps.api_sync.outcome == 'failure') && steps.check_csv.outputs.csv_exists != 'true'
+        if: always() && (steps.api_sync.outputs.api_available != 'true' || steps.api_sync.outputs.api_failed == 'true') && steps.check_csv.outputs.csv_exists != 'true'
         run: |
           echo "ℹ️  No automatic sync method available"
           echo "📝 Set up EmailJS API credentials OR add emailjs-contacts.csv file"

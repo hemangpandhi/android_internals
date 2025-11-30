@@ -7374,6 +7374,8 @@ del {
   transition: var(--transition-normal);
   z-index: 10000; /* Above everything including nav */
   overflow: hidden;
+  margin-top: 0.5rem; /* Space from avatar */
+  white-space: nowrap; /* Prevent text wrapping */
 }
 
 .user-menu-logged-in:hover .user-menu-dropdown,
@@ -7397,6 +7399,8 @@ del {
 .user-email {
   font-size: 0.85rem;
   color: var(--text-muted);
+  word-break: break-all; /* Break long emails */
+  overflow-wrap: break-word;
 }
 
 .user-menu-item {

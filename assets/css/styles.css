@@ -323,6 +323,7 @@ main {
 
 .nav-container {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   padding: 0.5rem 1.5rem 0.5rem 1rem;
   max-width: 1200px;
@@ -391,11 +392,12 @@ main {
   display: flex;
   gap: var(--space-md);
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* Prevent wrapping on desktop */
   flex: 1;
-  justify-content: flex-start;
-  margin-left: 1rem;
-  min-width: 0; /* Allow shrinking */
+  justify-content: center; /* Center the links */
+  margin: 0 auto;
+  min-width: 0;
+  max-width: fit-content;
 }
 
 .nav-link {
@@ -4024,10 +4026,11 @@ html {
     height: auto;
     background: none;
     flex-direction: row;
-    justify-content: flex-end;
+    justify-content: center !important; /* Center links on desktop */
     align-items: center;
     z-index: auto;
-    gap: 2rem;
+    gap: 1rem;
+    flex-wrap: nowrap !important;
   }
   
   .nav-link {
@@ -7291,14 +7294,8 @@ del {
   display: flex;
   align-items: center;
   flex-shrink: 0; /* Don't shrink */
-  margin-left: auto; /* Push to right */
   z-index: 100;
-  order: 3; /* After nav-links, before mobile toggle */
-}
-
-.mobile-menu-toggle {
-  flex-shrink: 0;
-  order: 4; /* Last item */
+  margin-left: 1rem;
 }
 
 .btn-login {
@@ -7538,12 +7535,6 @@ del {
 }
 
 /* Ensure user auth menu is visible and doesn't break layout */
-.user-auth-menu {
-  z-index: 100;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
 .user-menu-logged-out {
   display: block !important;
 }

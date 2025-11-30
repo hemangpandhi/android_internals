@@ -906,8 +906,13 @@ window.onclick = function(event) {
 
     // Login button
     if (btnLogin) {
-      btnLogin.addEventListener('click', () => {
-        loginModal.style.display = 'flex';
+      btnLogin.setAttribute('data-initialized', 'true');
+      btnLogin.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (loginModal) {
+          loginModal.style.display = 'flex';
+        }
       });
     }
 
@@ -960,11 +965,26 @@ window.onclick = function(event) {
     }
   }
 
-  // Initialize user auth UI when DOM is ready
+  // Initialize user auth UI - wait for user-auth.js to be ready
+  function waitForUserAuth() {
+    if (window.userAuth) {
+      initUserAuthUI();
+    } else {
+      // Wait for userAuthReady event
+      window.addEventListener('userAuthReady', initUserAuthUI, { once: true });
+      // Fallback: try again after a short delay
+      setTimeout(() => {
+        if (window.userAuth && !document.getElementById('btnLogin')?.hasAttribute('data-initialized')) {
+          initUserAuthUI();
+        }
+      }, 100);
+    }
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initUserAuthUI);
+    document.addEventListener('DOMContentLoaded', waitForUserAuth);
   } else {
-    initUserAuthUI();
+    waitForUserAuth();
   }
 
   // ===== PREFERENCES MODAL =====

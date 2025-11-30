@@ -7535,13 +7535,18 @@ del {
 }
 
 /* Ensure user auth menu is visible and doesn't break layout */
+/* user-menu-logged-out display is controlled by JavaScript */
+/* Default: show logged-out, hide logged-in */
 .user-menu-logged-out {
-  display: block !important;
+  display: flex;
 }
 
 .user-menu-logged-in {
-  display: block !important;
+  display: none;
 }
+
+/* user-menu-logged-in display is controlled by JavaScript */
+/* Don't force display here - let JS handle it */
 
 /* Mobile Responsive */
 @media (max-width: 768px) {

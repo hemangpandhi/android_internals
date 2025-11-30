@@ -204,6 +204,16 @@ class UserAuth {
     }
 }
 
-// Initialize global instance
-window.userAuth = new UserAuth();
+// Initialize global instance when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.userAuth = new UserAuth();
+        // Dispatch event that user-auth is ready
+        window.dispatchEvent(new CustomEvent('userAuthReady'));
+    });
+} else {
+    window.userAuth = new UserAuth();
+    // Dispatch event that user-auth is ready
+    window.dispatchEvent(new CustomEvent('userAuthReady'));
+}
 

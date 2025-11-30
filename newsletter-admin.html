@@ -279,6 +279,7 @@
                     <button class="btn btn-secondary" onclick="selectAllSubscribers()">✅ Select All</button>
                     <button class="btn btn-secondary" onclick="deselectAllSubscribers()">❌ Deselect All</button>
                     <button class="btn btn-secondary" onclick="refreshSubscribers()">🔄 Refresh</button>
+                    <button class="btn btn-secondary" onclick="downloadAllSubscribers()">📥 Download JSON</button>
                     <div class="selected-count" id="selected-count">0 selected</div>
                 </div>
                 
@@ -472,8 +473,8 @@
                 
                 const subscribers = await response.json();
                 
-                // Filter only active subscribers
-                allSubscribers = subscribers.filter(sub => sub.active !== false);
+                // Store all subscribers (including inactive for management)
+                allSubscribers = subscribers;
                 
                 if (allSubscribers.length === 0) {
                     statsElement.innerHTML = '📊 No active subscribers found';
@@ -484,7 +485,8 @@
                     return;
                 }
                 
-                statsElement.innerHTML = `📊 ${allSubscribers.length} active subscribers`;
+                const activeCount = allSubscribers.filter(sub => sub.active !== false).length;
+                statsElement.innerHTML = `📊 ${activeCount} active / ${allSubscribers.length} total subscribers`;
                 statsElement.className = 'status completed';
                 
                 // Render subscriber list with checkboxes
@@ -515,6 +517,7 @@
             
             listElement.innerHTML = allSubscribers.map((sub, index) => {
                 const isSelected = selectedSubscribers.has(sub.email);
+                const isActive = sub.active !== false;
                 const subscribedDate = new Date(sub.subscribedAt).toLocaleDateString('en-US', { 
                     year: 'numeric', 
                     month: 'short', 
@@ -522,22 +525,27 @@
                 });
                 
                 return `
-                    <div class="email-item">
+                    <div class="email-item" style="${!isActive ? 'opacity: 0.6;' : ''}">
                         <input 
                             type="checkbox" 
                             id="subscriber-${index}" 
                             ${isSelected ? 'checked' : ''}
+                            ${!isActive ? 'disabled' : ''}
                             onchange="toggleSubscriber('${sub.email}', ${index})"
                         >
                         <div class="email-info">
-                            <span class="email">${sub.email}</span>
+                            <span class="email">${sub.email} ${!isActive ? '(Inactive)' : ''}</span>
                             <span class="name">${sub.name || 'No name'}</span>
                             <span class="date">${subscribedDate}</span>
                         </div>
                         <div class="actions">
-                            <button class="btn btn-danger" onclick="removeSubscriber('${sub.email}')" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
-                                🗑️ Remove
-                            </button>
+                            ${isActive ? `
+                                <button class="btn btn-danger" onclick="removeSubscriber('${sub.email}')" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                    🗑️ Remove
+                                </button>
+                            ` : `
+                                <span style="color: #8b949e; font-size: 0.9rem;">Inactive</span>
+                            `}
                         </div>
                     </div>
                 `;
@@ -591,7 +599,7 @@
             
             selectedSubscribers.forEach(email => {
                 const subscriber = allSubscribers.find(sub => sub.email === email);
-                if (subscriber) {
+                if (subscriber && subscriber.active !== false) {
                     const emailItem = document.createElement('div');
                     emailItem.className = 'email-item';
                     emailItem.innerHTML = `
@@ -613,7 +621,7 @@
         }
 
         async function removeSubscriber(email) {
-            if (!confirm(`Are you sure you want to remove ${email} from the subscriber list?`)) {
+            if (!confirm(`Are you sure you want to remove ${email} from the subscriber list?\n\nThis will mark them as inactive and you can download the updated file.`)) {
                 return;
             }
             
@@ -633,19 +641,91 @@
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success) {
-                        log(`✅ Subscriber ${email} removed successfully`);
+                        log(`✅ Subscriber ${email} removed successfully via API`);
                         selectedSubscribers.delete(email);
                         loadSubscribers();
                         return;
                     }
                 }
             } catch (error) {
-                log(`⚠️ API not available, subscriber removal via API failed: ${error.message}`);
+                log(`⚠️ API not available, using client-side removal: ${error.message}`);
             }
             
-            // Fallback: Just remove from UI (file will need manual update)
-            alert('Subscriber removal requires API access. Please update /data/subscribers.json manually or ensure the API server is running.');
-            log(`⚠️ Subscriber ${email} removal requested but API is not available`);
+            // Client-side removal: Mark as inactive and update local data
+            const subscriberIndex = allSubscribers.findIndex(sub => sub.email === email);
+            if (subscriberIndex !== -1) {
+                // Mark as inactive instead of removing
+                allSubscribers[subscriberIndex].active = false;
+                allSubscribers[subscriberIndex].updatedAt = new Date().toISOString();
+                
+                // Remove from selected list
+                selectedSubscribers.delete(email);
+                
+                // Update UI
+                renderSubscriberList();
+                
+                // Provide download option
+                downloadUpdatedSubscribers();
+                
+                log(`✅ Subscriber ${email} marked as inactive`);
+                log(`📥 Updated subscribers.json is ready for download`);
+            } else {
+                log(`❌ Subscriber ${email} not found`);
+            }
+        }
+
+        function downloadUpdatedSubscribers() {
+            try {
+                // Create updated subscribers array (only active ones)
+                const updatedSubscribers = allSubscribers.map(sub => ({
+                    email: sub.email,
+                    name: sub.name,
+                    subscribedAt: sub.subscribedAt,
+                    updatedAt: sub.updatedAt || new Date().toISOString(),
+                    active: sub.active !== false // Keep active field
+                }));
+                
+                // Create blob and download
+                const jsonContent = JSON.stringify(updatedSubscribers, null, 2);
+                const blob = new Blob([jsonContent], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'subscribers.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                log(`📥 Downloaded updated subscribers.json`);
+                
+                // Show instructions
+                setTimeout(() => {
+                    alert(`✅ Subscriber marked as inactive!\n\n📥 Updated subscribers.json has been downloaded.\n\nTo apply the changes:\n1. Replace /data/subscribers.json with the downloaded file\n2. Or manually update the file on your server\n\nClick "Refresh" after updating the file.`);
+                }, 500);
+            } catch (error) {
+                log(`❌ Error creating download: ${error.message}`);
+                alert(`✅ Subscriber marked as inactive in UI!\n\n⚠️ To save changes, manually update /data/subscribers.json:\n\nSet "active": false for ${email}\n\nOr use the API server if available.`);
+            }
+        }
+
+        function downloadAllSubscribers() {
+            try {
+                const jsonContent = JSON.stringify(allSubscribers, null, 2);
+                const blob = new Blob([jsonContent], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'subscribers.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                log(`📥 Downloaded subscribers.json`);
+            } catch (error) {
+                log(`❌ Error downloading subscribers: ${error.message}`);
+            }
         }
 
         async function sendNewsletters() {

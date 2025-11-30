@@ -99,14 +99,29 @@ A GitHub Actions workflow is set up to automatically sync contacts daily:
 If you're running the API server locally:
 
 ```bash
-# Start API server
+# Start API server (in one terminal)
 npm run api
 
-# Sync via API endpoint
+# In another terminal, sync via API endpoint
 curl -X POST http://localhost:3001/api/sync-emailjs \
   -H "Content-Type: application/json" \
   -d '{"csvPath": "path/to/emailjs-contacts.csv"}'
 ```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Contacts synced successfully",
+  "result": {
+    "added": 2,
+    "updated": 1,
+    "total": 5
+  }
+}
+```
+
+**Note:** The CSV path should be relative to the project root, or provide an absolute path.
 
 ### Benefits of Automatic Sync:
 - ✅ No manual CSV import needed

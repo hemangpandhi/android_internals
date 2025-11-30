@@ -280,7 +280,19 @@
                     <button class="btn btn-secondary" onclick="deselectAllSubscribers()">❌ Deselect All</button>
                     <button class="btn btn-secondary" onclick="refreshSubscribers()">🔄 Refresh</button>
                     <button class="btn btn-secondary" onclick="downloadAllSubscribers()">📥 Download JSON</button>
+                    <button class="btn" onclick="showAddSubscriberForm()">➕ Add Subscriber</button>
                     <div class="selected-count" id="selected-count">0 selected</div>
+                </div>
+                
+                <!-- Add Subscriber Form (hidden by default) -->
+                <div id="add-subscriber-form" style="display: none; margin-top: 1rem; padding: 1rem; background: #0d1117; border: 1px solid #30363d; border-radius: 4px;">
+                    <h4 style="margin-bottom: 1rem;">Add New Subscriber</h4>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                        <input type="email" id="new-subscriber-email" placeholder="Email address" style="padding: 0.5rem; border-radius: 4px; border: 1px solid #30363d; background: #161b22; color: #f0f6fc; flex: 1; min-width: 200px;">
+                        <input type="text" id="new-subscriber-name" placeholder="Name (optional)" style="padding: 0.5rem; border-radius: 4px; border: 1px solid #30363d; background: #161b22; color: #f0f6fc; flex: 1; min-width: 150px;">
+                        <button class="btn" onclick="addSubscriber()">➕ Add</button>
+                        <button class="btn btn-secondary" onclick="hideAddSubscriberForm()">Cancel</button>
+                    </div>
                 </div>
                 
                 <div id="subscriber-list" class="email-list" style="display: none;">
@@ -769,6 +781,62 @@
             } catch (error) {
                 log(`❌ Error downloading subscribers: ${error.message}`);
             }
+        }
+
+        function showAddSubscriberForm() {
+            document.getElementById('add-subscriber-form').style.display = 'block';
+            document.getElementById('new-subscriber-email').focus();
+        }
+
+        function hideAddSubscriberForm() {
+            document.getElementById('add-subscriber-form').style.display = 'none';
+            document.getElementById('new-subscriber-email').value = '';
+            document.getElementById('new-subscriber-name').value = '';
+        }
+
+        function addSubscriber() {
+            const email = document.getElementById('new-subscriber-email').value.trim();
+            const name = document.getElementById('new-subscriber-name').value.trim();
+            
+            if (!email || !email.includes('@')) {
+                alert('Please enter a valid email address');
+                return;
+            }
+            
+            // Check if subscriber already exists
+            const existingSubscriber = allSubscribers.find(sub => sub.email.toLowerCase() === email.toLowerCase());
+            if (existingSubscriber) {
+                if (confirm(`Subscriber ${email} already exists. Do you want to reactivate them?`)) {
+                    existingSubscriber.active = true;
+                    existingSubscriber.updatedAt = new Date().toISOString();
+                    if (name) {
+                        existingSubscriber.name = name;
+                    }
+                    log(`✅ Reactivated subscriber: ${email}`);
+                } else {
+                    return;
+                }
+            } else {
+                // Add new subscriber
+                const newSubscriber = {
+                    email: email,
+                    name: name || email.split('@')[0],
+                    subscribedAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    active: true
+                };
+                allSubscribers.push(newSubscriber);
+                log(`✅ Added new subscriber: ${email}`);
+            }
+            
+            // Update UI
+            renderSubscriberList();
+            hideAddSubscriberForm();
+            
+            // Download updated file
+            downloadAllSubscribers();
+            
+            alert(`✅ Subscriber ${email} added successfully!\n\n📥 Updated subscribers.json has been downloaded.\n\nPlease replace /data/subscribers.json with the downloaded file on your server.`);
         }
 
         async function sendNewsletters() {

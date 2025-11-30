@@ -341,10 +341,24 @@ class UserAuth {
     // User Preferences Management
     getPreferences() {
         const prefs = localStorage.getItem('user_preferences');
-        return prefs ? JSON.parse(prefs) : {
+        const defaultPrefs = {
             theme: 'dark', // default
             bookmarks: []
         };
+        if (prefs) {
+            try {
+                const parsed = JSON.parse(prefs);
+                // Ensure theme is valid
+                if (!['dark', 'light', 'auto'].includes(parsed.theme)) {
+                    parsed.theme = 'dark';
+                }
+                return { ...defaultPrefs, ...parsed };
+            } catch (e) {
+                console.error('Error parsing preferences:', e);
+                return defaultPrefs;
+            }
+        }
+        return defaultPrefs;
     }
 
     savePreferences(preferences) {

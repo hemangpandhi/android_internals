@@ -1111,24 +1111,67 @@ function showPreferencesModal() {
 
   // Apply theme on load
   function applyTheme() {
+    console.log('🎨 [THEME] Applying theme on load');
     const userAuth = window.userAuth;
     if (userAuth) {
       const prefs = userAuth.getPreferences();
       const theme = prefs.theme || 'dark';
+      console.log('🎨 [THEME] Loaded theme preference:', theme);
       
       if (theme === 'auto') {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const actualTheme = prefersDark ? 'dark' : 'light';
+        console.log('🎨 [THEME] Auto theme - applying:', actualTheme);
+        document.documentElement.setAttribute('data-theme', actualTheme);
       } else {
+        console.log('🎨 [THEME] Applying theme:', theme);
         document.documentElement.setAttribute('data-theme', theme);
+      }
+    } else {
+      // Fallback if userAuth not ready - check localStorage directly
+      const savedPrefs = localStorage.getItem('user_preferences');
+      if (savedPrefs) {
+        try {
+          const prefs = JSON.parse(savedPrefs);
+          const theme = prefs.theme || 'dark';
+          console.log('🎨 [THEME] Fallback - applying theme:', theme);
+          if (theme === 'auto') {
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+          } else {
+            document.documentElement.setAttribute('data-theme', theme);
+          }
+        } catch (e) {
+          console.error('Error parsing preferences:', e);
+        }
+      } else {
+        // Default to dark
+        document.documentElement.setAttribute('data-theme', 'dark');
       }
     }
   }
 
-  // Listen for theme changes
+  // Listen for theme changes from system
   if (window.matchMedia) {
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', (e) => {
+      console.log('🎨 [THEME] System theme changed');
+      const userAuth = window.userAuth;
+      if (userAuth) {
+        const prefs = userAuth.getPreferences();
+        // Only apply auto theme if user has selected auto
+        if (prefs.theme === 'auto') {
+          applyTheme();
+        }
+      }
+    });
   }
+
+  // Listen for theme change events
+  window.addEventListener('themeChange', (e) => {
+    console.log('🎨 [THEME] Theme change event received:', e.detail);
+    // Theme is already applied by updateTheme, but we can trigger a re-render if needed
+  });
 
   // Apply theme on load
   if (document.readyState === 'loading') {
@@ -1136,3 +1179,9 @@ function showPreferencesModal() {
   } else {
     applyTheme();
   }
+  
+  // Also apply theme when userAuth is ready
+  window.addEventListener('userAuthReady', () => {
+    console.log('🎨 [THEME] userAuth ready, applying theme');
+    setTimeout(applyTheme, 100);
+  });

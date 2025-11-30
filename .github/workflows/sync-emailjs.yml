@@ -102,8 +102,25 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add data/subscribers.json build/data/subscribers.json
-          git diff --staged --quiet || git commit -m "Auto-sync: Update subscribers from EmailJS contacts [skip ci]"
-          git push
+          
+          # Add subscribers.json if it exists
+          if [ -f "data/subscribers.json" ]; then
+            git add data/subscribers.json
+          fi
+          
+          # Create build directory if it doesn't exist and copy subscribers.json
+          if [ -f "data/subscribers.json" ]; then
+            mkdir -p build/data
+            cp data/subscribers.json build/data/subscribers.json
+            git add build/data/subscribers.json
+          fi
+          
+          # Only commit if there are changes
+          if ! git diff --staged --quiet; then
+            git commit -m "Auto-sync: Update subscribers from EmailJS contacts [skip ci]"
+            git push
+          else
+            echo "No changes to commit"
+          fi
         continue-on-error: true
 

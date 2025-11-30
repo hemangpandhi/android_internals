@@ -54,18 +54,26 @@ export default async function handler(req, res) {
 
   // Step 1: Initiate OAuth flow (redirect to Google)
   if (req.method === 'GET' && req.query.action === 'login') {
-    // Use production Vercel URL for callback (must match Google OAuth app callback URL)
-    const vercelUrl = 'https://android-internals.vercel.app';
-    const redirectUri = `${vercelUrl}/api/auth-google?action=callback`;
-    const scope = 'openid email profile';
-    const redirectTo = req.query.redirect_to || siteUrl;
-    const state = req.query.state || Math.random().toString(36).substring(7);
-    // Store redirect_to in state
-    const stateWithRedirect = `${state}|${encodeURIComponent(redirectTo)}`;
-    
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${stateWithRedirect}&access_type=offline&prompt=consent`;
-    
-    return res.redirect(googleAuthUrl);
+    try {
+      // Use production Vercel URL for callback (must match Google OAuth app callback URL)
+      const vercelUrl = 'https://android-internals.vercel.app';
+      const redirectUri = `${vercelUrl}/api/auth-google?action=callback`;
+      const scope = 'openid email profile';
+      const redirectTo = req.query.redirect_to || siteUrl;
+      const state = req.query.state || Math.random().toString(36).substring(7);
+      // Store redirect_to in state
+      const stateWithRedirect = `${state}|${encodeURIComponent(redirectTo)}`;
+      
+      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${stateWithRedirect}&access_type=offline&prompt=consent`;
+      
+      return res.redirect(googleAuthUrl);
+    } catch (error) {
+      console.error('Error in login action:', error);
+      return res.status(500).json({ 
+        error: 'Failed to initiate login',
+        message: error.message 
+      });
+    }
   }
 
   // Step 2: Handle OAuth callback

@@ -30,9 +30,12 @@ export default async function handler(req, res) {
       : 'https://android-internals.vercel.app';
     const redirectUri = `${vercelUrl}/api/auth-github?action=callback`;
     const scope = 'read:user';
+    const redirectTo = req.query.redirect_to || (process.env.SITE_URL || 'https://www.hemangpandhi.com');
     const state = req.query.state || Math.random().toString(36).substring(7);
+    // Store redirect_to in state
+    const stateWithRedirect = `${state}|${encodeURIComponent(redirectTo)}`;
     
-    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}`;
+    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${stateWithRedirect}`;
     
     return res.redirect(githubAuthUrl);
   }
@@ -43,6 +46,13 @@ export default async function handler(req, res) {
 
     if (!code) {
       return res.status(400).json({ error: 'Authorization code missing' });
+    }
+
+    // Extract redirect_to from state
+    let redirectTo = process.env.SITE_URL || 'https://www.hemangpandhi.com';
+    if (state && state.includes('|')) {
+      const parts = state.split('|');
+      redirectTo = decodeURIComponent(parts[1]);
     }
 
     try {
@@ -106,15 +116,13 @@ export default async function handler(req, res) {
       })).toString('base64');
 
       // Redirect based on context
-      const siteUrl = process.env.SITE_URL || 'https://www.hemangpandhi.com';
-      
       if (isAdmin) {
         // Admin panel redirect
-        const adminUrl = `${siteUrl}/newsletter-admin.html?token=${sessionToken}`;
+        const adminUrl = `${redirectTo}/newsletter-admin.html?token=${sessionToken}`;
         return res.redirect(adminUrl);
       } else {
-        // Regular user redirect to homepage
-        const returnUrl = `${siteUrl}?token=${sessionToken}&provider=github`;
+        // Regular user redirect to original page
+        const returnUrl = `${redirectTo}${redirectTo.includes('?') ? '&' : '?'}token=${sessionToken}&provider=github`;
         return res.redirect(returnUrl);
       }
 
@@ -145,7 +153,7 @@ export default async function handler(req, res) {
           provider: decoded.provider || 'github',
           username: decoded.username,
           name: decoded.name,
-          avatar: decoded.avatar,
+          avatar: decoded.avatar || decoded.avatar_url,
           email: decoded.email,
           id: decoded.id
         }

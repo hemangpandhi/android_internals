@@ -14,6 +14,16 @@ class UserAuth {
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
         const provider = urlParams.get('provider') || 'github';
+        const error = urlParams.get('error');
+
+        if (error) {
+            console.error('OAuth error:', error);
+            alert(`Login failed: ${error}`);
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            this.onUserChange(); // Update UI to show logged out state
+            return;
+        }
 
         if (token) {
             this.handleAuthCallback(token, provider);
@@ -22,6 +32,8 @@ class UserAuth {
         } else {
             // Check for existing session
             this.loadUserSession();
+            // Update UI even if no session
+            this.onUserChange();
         }
     }
 
@@ -39,15 +51,24 @@ class UserAuth {
                 this.currentUser = {
                     ...data.user,
                     provider: provider,
-                    token: token
+                    token: token,
+                    // Normalize avatar/picture field
+                    avatar: data.user.avatar || data.user.picture,
+                    picture: data.user.picture || data.user.avatar
                 };
                 this.saveUserSession();
                 this.onUserChange();
+                console.log('Authentication successful:', this.currentUser);
                 return true;
+            } else {
+                console.error('Authentication failed:', data.error || 'Unknown error');
+                alert('Authentication failed. Please try again.');
             }
         } catch (error) {
             console.error('Auth verification failed:', error);
+            alert('Network error during authentication. Please try again.');
         }
+        this.onUserChange(); // Update UI even on failure
         return false;
     }
 
@@ -59,17 +80,20 @@ class UserAuth {
                 // Check if session is still valid (24 hours)
                 if (session.exp && session.exp > Date.now()) {
                     this.currentUser = session.user;
-                    this.onUserChange();
                     return true;
                 } else {
                     // Session expired
                     localStorage.removeItem('user_session');
+                    this.currentUser = null;
                 }
             } catch (e) {
                 console.error('Failed to load user session:', e);
+                this.currentUser = null;
             }
+        } else {
+            this.currentUser = null;
         }
-        return false;
+        return this.currentUser !== null;
     }
 
     saveUserSession() {
@@ -83,11 +107,13 @@ class UserAuth {
     }
 
     loginWithGitHub() {
-        window.location.href = `${this.authApiUrl}?action=login`;
+        const redirectTo = encodeURIComponent(window.location.href);
+        window.location.href = `${this.authApiUrl}?action=login&redirect_to=${redirectTo}`;
     }
 
     loginWithGoogle() {
-        window.location.href = `${this.googleAuthApiUrl}?action=login`;
+        const redirectTo = encodeURIComponent(window.location.href);
+        window.location.href = `${this.googleAuthApiUrl}?action=login&redirect_to=${redirectTo}`;
     }
 
     logout() {

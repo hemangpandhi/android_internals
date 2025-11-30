@@ -28,9 +28,12 @@ export default async function handler(req, res) {
     const vercelUrl = 'https://android-internals.vercel.app';
     const redirectUri = `${vercelUrl}/api/auth-google?action=callback`;
     const scope = 'openid email profile';
+    const redirectTo = req.query.redirect_to || siteUrl;
     const state = req.query.state || Math.random().toString(36).substring(7);
+    // Store redirect_to in state
+    const stateWithRedirect = `${state}|${encodeURIComponent(redirectTo)}`;
     
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${state}&access_type=offline&prompt=consent`;
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${stateWithRedirect}&access_type=offline&prompt=consent`;
     
     return res.redirect(googleAuthUrl);
   }
@@ -41,6 +44,13 @@ export default async function handler(req, res) {
 
     if (!code) {
       return res.status(400).json({ error: 'Authorization code missing' });
+    }
+
+    // Extract redirect_to from state
+    let redirectTo = siteUrl;
+    if (state && state.includes('|')) {
+      const parts = state.split('|');
+      redirectTo = decodeURIComponent(parts[1]);
     }
 
     try {
@@ -91,8 +101,8 @@ export default async function handler(req, res) {
         exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
       })).toString('base64');
 
-      // Redirect to site with token
-      const returnUrl = `${siteUrl}?token=${sessionToken}&provider=google`;
+      // Redirect to original page with token
+      const returnUrl = `${redirectTo}${redirectTo.includes('?') ? '&' : '?'}token=${sessionToken}&provider=google`;
       
       return res.redirect(returnUrl);
 
@@ -120,10 +130,11 @@ export default async function handler(req, res) {
       return res.status(200).json({ 
         authenticated: true, 
         user: {
-          provider: decoded.provider,
+          provider: decoded.provider || 'google',
           email: decoded.email,
           name: decoded.name,
-          picture: decoded.picture,
+          avatar: decoded.picture || decoded.avatar,
+          picture: decoded.picture || decoded.avatar,
           id: decoded.id
         }
       });

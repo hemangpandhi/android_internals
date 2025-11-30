@@ -48,8 +48,8 @@ jobs:
         continue-on-error: true
       
       - name: Fallback: Check for CSV file
-        id: check_csv
         if: always() && (steps.api_sync.outputs.api_available != 'true' || steps.api_sync.outputs.api_failed == 'true' || steps.api_sync.outcome == 'failure')
+        id: check_csv
         run: |
           if [ -f "emailjs-contacts.csv" ]; then
             echo "csv_exists=true" >> $GITHUB_OUTPUT

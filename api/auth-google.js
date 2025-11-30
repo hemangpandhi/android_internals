@@ -19,36 +19,33 @@ function parseCookies(cookieHeader) {
 }
 
 export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  try {
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
 
-  // Parse cookies from request headers
-  const cookies = parseCookies(req.headers.cookie);
-  req.cookies = cookies;
+    // Parse cookies from request headers
+    const cookies = parseCookies(req.headers.cookie);
+    req.cookies = cookies;
 
-  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SITE_URL, JWT_SECRET } = process.env;
+    const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SITE_URL, JWT_SECRET } = process.env;
 
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    console.error('Google OAuth credentials missing');
     return res.status(500).json({ 
       error: 'Google OAuth not configured',
-      message: 'Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables'
+      message: 'Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables in Vercel'
     });
   }
 
-  if (!JWT_SECRET || JWT_SECRET.trim() === '') {
-    console.error('JWT_SECRET is not set in environment variables');
-    return res.status(500).json({ 
-      error: 'JWT secret not configured',
-      message: 'Set JWT_SECRET environment variable in Vercel project settings. Generate with: openssl rand -base64 32'
-    });
-  }
+  // JWT_SECRET is only needed for callback/verify actions, not for login
+  // We'll check it in those specific actions
 
   const siteUrl = SITE_URL || 'https://www.hemangpandhi.com';
 
@@ -275,5 +272,15 @@ export default async function handler(req, res) {
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
+  
+  } catch (error) {
+    console.error('Unhandled error in auth-google:', error);
+    console.error('Error stack:', error.stack);
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
 }
 

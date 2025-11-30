@@ -267,16 +267,18 @@ window.loginWithGoogle = function() {
     }
 };
 
-// Initialize global instance when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        window.userAuth = new UserAuth();
-        // Dispatch event that user-auth is ready
-        window.dispatchEvent(new CustomEvent('userAuthReady'));
-    });
-} else {
+// Initialize global instance immediately (don't wait for DOMContentLoaded)
+// This ensures token processing happens as soon as possible
+(function() {
     window.userAuth = new UserAuth();
     // Dispatch event that user-auth is ready
     window.dispatchEvent(new CustomEvent('userAuthReady'));
-}
+    
+    // Also trigger UI update after a short delay to ensure DOM is ready
+    setTimeout(() => {
+        if (window.userAuth && window.userAuth.isAuthenticated()) {
+            window.userAuth.onUserChange();
+        }
+    }, 200);
+})();
 

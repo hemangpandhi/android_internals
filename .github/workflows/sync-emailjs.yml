@@ -51,8 +51,12 @@ jobs:
         if: always()
         id: check_csv
         run: |
+          API_OUTCOME="${{ steps.api_sync.outcome }}"
+          API_AVAILABLE="${{ steps.api_sync.outputs.api_available }}"
+          API_FAILED="${{ steps.api_sync.outputs.api_failed }}"
+          
           # Check if API sync failed or wasn't available
-          if [ "${{ steps.api_sync.outcome }}" == "failure" ] || [ "${{ steps.api_sync.outputs.api_available }}" != "true" ] || [ "${{ steps.api_sync.outputs.api_failed }}" == "true" ]; then
+          if [ "$API_OUTCOME" == "failure" ] || [ "$API_AVAILABLE" != "true" ] || [ "$API_FAILED" == "true" ]; then
             if [ -f "emailjs-contacts.csv" ]; then
               echo "csv_exists=true" >> $GITHUB_OUTPUT
               echo "✅ Found emailjs-contacts.csv - will sync from CSV"

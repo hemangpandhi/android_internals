@@ -434,14 +434,14 @@
 <ul class="article-list"><li class="list-item"><strong>Unified Service Management</strong>: All framework services share the same process space, enabling efficient in-memory communication</li><li class="list-item"><strong>Optimized Boot Sequence</strong>: Services can be initialized in dependency order without IPC overhead</li><li class="list-item"><strong>Memory Efficiency</strong>: Shared framework classes and data structures reduce overall system memory footprint</li><li class="list-item"><strong>Performance</strong>: Critical service interactions avoid Binder IPC overhead</li></ul>
 <h3 id="-architectural--position--in--android--hierarchy">Architectural Position in Android Hierarchy</h3>
 
-<div class="mermaid-diagram" id="diagram-mermaid-xeyonbi71">
+<div class="mermaid-diagram" id="diagram-mermaid-bdv520b53">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-xeyonbi71', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-xeyonbi71')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-xeyonbi71', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-xeyonbi71')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-bdv520b53', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-bdv520b53')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-bdv520b53', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-bdv520b53')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-xeyonbi71">graph TD
+            <div class="mermaid" id="mermaid-bdv520b53">graph TD
     A[Linux Kernel] --> B[Init Process]
     B --> C[Zygote Process]
     C --> D[System Server]
@@ -456,7 +456,7 @@
     H --> K
     I --> K
     K --> L[Android Applications]</div>
-            <div class="zoom-indicator" id="zoom-mermaid-xeyonbi71">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-bdv520b53">100%</div>
           </div>
 
 <p class="article-paragraph">The System Server sits at the critical junction between the native Android runtime and the application framework, managing the lifecycle of all Android applications while coordinating with hardware abstraction layers (HAL) and kernel services.</p>
@@ -607,14 +607,14 @@ adb shell <span class="keyword">ls</span> -Z /system/bin/system_server
 
 <p class="article-paragraph"><strong>Detailed Initialization Sequence:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-g6eiva33s">
+<div class="mermaid-diagram" id="diagram-mermaid-8ep7u6313">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-g6eiva33s', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-g6eiva33s')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-g6eiva33s', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-g6eiva33s')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-8ep7u6313', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-8ep7u6313')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-8ep7u6313', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-8ep7u6313')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-g6eiva33s">sequenceDiagram
+            <div class="mermaid" id="mermaid-8ep7u6313">sequenceDiagram
     participant Init as Init Process
     participant Zygote as Zygote Process
     participant SystemServer as System Server
@@ -631,7 +631,7 @@ adb shell <span class="keyword">ls</span> -Z /system/bin/system_server
     SystemServer->>WMS: Start core services
     SystemServer->>SystemServer: Start other services
     SystemServer->>SystemServer: Signal ready to Zygote</div>
-            <div class="zoom-indicator" id="zoom-mermaid-g6eiva33s">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-8ep7u6313">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>AOSP Source Code Deep Dive:</strong></p>
@@ -1179,14 +1179,14 @@ IActivityManager am = IActivityManager.Stub.asInterface(binder);</code></pre>
 
 <p class="article-paragraph"><strong>Service Class Hierarchy:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-y2rlvuxd3">
+<div class="mermaid-diagram" id="diagram-mermaid-pm5px2gur">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-y2rlvuxd3', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-y2rlvuxd3')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-y2rlvuxd3', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-y2rlvuxd3')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-pm5px2gur', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-pm5px2gur')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-pm5px2gur', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-pm5px2gur')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-y2rlvuxd3">classDiagram
+            <div class="mermaid" id="mermaid-pm5px2gur">classDiagram
     class SystemService {
         <<abstract>>
         +onStart()
@@ -1241,19 +1241,19 @@ IActivityManager am = IActivityManager.Stub.asInterface(binder);</code></pre>
     SystemService <|-- PackageManagerService
     SystemServiceManager "1" --> "*" SystemService : manages lifecycle
     SystemServiceManager ..> SystemService : calls onBootPhase()</div>
-            <div class="zoom-indicator" id="zoom-mermaid-y2rlvuxd3">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-pm5px2gur">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Service Lifecycle States:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-zc07tm9le">
+<div class="mermaid-diagram" id="diagram-mermaid-2hbja8h2v">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-zc07tm9le', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-zc07tm9le')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-zc07tm9le', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-zc07tm9le')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-2hbja8h2v', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-2hbja8h2v')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-2hbja8h2v', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-2hbja8h2v')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-zc07tm9le">stateDiagram-v2
+            <div class="mermaid" id="mermaid-2hbja8h2v">stateDiagram-v2
     [*] --> Created: Service class instantiated
     Created --> Starting: SystemServiceManager.startService()
     Starting --> onStart: Service.onStart() called
@@ -1267,7 +1267,7 @@ IActivityManager am = IActivityManager.Stub.asInterface(binder);</code></pre>
     UserUnlocking --> Running: User ready
     Running --> Stopping: System shutdown
     Stopping --> [*]: Service destroyed</div>
-            <div class="zoom-indicator" id="zoom-mermaid-zc07tm9le">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-2hbja8h2v">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Boot Phases Explained:</strong></p>
@@ -1275,14 +1275,14 @@ IActivityManager am = IActivityManager.Stub.asInterface(binder);</code></pre>
 <ul class="article-list"><li class="list-item"><strong>Phase 0-99</strong>: Pre-bootstrap initialization (native services, basic infrastructure)</li><li class="list-item"><strong>Phase 100-499</strong>: Bootstrap services (<code class="inline-code">startBootstrapServices()</code>) - Critical services like ActivityManagerService, PowerManagerService, PackageManagerService</li><li class="list-item"><strong>Phase 500-999</strong>: Core services (<code class="inline-code">startCoreServices()</code>) - Services that depend on bootstrap services (BatteryService, UsageStatsService)</li><li class="list-item"><strong>Phase 1000+</strong>: Other services (<code class="inline-code">startOtherServices()</code>) - Remaining services with complex dependencies</li></ul>
 <p class="article-paragraph"><strong>Service Registration Flow:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-bbrs4dfw6">
+<div class="mermaid-diagram" id="diagram-mermaid-lwaiiknat">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-bbrs4dfw6', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-bbrs4dfw6')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-bbrs4dfw6', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-bbrs4dfw6')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-lwaiiknat', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-lwaiiknat')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-lwaiiknat', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-lwaiiknat')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-bbrs4dfw6">sequenceDiagram
+            <div class="mermaid" id="mermaid-lwaiiknat">sequenceDiagram
     participant SSM as SystemServiceManager
     participant Service as SystemService
     participant NativeSM as ServiceManager (Native)
@@ -1296,7 +1296,7 @@ IActivityManager am = IActivityManager.Stub.asInterface(binder);</code></pre>
     Client->>NativeSM: getService("service_name")
     NativeSM->>Client: Return Binder handle
     Client->>Service: Direct Binder IPC call</div>
-            <div class="zoom-indicator" id="zoom-mermaid-bbrs4dfw6">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-lwaiiknat">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Internal vs External Communication:</strong></p>

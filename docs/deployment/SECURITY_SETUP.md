@@ -17,7 +17,7 @@ You need to set up the following secrets in your GitHub repository:
 
 | Secret Name | Value | Description |
 |-------------|-------|-------------|
-| `EMAILJS_PUBLIC_KEY` | `LMsUX_rrpIYPFa76a` | Your EmailJS public key |
+| `EMAILJS_PUBLIC_KEY` | `YOUR_PUBLIC_KEY_HERE` | Your EmailJS public key |
 | `EMAILJS_SERVICE_ID` | `service_dygzcoh` | Your EmailJS service ID |
 | `EMAILJS_NEWSLETTER_TEMPLATE` | `template_uwh1kil` | Newsletter template ID |
 | `EMAILJS_CONTACT_TEMPLATE` | `template_7bzhk1x` | Contact form template ID |
@@ -28,7 +28,7 @@ You need to set up the following secrets in your GitHub repository:
 
 1. Click **New repository secret**
 2. Enter the **Name** (e.g., `EMAILJS_PUBLIC_KEY`)
-3. Enter the **Value** (e.g., `LMsUX_rrpIYPFa76a`)
+3. Enter the **Value** (your EmailJS public key from dashboard)
 4. Click **Add secret**
 
 ## 🔧 How It Works

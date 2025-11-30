@@ -368,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
         recipient_name: 'Hemang Pandhi'
       };
       
-      if (!window.EMAILJS_CONFIG.serviceId || !window.EMAILJS_CONFIG.newsletterTemplate) {
+      if (!window.EMAILJS_CONFIG.serviceId || !window.EMAILJS_CONFIG.contactTemplate) {
         console.error('EmailJS configuration missing');
         toast.error('Configuration Error', 'Email service not properly configured. Please try again later.');
         submitBtn.textContent = originalText;

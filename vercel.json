@@ -1,0 +1,14 @@
+{
+  "functions": {
+    "api/emailjs-contacts.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/emailjs-contacts",
+      "destination": "/api/emailjs-contacts.js"
+    }
+  ]
+}
+

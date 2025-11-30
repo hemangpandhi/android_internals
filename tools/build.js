@@ -202,14 +202,14 @@ function generateVideosHTML(sections, disclaimer = '') {
           <a href="index.html#about" class="nav-link">About</a>
           <a href="books.html" class="nav-link">Reference Books</a>
           <a href="videos.html" class="nav-link">Reference Videos</a>
-        </div>
+            </div>
         <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle mobile menu">
           <span class="hamburger-line"></span>
           <span class="hamburger-line"></span>
           <span class="hamburger-line"></span>
         </button>
-      </div>
-    </nav>
+    </div>
+  </nav>
 
   <header class="hero">
     <div class="hero-content">

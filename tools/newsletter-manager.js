@@ -100,12 +100,18 @@ class NewsletterManager {
 
     console.log(`📧 Sending newsletter to ${activeSubscribers.length} subscribers...`);
 
-    // EmailJS configuration (you'll need to set these up)
+    // EmailJS configuration - read from environment or config
+    // Note: This should be set via environment variables or config file
     const emailjsConfig = {
-      serviceId: 'service_dygzcoh',
-      templateId: 'template_uwh1kil',
-      publicKey: 'LMsUX_rrpIYPFa76a'
+      serviceId: process.env.EMAILJS_SERVICE_ID || 'service_dygzcoh',
+      templateId: process.env.EMAILJS_NEWSLETTER_TEMPLATE || 'template_uwh1kil',
+      publicKey: process.env.EMAILJS_PUBLIC_KEY || ''
     };
+    
+    if (!emailjsConfig.publicKey) {
+      console.error('❌ EMAILJS_PUBLIC_KEY not set. Set it as an environment variable.');
+      return;
+    }
 
     // Newsletter content
     const newsletterContent = {

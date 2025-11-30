@@ -97,8 +97,8 @@ if (typeof window.testEmailJS === 'function') {
 
 ```
 EmailJS: Loaded
-Config: {publicKey: "LMsUX_rrpIYPFa76a", serviceId: "service_dygzcoh", ...}
-EmailJS initialized with key: LMsUX_rrpIYPFa76a
+Config: {publicKey: "YOUR_PUBLIC_KEY", serviceId: "service_dygzcoh", ...}
+EmailJS initialized with key: YOUR_PUBLIC_KEY
 ```
 
 ## If Still Not Working:

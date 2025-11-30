@@ -7,7 +7,7 @@ EmailJS uses different credentials for different purposes:
 ### 1. **Public Key** (for client-side EmailJS)
 - Used in `config.js` for client-side email sending
 - Found in: EmailJS Dashboard → Account → General → **Public Key**
-- Example: `LMsUX_rrpIYPFa76a`
+- Example: `YOUR_PUBLIC_KEY_HERE`
 - Used for: `emailjs.init(publicKey)` in browser
 
 ### 2. **Private Key** (for API access)
@@ -54,7 +54,7 @@ Set these secrets in: `https://github.com/hemangpandhi/android_internals/setting
    - Value: Your **Public Key** (this IS the User ID - they're the same)
    - Location: EmailJS Dashboard → Account → General → **Public Key**
    - **Important**: In EmailJS, User ID = Public Key (same value)
-   - Example: `LMsUX_rrpIYPFa76a`
+   - Example: `YOUR_PUBLIC_KEY_HERE`
 
 3. **`EMAILJS_SERVICE_ID`** (optional, for filtering)
    - Value: Your Service ID

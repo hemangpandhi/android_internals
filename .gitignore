@@ -3,6 +3,9 @@
 .env.local
 .env.production
 config.js
+# Ensure config.js is never committed (contains sensitive keys)
+/config.js
+build/config.js
 
 # Build Output
 build/

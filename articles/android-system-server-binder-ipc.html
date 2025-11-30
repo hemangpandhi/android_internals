@@ -490,14 +490,14 @@
 
 <p class="article-paragraph"><strong>Binder Driver (<code class="inline-code">drivers/android/binder.c</code>):</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-ziw6v3y69">
+<div class="mermaid-diagram" id="diagram-mermaid-czylsslbc">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-ziw6v3y69', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-ziw6v3y69')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-ziw6v3y69', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-ziw6v3y69')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-czylsslbc', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-czylsslbc')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-czylsslbc', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-czylsslbc')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-ziw6v3y69">graph TD
+            <div class="mermaid" id="mermaid-czylsslbc">graph TD
     A[Linux Kernel Base] --> B[Android Kernel Modifications]
     B --> C[Binder Driver]
     B --> D[Ashmem Shared Memory]
@@ -510,7 +510,7 @@
     
     style C fill:#3ddc84
     style B fill:#4ecdc4</div>
-            <div class="zoom-indicator" id="zoom-mermaid-ziw6v3y69">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-czylsslbc">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Key Differences:</strong></p>
@@ -519,14 +519,14 @@
 <ol class="article-list"><li class="list-item"><strong>Binder Driver</strong>: Custom kernel module (<code class="inline-code">/dev/binder</code>) not present in standard Linux</li><li class="list-item"><strong>Reference Counting</strong>: Kernel tracks object references across processes</li><li class="list-item"><strong>Death Notifications</strong>: Kernel notifies processes when referenced objects die</li><li class="list-item"><strong>Security Integration</strong>: Tight integration with Android's permission system</li></ol>
 <p class="article-paragraph"><strong>Comparison: Standard Linux vs Android Kernel:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-pjnqb8fdn">
+<div class="mermaid-diagram" id="diagram-mermaid-crst0x96q">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-pjnqb8fdn', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-pjnqb8fdn')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-pjnqb8fdn', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-pjnqb8fdn')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-crst0x96q', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-crst0x96q')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-crst0x96q', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-crst0x96q')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-pjnqb8fdn">graph LR
+            <div class="mermaid" id="mermaid-crst0x96q">graph LR
     subgraph "Standard Linux Kernel"
         A1[Pipes] --> A2[Process Communication]
         A3[Sockets] --> A2
@@ -547,7 +547,7 @@
     style B5 fill:#ff6b6b
     style B6 fill:#ff6b6b
     style B7 fill:#ff6b6b</div>
-            <div class="zoom-indicator" id="zoom-mermaid-pjnqb8fdn">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-crst0x96q">100%</div>
           </div>
 
 <h4 id="-why--binder--over--other--ipc--mechanisms">Why Binder Over Other IPC Mechanisms?</h4>
@@ -566,14 +566,14 @@
 <ul class="article-list"><li class="list-item"><strong>AIDL</strong>: Simple interface definition language</li><li class="list-item"><strong>Automatic code generation</strong>: Proxy/Stub classes generated automatically</li><li class="list-item"><strong>Type safety</strong>: Compile-time checking of interfaces</li></ul>
 <p class="article-paragraph"><strong>Performance Comparison:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-gsb3dsky7">
+<div class="mermaid-diagram" id="diagram-mermaid-bz6n51d9c">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-gsb3dsky7', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-gsb3dsky7')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-gsb3dsky7', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-gsb3dsky7')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-bz6n51d9c', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-bz6n51d9c')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-bz6n51d9c', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-bz6n51d9c')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-gsb3dsky7">graph TD
+            <div class="mermaid" id="mermaid-bz6n51d9c">graph TD
     A["IPC Mechanism Comparison"] --> B[Latency]
     A --> C["Memory Overhead"]
     A --> D[Complexity]
@@ -596,7 +596,7 @@
     style B1 fill:#3ddc84
     style C1 fill:#3ddc84
     style D1 fill:#3ddc84</div>
-            <div class="zoom-indicator" id="zoom-mermaid-gsb3dsky7">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-bz6n51d9c">100%</div>
           </div>
 
 <h4 id="-android--kernel--binder--implementation">Android Kernel Binder Implementation</h4>
@@ -617,14 +617,14 @@
 <ul class="article-list"><li class="list-item">Uses <code class="inline-code">mmap()</code> to share memory between processes</li><li class="list-item">Kernel manages buffer allocation and deallocation</li><li class="list-item">Automatic cleanup when processes die</li></ul>
 <p class="article-paragraph"><strong>Binder in Android Architecture:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-rmgn1eb3z">
+<div class="mermaid-diagram" id="diagram-mermaid-gcn9xrpji">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-rmgn1eb3z', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-rmgn1eb3z')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-rmgn1eb3z', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-rmgn1eb3z')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-gcn9xrpji', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-gcn9xrpji')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-gcn9xrpji', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-gcn9xrpji')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-rmgn1eb3z">graph TD
+            <div class="mermaid" id="mermaid-gcn9xrpji">graph TD
     A[Android Applications] --> B[Binder Proxy]
     B --> C["/dev/binder Driver"]
     C --> D[system_server]
@@ -644,7 +644,7 @@
     style G fill:#4ecdc4
     style I fill:#ffe66d
     style K fill:#ff6b6b</div>
-            <div class="zoom-indicator" id="zoom-mermaid-rmgn1eb3z">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-gcn9xrpji">100%</div>
           </div>
 
 <h4 id="-evolution--in--android--versions">Evolution in Android Versions</h4>
@@ -674,14 +674,14 @@
 <ul class="article-list"><li class="list-item"><strong>Zero-copy optimization</strong>: Minimizes data copying between user space and kernel space</li><li class="list-item"><strong>Reference counting</strong>: Manages object lifecycle across process boundaries</li><li class="list-item"><strong>Security</strong>: Enforces permission checks at the kernel level</li><li class="list-item"><strong>Thread management</strong>: Routes transactions to appropriate threads in the server process</li></ul>
 <p class="article-paragraph"><strong>Binder Architecture Overview:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-17m3p5445">
+<div class="mermaid-diagram" id="diagram-mermaid-b87u55arg">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-17m3p5445', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-17m3p5445')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-17m3p5445', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-17m3p5445')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-b87u55arg', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-b87u55arg')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-b87u55arg', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-b87u55arg')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-17m3p5445">graph TD
+            <div class="mermaid" id="mermaid-b87u55arg">graph TD
     A[App Process] --> B[Binder Proxy]
     B --> C["Binder Driver /dev/binder"]
     C -->|"Kernel Space<br/>Cross-Process Boundary"| D[Binder Stub in system_server]
@@ -700,7 +700,7 @@
     style C fill:#3ddc84,stroke:#2bb673,stroke-width:3px
     style D fill:#ff6b6b,stroke:#ee5a6f,stroke-width:2px
     style E fill:#ff6b6b,stroke:#ee5a6f,stroke-width:2px</div>
-            <div class="zoom-indicator" id="zoom-mermaid-17m3p5445">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-b87u55arg">100%</div>
           </div>
 
 <h4 id="-service--registration--and--discovery">Service Registration and Discovery</h4>
@@ -709,14 +709,14 @@
 
 <p class="article-paragraph"><strong>Service Registration Flow:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-uwv6xcu0z">
+<div class="mermaid-diagram" id="diagram-mermaid-aszda2rk1">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-uwv6xcu0z', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-uwv6xcu0z')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-uwv6xcu0z', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-uwv6xcu0z')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-aszda2rk1', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-aszda2rk1')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-aszda2rk1', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-aszda2rk1')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-uwv6xcu0z">sequenceDiagram
+            <div class="mermaid" id="mermaid-aszda2rk1">sequenceDiagram
     participant Service as System Service
     participant SM as ServiceManager
     participant Client as App Process
@@ -728,7 +728,7 @@
     Client->>SM: getService("activity")
     SM->>Client: Return Binder proxy
     Client->>Service: Call service methods via proxy</div>
-            <div class="zoom-indicator" id="zoom-mermaid-uwv6xcu0z">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-aszda2rk1">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Key System Services:</strong></p>
@@ -750,14 +750,14 @@
 
 <p class="article-paragraph"><strong>Detailed Transaction Flow:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-asorhb17q">
+<div class="mermaid-diagram" id="diagram-mermaid-vhhpfh0my">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-asorhb17q', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-asorhb17q')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-asorhb17q', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-asorhb17q')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-vhhpfh0my', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-vhhpfh0my')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-vhhpfh0my', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-vhhpfh0my')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-asorhb17q">sequenceDiagram
+            <div class="mermaid" id="mermaid-vhhpfh0my">sequenceDiagram
     participant Client as Client Process
     participant Proxy as Binder Proxy
     participant Driver as Binder Driver
@@ -789,7 +789,7 @@
     
     Proxy->>Proxy: Unmarshal response from Parcel
     Proxy->>Client: Return result</div>
-            <div class="zoom-indicator" id="zoom-mermaid-asorhb17q">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-vhhpfh0my">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Transaction Code Example:</strong></p>
@@ -891,14 +891,14 @@ public boolean onTransact(int code, Parcel data, Parcel reply, int flags) {
 
 <p class="article-paragraph"><strong>Binder Domain Architecture:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-mxhagvfq4">
+<div class="mermaid-diagram" id="diagram-mermaid-mm3cmg5xn">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-mxhagvfq4', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-mxhagvfq4')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-mxhagvfq4', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-mxhagvfq4')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-mm3cmg5xn', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-mm3cmg5xn')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-mm3cmg5xn', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-mm3cmg5xn')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-mxhagvfq4">graph LR
+            <div class="mermaid" id="mermaid-mm3cmg5xn">graph LR
     A[Framework Services] --> B["/dev/binder"]
     C[Applications] --> B
     
@@ -911,7 +911,7 @@ public boolean onTransact(int code, Parcel data, Parcel reply, int flags) {
     style B fill:#3ddc84
     style E fill:#4ecdc4
     style H fill:#ffe66d</div>
-            <div class="zoom-indicator" id="zoom-mermaid-mxhagvfq4">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-mm3cmg5xn">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Domain Details:</strong></p>
@@ -1026,14 +1026,14 @@ try {
 
 <p class="article-paragraph"><strong>Permission Enforcement:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-nwwzohwzo">
+<div class="mermaid-diagram" id="diagram-mermaid-vzyms0936">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-nwwzohwzo', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-nwwzohwzo')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-nwwzohwzo', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-nwwzohwzo')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-vzyms0936', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-vzyms0936')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-vzyms0936', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-vzyms0936')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-nwwzohwzo">graph TD
+            <div class="mermaid" id="mermaid-vzyms0936">graph TD
     A[Client Request] --> B{Binder Driver}
     B --> C{Check UID/GID}
     C -->|Allowed| D{Check SELinux}
@@ -1043,7 +1043,7 @@ try {
     
     style F fill:#ff6b6b
     style E fill:#3ddc84</div>
-            <div class="zoom-indicator" id="zoom-mermaid-nwwzohwzo">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-vzyms0936">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Security Mechanisms:</strong></p>
@@ -1095,14 +1095,14 @@ public boolean onTransact(int code, Parcel data, Parcel reply, int flags) {
 
 <p class="article-paragraph"><strong>Thread Pool Architecture:</strong></p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-qlo4slyn7">
+<div class="mermaid-diagram" id="diagram-mermaid-y5xdcvyvj">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-qlo4slyn7', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-qlo4slyn7')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-qlo4slyn7', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-qlo4slyn7')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-y5xdcvyvj', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-y5xdcvyvj')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-y5xdcvyvj', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-y5xdcvyvj')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-qlo4slyn7">graph TD
+            <div class="mermaid" id="mermaid-y5xdcvyvj">graph TD
     A[Binder Driver] --> B[Binder Thread Pool]
     B --> C[Thread 1]
     B --> D[Thread 2]
@@ -1118,7 +1118,7 @@ public boolean onTransact(int code, Parcel data, Parcel reply, int flags) {
     
     style B fill:#3ddc84
     style G fill:#4ecdc4</div>
-            <div class="zoom-indicator" id="zoom-mermaid-qlo4slyn7">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-y5xdcvyvj">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Key Characteristics:</strong></p>
@@ -1226,14 +1226,14 @@ adb shell dumpsys meminfo system_server | <span class="keyword">grep</span> -i b
 
 <p class="article-paragraph">When an app starts an activity, multiple Binder transactions occur:</p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-h2ammab8j">
+<div class="mermaid-diagram" id="diagram-mermaid-27ylwlvbz">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-h2ammab8j', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-h2ammab8j')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-h2ammab8j', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-h2ammab8j')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-27ylwlvbz', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-27ylwlvbz')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-27ylwlvbz', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-27ylwlvbz')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-h2ammab8j">sequenceDiagram
+            <div class="mermaid" id="mermaid-27ylwlvbz">sequenceDiagram
     participant App as Application
     participant AMS as ActivityManagerService
     participant WMS as WindowManagerService
@@ -1250,7 +1250,7 @@ adb shell dumpsys meminfo system_server | <span class="keyword">grep</span> -i b
     WMS-->>AMS: Window token
     
     AMS->>App: Schedule launch</div>
-            <div class="zoom-indicator" id="zoom-mermaid-h2ammab8j">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-27ylwlvbz">100%</div>
           </div>
 
 <h4 id="-example--service--binding">Example: Service Binding</h4>
@@ -1337,14 +1337,14 @@ bindService(intent, connection, Context.BIND_AUTO_CREATE);</code></pre>
 
 <p class="article-paragraph">Binder maintains object references across process boundaries:</p>
 
-<div class="mermaid-diagram" id="diagram-mermaid-nie5oachu">
+<div class="mermaid-diagram" id="diagram-mermaid-8hbc1dxa5">
             <div class="mermaid-zoom-controls">
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-nie5oachu', 0.8)" title="Zoom Out">🔍-</button>
-              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-nie5oachu')" title="Reset Zoom">⌂</button>
-              <button class="zoom-btn" onclick="zoomDiagram('mermaid-nie5oachu', 1.2)" title="Zoom In">🔍+</button>
-              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-nie5oachu')" title="Fullscreen">⛶</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-8hbc1dxa5', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-8hbc1dxa5')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-8hbc1dxa5', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-8hbc1dxa5')" title="Fullscreen">⛶</button>
             </div>
-            <div class="mermaid" id="mermaid-nie5oachu">graph LR
+            <div class="mermaid" id="mermaid-8hbc1dxa5">graph LR
     A[Client Process] -->|Holds Reference| B[Binder Proxy]
     B -->|Kernel Reference| C[Binder Driver]
     C -->|Tracks Object| D[Server Process]
@@ -1355,7 +1355,7 @@ bindService(intent, connection, Context.BIND_AUTO_CREATE);</code></pre>
     B -->|Callback| A
     
     style C fill:#3ddc84</div>
-            <div class="zoom-indicator" id="zoom-mermaid-nie5oachu">100%</div>
+            <div class="zoom-indicator" id="zoom-mermaid-8hbc1dxa5">100%</div>
           </div>
 
 <p class="article-paragraph"><strong>Death Recipients:</strong></p>

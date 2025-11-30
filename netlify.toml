@@ -1,0 +1,8 @@
+[build]
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/emailjs-contacts"
+  to = "/.netlify/functions/emailjs-contacts"
+  status = 200
+

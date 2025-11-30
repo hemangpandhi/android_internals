@@ -6,6 +6,7 @@ A comprehensive website dedicated to Android system internals, debugging, and de
 
 - **Comprehensive ADB Guide**: Complete encyclopedia of ADB commands and Android debugging
 - **Interactive Forms**: Contact form and newsletter subscription with EmailJS integration
+- **Newsletter Admin Panel**: Manage subscribers and send newsletters (GitHub SSO protected)
 - **Responsive Design**: Modern, mobile-friendly interface
 - **Static Site Generation**: Fast, SEO-optimized static website
 - **Automated Deployment**: GitHub Actions for continuous deployment
@@ -26,10 +27,39 @@ A comprehensive website dedicated to Android system internals, debugging, and de
 
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 - **Email Service**: EmailJS for contact forms and newsletters
+- **Authentication**: GitHub SSO (OAuth) for admin panel
 - **Build System**: Custom Node.js build script
 - **Deployment**: GitHub Pages with GitHub Actions
+- **API Functions**: Vercel serverless functions for GitHub SSO
 - **Styling**: Custom CSS with responsive design
 - **Icons**: SVG icons and Android branding
+
+## 📧 Newsletter Admin Panel
+
+The admin panel provides a simple way to manage newsletter subscribers and send newsletters.
+
+### Access
+- **URL**: https://www.hemangpandhi.com/newsletter-admin.html
+- **Authentication**: GitHub SSO (only authorized users)
+
+### Features
+- **CSV Import**: Import subscribers from EmailJS Dashboard
+- **Manual Entry**: Add subscribers manually
+- **Newsletter Sending**: Send newsletters to selected subscribers
+- **Subscriber Management**: View, add, and remove subscribers
+
+### How to Use
+1. **Import Subscribers:**
+   - Export CSV from EmailJS Dashboard → Contacts
+   - Click "📥 Import from EmailJS CSV" in admin panel
+   - Select and import the CSV file
+
+2. **Send Newsletter:**
+   - Select article from queue
+   - Select recipients
+   - Click "📧 Send Newsletter"
+
+See `docs/ADMIN_GUIDE.md` for detailed instructions.
 
 ## 🚀 Quick Start
 

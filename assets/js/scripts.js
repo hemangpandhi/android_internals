@@ -265,30 +265,50 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('EmailJS available:', typeof emailjs !== 'undefined');
   console.log('EmailJS config available:', typeof window.EMAILJS_CONFIG !== 'undefined');
   
-  if (typeof emailjs !== 'undefined') {
-    console.log('EmailJS object:', emailjs);
-    console.log('EmailJS config:', window.EMAILJS_CONFIG);
+  // Wait for EmailJS to load if it's not available yet
+  function waitForEmailJS(callback, maxAttempts = 10) {
+    if (typeof emailjs !== 'undefined') {
+      callback();
+      return;
+    }
     
-    // Ensure EmailJS is initialized
-    if (window.EMAILJS_CONFIG && window.EMAILJS_CONFIG.publicKey) {
-      // Check if publicKey is still a placeholder
-      if (window.EMAILJS_CONFIG.publicKey.includes('YOUR_EMAILJS') || 
-          window.EMAILJS_CONFIG.publicKey.includes('HERE')) {
-        console.error('⚠️ EmailJS configuration has placeholder values!');
-        console.error('⚠️ GitHub Secrets may not be set. Check: https://github.com/hemangpandhi/android_internals/settings/secrets/actions');
-        console.error('⚠️ EmailJS forms will not work until secrets are configured.');
+    if (maxAttempts <= 0) {
+      console.error('❌ EmailJS library failed to load after multiple attempts');
+      console.error('Check network tab for blocked CDN requests or CSP violations');
+      return;
+    }
+    
+    setTimeout(() => {
+      waitForEmailJS(callback, maxAttempts - 1);
+    }, 200);
+  }
+  
+  waitForEmailJS(function() {
+    if (typeof emailjs !== 'undefined') {
+      console.log('EmailJS object:', emailjs);
+      console.log('EmailJS config:', window.EMAILJS_CONFIG);
+      
+      // Ensure EmailJS is initialized
+      if (window.EMAILJS_CONFIG && window.EMAILJS_CONFIG.publicKey) {
+        // Check if publicKey is still a placeholder
+        if (window.EMAILJS_CONFIG.publicKey.includes('YOUR_EMAILJS') || 
+            window.EMAILJS_CONFIG.publicKey.includes('HERE')) {
+          console.error('⚠️ EmailJS configuration has placeholder values!');
+          console.error('⚠️ GitHub Secrets may not be set. Check: https://github.com/hemangpandhi/android_internals/settings/secrets/actions');
+          console.error('⚠️ EmailJS forms will not work until secrets are configured.');
+        } else {
+          emailjs.init(window.EMAILJS_CONFIG.publicKey);
+          console.log('✅ EmailJS initialized successfully');
+        }
       } else {
-        emailjs.init(window.EMAILJS_CONFIG.publicKey);
-        console.log('✅ EmailJS initialized successfully');
+        console.error('❌ EmailJS config missing or invalid');
+        console.error('Check if config.js is loading correctly');
       }
     } else {
-      console.error('❌ EmailJS config missing or invalid');
-      console.error('Check if config.js is loading correctly');
+      console.error('❌ EmailJS library not loaded');
+      console.error('Check network tab for failed CDN requests or CSP violations');
     }
-  } else {
-    console.error('❌ EmailJS library not loaded');
-    console.error('Check network tab for failed CDN requests');
-  }
+  });
   
   // Test notification system
   console.log('Testing notification system...');
@@ -748,6 +768,8 @@ window.onclick = function(event) {
   }
 }
 
+}); // End of DOMContentLoaded
+
 // ===== COOKIE CONSENT BANNER =====
 (function() {
   'use strict';
@@ -817,6 +839,4 @@ window.onclick = function(event) {
       declineBtn.addEventListener('click', declineCookies);
     }
   });
-})();
-  
-}); 
+})(); 

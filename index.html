@@ -8,8 +8,24 @@
   <meta name="author" content="Android Internals">
   <meta name="robots" content="index, follow">
   
-      <!-- EmailJS Integration -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" integrity="sha384-8X4b8l4K2lI8v5vp3S2Q7zXWf+7F1oYFv4QyU8j8fwpdkO5GFvQq0s1hqTqA1hQy" crossorigin="anonymous" onerror="console.error('Failed to load EmailJS library')"></script>
+      <!-- EmailJS Integration - Load synchronously to ensure it's available -->
+    <script type="text/javascript">
+      // Load EmailJS library dynamically with error handling
+      (function() {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+        script.integrity = 'sha384-8X4b8l4K2lI8v5vp3S2Q7zXWf+7F1oYFv4QyU8j8fwpdkO5GFvQq0s1hqTqA1hQy';
+        script.crossOrigin = 'anonymous';
+        script.onerror = function() {
+          console.error('❌ Failed to load EmailJS library from CDN');
+          console.error('Check network tab for blocked requests or CSP violations');
+        };
+        script.onload = function() {
+          console.log('✅ EmailJS library loaded successfully');
+        };
+        document.head.appendChild(script);
+      })();
+    </script>
     <script type="text/javascript" src="config.js" onerror="console.error('Failed to load config.js')"></script>
   
   <!-- Security Headers -->

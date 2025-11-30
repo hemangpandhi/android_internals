@@ -175,9 +175,53 @@ class UserAuth {
 
     onUserChange() {
         // Dispatch custom event for other components to listen
+        console.log('onUserChange: Dispatching userAuthChange event, authenticated:', this.isAuthenticated(), 'user:', this.currentUser);
         window.dispatchEvent(new CustomEvent('userAuthChange', {
             detail: { user: this.currentUser, authenticated: this.isAuthenticated() }
         }));
+        
+        // Also try to manually trigger UI update if scripts.js is ready
+        if (typeof window !== 'undefined') {
+            // Force a re-check after a short delay
+            setTimeout(() => {
+                if (window.userAuth && document.getElementById('userMenuLoggedIn')) {
+                    const user = this.currentUser;
+                    const userMenuLoggedOut = document.getElementById('userMenuLoggedOut');
+                    const userMenuLoggedIn = document.getElementById('userMenuLoggedIn');
+                    const userAvatarImg = document.getElementById('userAvatarImg');
+                    const userAvatarInitial = document.getElementById('userAvatarInitial');
+                    const userName = document.getElementById('userName');
+                    const userEmail = document.getElementById('userEmail');
+                    
+                    if (this.isAuthenticated() && user) {
+                        console.log('Manual UI update: User is authenticated');
+                        if (userMenuLoggedOut) userMenuLoggedOut.style.display = 'none';
+                        if (userMenuLoggedIn) userMenuLoggedIn.style.display = 'block';
+                        
+                        if (user.picture || user.avatar) {
+                            if (userAvatarImg) {
+                                userAvatarImg.src = user.picture || user.avatar;
+                                userAvatarImg.style.display = 'block';
+                            }
+                            if (userAvatarInitial) userAvatarInitial.style.display = 'none';
+                        } else {
+                            if (userAvatarImg) userAvatarImg.style.display = 'none';
+                            if (userAvatarInitial) {
+                                userAvatarInitial.style.display = 'block';
+                                userAvatarInitial.textContent = (user.name || user.email || 'U').charAt(0).toUpperCase();
+                            }
+                        }
+                        
+                        if (userName) userName.textContent = user.name || user.email || 'User';
+                        if (userEmail) userEmail.textContent = user.email || '';
+                    } else {
+                        console.log('Manual UI update: User is not authenticated');
+                        if (userMenuLoggedOut) userMenuLoggedOut.style.display = 'block';
+                        if (userMenuLoggedIn) userMenuLoggedIn.style.display = 'none';
+                    }
+                }
+            }, 300);
+        }
     }
 
     // User Preferences Management

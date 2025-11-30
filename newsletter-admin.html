@@ -520,21 +520,25 @@
                 if (!queue) {
                     // This is OK - no pending newsletters
                     console.log('ℹ️ No newsletter queue found (this is normal if no articles are queued)');
-                    throw new Error('No newsletter queue found');
+                    // Don't throw error - just log and continue
+                    newsletterQueue = null;
+                    return; // Exit gracefully without error
                 }
                 
                 newsletterQueue = queue;
-                if (!response.ok) {
-                    throw new Error('No newsletter queue found');
-                }
-                
-                newsletterQueue = await response.json();
                 displayNewsletterInfo();
                 log('✅ Newsletter queue loaded successfully');
             } catch (error) {
-                document.getElementById('status').innerHTML = '❌ No pending newsletters found';
-                document.getElementById('status').className = 'status error';
-                log('⚠️ No newsletter queue found: ' + error.message);
+                // No newsletter queue is normal - don't show as error
+                if (error.message === 'No newsletter queue found') {
+                    document.getElementById('status').innerHTML = 'ℹ️ No pending newsletters';
+                    document.getElementById('status').className = 'status pending';
+                    log('ℹ️ No newsletter queue found (this is normal if no articles are queued)');
+                } else {
+                    document.getElementById('status').innerHTML = '❌ Error loading newsletter queue';
+                    document.getElementById('status').className = 'status error';
+                    log('⚠️ Error loading newsletter queue: ' + error.message);
+                }
             }
         }
 

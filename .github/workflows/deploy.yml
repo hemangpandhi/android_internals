@@ -51,14 +51,25 @@ jobs:
           echo "⚠️  WARNING: EMAILJS_CONTACT_TEMPLATE secret is not set!"
         fi
         
+        # Set default values for optional secrets
+        SITE_DOMAIN="${{ secrets.SITE_DOMAIN }}"
+        if [ -z "$SITE_DOMAIN" ]; then
+          SITE_DOMAIN="https://www.hemangpandhi.com"
+        fi
+        
+        NEWSLETTER_FROM_EMAIL="${{ secrets.NEWSLETTER_FROM_EMAIL }}"
+        if [ -z "$NEWSLETTER_FROM_EMAIL" ]; then
+          NEWSLETTER_FROM_EMAIL="noreply@hemangpandhi.com"
+        fi
+        
         cp config.example.js config.js
-        # Replace placeholder values with GitHub Secrets (use empty string if secret is not set)
-        sed -i 's/YOUR_EMAILJS_PUBLIC_KEY_HERE/${{ secrets.EMAILJS_PUBLIC_KEY }}/g' config.js
-        sed -i 's/YOUR_EMAILJS_SERVICE_ID_HERE/${{ secrets.EMAILJS_SERVICE_ID }}/g' config.js
-        sed -i 's/YOUR_NEWSLETTER_TEMPLATE_ID_HERE/${{ secrets.EMAILJS_NEWSLETTER_TEMPLATE }}/g' config.js
-        sed -i 's/YOUR_CONTACT_TEMPLATE_ID_HERE/${{ secrets.EMAILJS_CONTACT_TEMPLATE }}/g' config.js
-        sed -i 's|https://your-domain.com|${{ secrets.SITE_DOMAIN || "https://www.hemangpandhi.com" }}|g' config.js
-        sed -i 's/noreply@your-domain.com/${{ secrets.NEWSLETTER_FROM_EMAIL || "noreply@hemangpandhi.com" }}|g' config.js
+        # Replace placeholder values with GitHub Secrets
+        sed -i "s/YOUR_EMAILJS_PUBLIC_KEY_HERE/${{ secrets.EMAILJS_PUBLIC_KEY }}/g" config.js
+        sed -i "s/YOUR_EMAILJS_SERVICE_ID_HERE/${{ secrets.EMAILJS_SERVICE_ID }}/g" config.js
+        sed -i "s/YOUR_NEWSLETTER_TEMPLATE_ID_HERE/${{ secrets.EMAILJS_NEWSLETTER_TEMPLATE }}/g" config.js
+        sed -i "s/YOUR_CONTACT_TEMPLATE_ID_HERE/${{ secrets.EMAILJS_CONTACT_TEMPLATE }}/g" config.js
+        sed -i "s|https://your-domain.com|$SITE_DOMAIN|g" config.js
+        sed -i "s/noreply@your-domain.com/$NEWSLETTER_FROM_EMAIL/g" config.js
         
         # Verify config.js was created and show first few lines (without exposing secrets)
         echo "✅ Config file created"

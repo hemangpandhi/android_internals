@@ -70,9 +70,9 @@ temp/
 *.rar
 
 # Source files (only deploy build output)
+# Note: tools/ is needed for build process, so don't exclude it
 content/
 templates/
-tools/
 src/
 
 # Config files that shouldn't be deployed

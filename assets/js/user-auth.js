@@ -108,12 +108,16 @@ class UserAuth {
 
     loginWithGitHub() {
         const redirectTo = encodeURIComponent(window.location.href);
-        window.location.href = `${this.authApiUrl}?action=login&redirect_to=${redirectTo}`;
+        const authApiUrl = this.authApiUrl || window.EMAILJS_CONFIG?.authApiUrl || 'https://android-internals.vercel.app/api/auth-github';
+        console.log('Redirecting to GitHub OAuth:', authApiUrl);
+        window.location.href = `${authApiUrl}?action=login&redirect_to=${redirectTo}`;
     }
 
     loginWithGoogle() {
         const redirectTo = encodeURIComponent(window.location.href);
-        window.location.href = `${this.googleAuthApiUrl}?action=login&redirect_to=${redirectTo}`;
+        const googleAuthApiUrl = this.googleAuthApiUrl || window.EMAILJS_CONFIG?.googleAuthApiUrl || 'https://android-internals.vercel.app/api/auth-google';
+        console.log('Redirecting to Google OAuth:', googleAuthApiUrl);
+        window.location.href = `${googleAuthApiUrl}?action=login&redirect_to=${redirectTo}`;
     }
 
     logout() {
@@ -203,6 +207,29 @@ class UserAuth {
         return prefs.bookmarks || [];
     }
 }
+
+// Global fallback functions for login buttons (work even if userAuth isn't ready)
+window.loginWithGitHub = function() {
+    if (window.userAuth && window.userAuth.loginWithGitHub) {
+        window.userAuth.loginWithGitHub();
+    } else {
+        const redirectTo = encodeURIComponent(window.location.href);
+        const authApiUrl = window.EMAILJS_CONFIG?.authApiUrl || 'https://android-internals.vercel.app/api/auth-github';
+        console.log('Using fallback GitHub login:', authApiUrl);
+        window.location.href = `${authApiUrl}?action=login&redirect_to=${redirectTo}`;
+    }
+};
+
+window.loginWithGoogle = function() {
+    if (window.userAuth && window.userAuth.loginWithGoogle) {
+        window.userAuth.loginWithGoogle();
+    } else {
+        const redirectTo = encodeURIComponent(window.location.href);
+        const googleAuthApiUrl = window.EMAILJS_CONFIG?.googleAuthApiUrl || 'https://android-internals.vercel.app/api/auth-google';
+        console.log('Using fallback Google login:', googleAuthApiUrl);
+        window.location.href = `${googleAuthApiUrl}?action=login&redirect_to=${redirectTo}`;
+    }
+};
 
 // Initialize global instance when DOM is ready
 if (document.readyState === 'loading') {

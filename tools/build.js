@@ -195,7 +195,7 @@ function generateVideosHTML(sections, disclaimer = '') {
       <a href="index.html" class="nav-logo-link">
         <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
       </a>
-        <div class="nav-links">
+        <div class="nav-links" id="navLinks">
           <a href="index.html" class="nav-link">Home</a>
           <a href="index.html#topics" class="nav-link">Topics</a>
           <a href="index.html#blogs" class="nav-link">Blogs</a>
@@ -203,8 +203,13 @@ function generateVideosHTML(sections, disclaimer = '') {
           <a href="books.html" class="nav-link">Reference Books</a>
           <a href="videos.html" class="nav-link">Reference Videos</a>
         </div>
-    </div>
-  </nav>
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle mobile menu">
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
+      </div>
+    </nav>
 
   <header class="hero">
     <div class="hero-content">

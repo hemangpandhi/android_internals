@@ -310,7 +310,7 @@ main {
   border-bottom: 1px solid var(--border-primary);
   transition: var(--transition-normal);
   height: 80px;
-  overflow: visible;
+  overflow: visible; /* Allow dropdowns to overflow nav */
   margin-top: 0;
   padding-top: 0;
   box-shadow: var(--shadow-lg);
@@ -7294,9 +7294,10 @@ del {
   display: flex;
   align-items: center;
   flex-shrink: 0; /* Don't shrink */
-  z-index: 1000; /* Higher than nav to ensure clickable */
+  z-index: 10001; /* Higher than nav to ensure clickable */
   margin-left: 1rem;
   pointer-events: auto; /* Ensure clicks work */
+  overflow: visible; /* Allow dropdown to overflow */
 }
 
 .btn-login {
@@ -7321,6 +7322,9 @@ del {
 
 .user-menu-logged-in {
   position: relative;
+  display: flex;
+  align-items: center;
+  overflow: visible; /* Allow dropdown to overflow */
 }
 
 .user-avatar {
@@ -7362,12 +7366,14 @@ del {
   border: 1px solid #30363d;
   border-radius: var(--radius-md);
   min-width: 240px;
-  box-shadow: var(--shadow-xl);
+  max-width: 300px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   opacity: 0;
   visibility: hidden;
   transform: translateY(-10px);
   transition: var(--transition-normal);
-  z-index: 1000;
+  z-index: 10000; /* Above everything including nav */
+  overflow: hidden;
 }
 
 .user-menu-logged-in:hover .user-menu-dropdown,

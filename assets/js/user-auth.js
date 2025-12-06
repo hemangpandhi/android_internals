@@ -171,17 +171,31 @@ class UserAuth {
     }
 
     loginWithGitHub() {
-        const redirectTo = encodeURIComponent(window.location.href);
-        const authApiUrl = this.authApiUrl || window.EMAILJS_CONFIG?.authApiUrl || 'https://android-internals.vercel.app/api/auth-github';
-        console.log('Redirecting to GitHub OAuth:', authApiUrl);
-        window.location.href = `${authApiUrl}?action=login&redirect_to=${redirectTo}`;
+        console.log('🔐 [AUTH] loginWithGitHub() called');
+        try {
+            const redirectTo = encodeURIComponent(window.location.href);
+            const authApiUrl = this.authApiUrl || window.EMAILJS_CONFIG?.authApiUrl || 'https://android-internals.vercel.app/api/auth-github';
+            console.log('🔐 [AUTH] Redirecting to GitHub OAuth:', authApiUrl);
+            console.log('🔐 [AUTH] Redirect URL:', `${authApiUrl}?action=login&redirect_to=${redirectTo}`);
+            window.location.href = `${authApiUrl}?action=login&redirect_to=${redirectTo}`;
+        } catch (error) {
+            console.error('🔐 [AUTH] Error in loginWithGitHub:', error);
+            alert('Failed to initiate GitHub login. Please try again.');
+        }
     }
 
     loginWithGoogle() {
-        const redirectTo = encodeURIComponent(window.location.href);
-        const googleAuthApiUrl = this.googleAuthApiUrl || window.EMAILJS_CONFIG?.googleAuthApiUrl || 'https://android-internals.vercel.app/api/auth-google';
-        console.log('Redirecting to Google OAuth:', googleAuthApiUrl);
-        window.location.href = `${googleAuthApiUrl}?action=login&redirect_to=${redirectTo}`;
+        console.log('🔐 [AUTH] loginWithGoogle() called');
+        try {
+            const redirectTo = encodeURIComponent(window.location.href);
+            const googleAuthApiUrl = this.googleAuthApiUrl || window.EMAILJS_CONFIG?.googleAuthApiUrl || 'https://android-internals.vercel.app/api/auth-google';
+            console.log('🔐 [AUTH] Redirecting to Google OAuth:', googleAuthApiUrl);
+            console.log('🔐 [AUTH] Redirect URL:', `${googleAuthApiUrl}?action=login&redirect_to=${redirectTo}`);
+            window.location.href = `${googleAuthApiUrl}?action=login&redirect_to=${redirectTo}`;
+        } catch (error) {
+            console.error('🔐 [AUTH] Error in loginWithGoogle:', error);
+            alert('Failed to initiate Google login. Please try again.');
+        }
     }
 
     async logout() {

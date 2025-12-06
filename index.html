@@ -581,35 +581,49 @@
     <script>
       // Global login functions (available immediately, before user-auth.js loads)
       // These work even if config.js hasn't loaded yet
+      // Global login functions (available immediately, before user-auth.js loads)
+      // These work even if config.js hasn't loaded yet
       window.loginWithGitHub = function() {
+        console.log('🔐 [AUTH] loginWithGitHub() called (inline)');
         try {
+          // Try to use userAuth method if available (preferred)
+          if (window.userAuth && window.userAuth.loginWithGitHub) {
+            console.log('🔐 [AUTH] Using userAuth.loginWithGitHub()');
+            window.userAuth.loginWithGitHub();
+            return;
+          }
+          
+          // Fallback: direct redirect
           const redirectTo = encodeURIComponent(window.location.href);
-          // Try to get from config, fallback to hardcoded URL
           const authApiUrl = (window.EMAILJS_CONFIG && window.EMAILJS_CONFIG.authApiUrl) || 
                             'https://android-internals.vercel.app/api/auth-github';
-          console.log('Login with GitHub:', authApiUrl);
+          console.log('🔐 [AUTH] Using fallback GitHub login:', authApiUrl);
           window.location.href = authApiUrl + '?action=login&redirect_to=' + redirectTo;
         } catch (e) {
-          console.error('Error in loginWithGitHub:', e);
-          // Fallback redirect
-          const redirectTo = encodeURIComponent(window.location.href);
-          window.location.href = 'https://android-internals.vercel.app/api/auth-github?action=login&redirect_to=' + redirectTo;
+          console.error('🔐 [AUTH] Error in loginWithGitHub:', e);
+          alert('Failed to initiate GitHub login. Please try again.');
         }
       };
 
       window.loginWithGoogle = function() {
+        console.log('🔐 [AUTH] loginWithGoogle() called (inline)');
         try {
+          // Try to use userAuth method if available (preferred)
+          if (window.userAuth && window.userAuth.loginWithGoogle) {
+            console.log('🔐 [AUTH] Using userAuth.loginWithGoogle()');
+            window.userAuth.loginWithGoogle();
+            return;
+          }
+          
+          // Fallback: direct redirect
           const redirectTo = encodeURIComponent(window.location.href);
-          // Try to get from config, fallback to hardcoded URL
           const googleAuthApiUrl = (window.EMAILJS_CONFIG && window.EMAILJS_CONFIG.googleAuthApiUrl) || 
                                    'https://android-internals.vercel.app/api/auth-google';
-          console.log('Login with Google:', googleAuthApiUrl);
+          console.log('🔐 [AUTH] Using fallback Google login:', googleAuthApiUrl);
           window.location.href = googleAuthApiUrl + '?action=login&redirect_to=' + redirectTo;
         } catch (e) {
-          console.error('Error in loginWithGoogle:', e);
-          // Fallback redirect
-          const redirectTo = encodeURIComponent(window.location.href);
-          window.location.href = 'https://android-internals.vercel.app/api/auth-google?action=login&redirect_to=' + redirectTo;
+          console.error('🔐 [AUTH] Error in loginWithGoogle:', e);
+          alert('Failed to initiate Google login. Please try again.');
         }
       };
       

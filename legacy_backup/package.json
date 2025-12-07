@@ -1,0 +1,29 @@
+{
+  "name": "android-internals",
+  "version": "1.0.0",
+  "description": "Android Internals Website - Newsletter and Admin Panel",
+  "main": "tools/build.js",
+  "scripts": {
+    "build": "node tools/build.js",
+    "serve": "cd build && python3 -m http.server 8080",
+    "preview": "npm run build && cd build && python3 -m http.server 8000",
+    "deploy": "npm run build && echo 'Build completed. Deploy the build/ directory to your hosting service.'",
+    "clean": "rm -rf build/",
+    "rebuild": "npm run clean && npm run build"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "android",
+    "internals",
+    "newsletter",
+    "blog"
+  ],
+  "author": "Hemang Pandhi",
+  "license": "MIT",
+  "dependencies": {
+    "marked": "^4.3.0"
+  },
+  "devDependencies": {}
+}

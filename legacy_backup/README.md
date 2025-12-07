@@ -1,0 +1,207 @@
+# Android Internals Website
+
+A comprehensive website dedicated to Android system internals, debugging, and development resources.
+
+## 🚀 Features
+
+- **Comprehensive ADB Guide**: Complete encyclopedia of ADB commands and Android debugging
+- **Interactive Forms**: Contact form and newsletter subscription with EmailJS integration
+- **Newsletter Admin Panel**: Manage subscribers and send newsletters (GitHub SSO protected)
+- **Responsive Design**: Modern, mobile-friendly interface
+- **Static Site Generation**: Fast, SEO-optimized static website
+- **Automated Deployment**: GitHub Actions for continuous deployment
+
+## 📚 Content
+
+### Articles
+- **The Ultimate Encyclopedia of ADB, Dumpsys & Android Internals**: Complete guide covering:
+  - ADB fundamentals and device management
+  - App and file management
+  - Logging and debugging techniques
+  - Advanced internals and native debugging
+  - Android Automotive commands
+  - Dumpsys encyclopedia
+  - Automation and UI testing
+
+## 🛠️ Technology Stack
+
+- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
+- **Email Service**: EmailJS for contact forms and newsletters
+- **Authentication**: GitHub SSO (OAuth) for admin panel
+- **Build System**: Custom Node.js build script
+- **Deployment**: GitHub Pages with GitHub Actions
+- **API Functions**: Vercel serverless functions for GitHub SSO
+- **Styling**: Custom CSS with responsive design
+- **Icons**: SVG icons and Android branding
+
+## 📧 Newsletter Admin Panel
+
+The admin panel provides a simple way to manage newsletter subscribers and send newsletters.
+
+### Access
+- **URL**: https://www.hemangpandhi.com/newsletter-admin.html
+- **Authentication**: GitHub SSO (only authorized users)
+
+### Features
+- **CSV Import**: Import subscribers from EmailJS Dashboard
+- **Manual Entry**: Add subscribers manually
+- **Newsletter Sending**: Send newsletters to selected subscribers
+- **Subscriber Management**: View, add, and remove subscribers
+
+### How to Use
+1. **Import Subscribers:**
+   - Export CSV from EmailJS Dashboard → Contacts
+   - Click "📥 Import from EmailJS CSV" in admin panel
+   - Select and import the CSV file
+
+2. **Send Newsletter:**
+   - Select article from queue
+   - Select recipients
+   - Click "📧 Send Newsletter"
+
+See `docs/ADMIN_GUIDE.md` for detailed instructions.
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js (v14 or higher)
+- Git
+
+### Local Development
+```bash
+# Clone the repository
+git clone https://github.com/your-username/android-internals.git
+cd android-internals
+
+# Install dependencies
+npm install
+
+# Copy configuration template
+cp config.example.js config.js
+
+# Edit config.js with your EmailJS credentials
+# (Use test values for development)
+
+# Build the website
+npm run build
+
+# Serve locally
+npm run serve
+```
+
+### Production Deployment
+1. Set up GitHub Secrets (see [Deployment Guide](docs/deployment/DEPLOYMENT.md))
+2. Push to main branch
+3. GitHub Actions will automatically build and deploy
+
+## 📁 Project Structure
+
+```
+android-internals/
+├── content/                 # Content management
+│   ├── articles/           # Markdown articles
+│   └── data/              # Article metadata
+├── templates/              # HTML templates
+├── tools/                  # Build and utility scripts
+├── docs/                   # Documentation
+│   ├── deployment/        # Deployment guides
+│   ├── development/       # Development guides
+│   └── guides/           # User guides
+├── .github/               # GitHub Actions workflows
+├── build/                 # Generated static files (not in repo)
+└── assets/               # Static assets (CSS, JS, images)
+```
+
+## 🔧 Configuration
+
+### EmailJS Setup
+The website uses EmailJS for contact forms and newsletters. Configure in `config.js`:
+
+```javascript
+window.EMAILJS_CONFIG = {
+  publicKey: 'YOUR_EMAILJS_PUBLIC_KEY',
+  serviceId: 'YOUR_EMAILJS_SERVICE_ID',
+  newsletterTemplate: 'YOUR_NEWSLETTER_TEMPLATE_ID',
+  contactTemplate: 'YOUR_CONTACT_TEMPLATE_ID',
+  // ... other settings
+};
+```
+
+### Environment Variables
+For production, set these GitHub Secrets:
+- `EMAILJS_PUBLIC_KEY`
+- `EMAILJS_SERVICE_ID`
+- `EMAILJS_NEWSLETTER_TEMPLATE`
+- `EMAILJS_CONTACT_TEMPLATE`
+- `SITE_DOMAIN`
+- `NEWSLETTER_FROM_EMAIL`
+
+## 📖 Documentation
+
+- **[Deployment Guide](docs/deployment/DEPLOYMENT.md)**: Complete deployment instructions
+- **[Development Guide](docs/development/content-structure.md)**: Content management and development
+- **[Security Guide](docs/deployment/clean-for-github.sh)**: Security best practices
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test locally
+5. Submit a pull request
+
+### Adding New Articles
+```bash
+# Use the article creation tool
+node tools/new-article.js "Your Article Title"
+```
+
+## 🔐 Admin Panel
+
+**⚠️ SECURITY**: This is a public repository. Admin credentials are NOT committed.
+
+### Setup
+1. **Run setup script**: `./setup-admin.sh`
+2. **Set secure credentials** when prompted
+3. **Start admin server**: `node tools/admin-server.js`
+4. **Access admin panel**: `http://localhost:3001/login`
+
+### Features
+- **Subscriber Management**: View, add, remove subscribers
+- **Newsletter Queue**: Sync and manage newsletter data
+- **EmailJS Testing**: Test email functionality
+- **Secure Authentication**: Session-based login system
+
+**📖 For detailed security setup, see**: `docs/deployment/ADMIN_SECURITY.md`
+
+## 🔒 Security
+
+- No sensitive data in source code
+- API keys stored as GitHub Secrets
+- Environment variables for configuration
+- Secure deployment pipeline
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Android Debug Bridge (ADB) documentation
+- EmailJS for email functionality
+- GitHub Pages for hosting 
+- The Android developer community 
+
+## 📞 Contact
+
+- **Website**: [Android Internals](https://www.hemangpandhi.com)
+- **Email**: Contact via the website's contact form
+- **GitHub**: [Repository](https://github.com/your-username/android-internals)
+
+---
+
+**Built with ❤️ for the Android developer community**
+# Force deployment update
+# Force deployment update
+# Force fresh deployment - Sat Aug 30 01:33:28 JST 2025
+# Force deployment test - Sat Aug 30 01:53:02 JST 2025

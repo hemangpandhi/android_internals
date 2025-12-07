@@ -1,29 +1,46 @@
 {
   "name": "android-internals",
-  "version": "1.0.0",
-  "description": "Android Internals Website - Newsletter and Admin Panel",
-  "main": "tools/build.js",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "build": "node tools/build.js",
-    "serve": "cd build && python3 -m http.server 8080",
-    "preview": "npm run build && cd build && python3 -m http.server 8000",
-    "deploy": "npm run build && echo 'Build completed. Deploy the build/ directory to your hosting service.'",
-    "clean": "rm -rf build/",
-    "rebuild": "npm run clean && npm run build"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "keywords": [
-    "android",
-    "internals",
-    "newsletter",
-    "blog"
-  ],
-  "author": "Hemang Pandhi",
-  "license": "MIT",
   "dependencies": {
-    "marked": "^4.3.0"
+    "@headlessui/react": "^2.2.9",
+    "@heroicons/react": "^2.2.0",
+    "@supabase/auth-helpers-nextjs": "^0.15.0",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.86.2",
+    "@types/nodemailer": "^7.0.4",
+    "cheerio": "^1.1.2",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.23.25",
+    "gray-matter": "^4.0.3",
+    "lucide-react": "^0.460.0",
+    "next": "15.0.3",
+    "nodemailer": "^7.0.11",
+    "react": "19.0.0-rc-66855b96-20241106",
+    "react-dom": "19.0.0-rc-66855b96-20241106",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^16.1.0",
+    "react-zoom-pan-pinch": "^3.7.0",
+    "remark-gfm": "^4.0.1",
+    "resend": "^6.5.2",
+    "tailwind-merge": "^3.4.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "eslint": "^8",
+    "eslint-config-next": "15.0.3",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
 }

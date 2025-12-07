@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Comprehensive guide to Android Internals - HAL, Framework, System Apps, OS Internals, ADB, Performance, and more. Expert resources for Android developers and enthusiasts.">
+  <meta name="keywords" content="Android Internals, AOSP, HAL, Android Framework, System Apps, ADB, Android Development, Android OS">
+  <meta name="author" content="Android Internals">
+  <meta name="robots" content="index, follow">
+  
+      <!-- EmailJS Integration - Load directly from CDN -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+      // Fallback to unpkg if jsdelivr fails
+      window.addEventListener('load', function() {
+        if (typeof emailjs === 'undefined') {
+          console.warn('EmailJS not loaded from jsdelivr, trying unpkg fallback...');
+          const fallbackScript = document.createElement('script');
+          fallbackScript.src = 'https://unpkg.com/@emailjs/browser@4/dist/email.min.js';
+          fallbackScript.onload = function() {
+            console.log('✅ EmailJS loaded from unpkg fallback');
+            initializeEmailJS();
+          };
+          fallbackScript.onerror = function() {
+            console.error('❌ EmailJS failed to load from both CDNs');
+            console.error('Check browser Network tab for blocked requests or CSP violations');
+          };
+          document.head.appendChild(fallbackScript);
+        } else {
+          console.log('✅ EmailJS loaded from jsdelivr');
+          initializeEmailJS();
+        }
+      });
+      
+      function initializeEmailJS() {
+        if (window.EMAILJS_CONFIG && window.EMAILJS_CONFIG.publicKey && typeof emailjs !== 'undefined') {
+          if (!window.EMAILJS_CONFIG.publicKey.includes('YOUR_EMAILJS') && 
+              !window.EMAILJS_CONFIG.publicKey.includes('HERE')) {
+            emailjs.init(window.EMAILJS_CONFIG.publicKey);
+            console.log('✅ EmailJS initialized with public key');
+          }
+        }
+      }
+    </script>
+    <script type="text/javascript" src="config.js" onerror="console.error('Failed to load config.js')"></script>
+  
+  <!-- Security Headers -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://api.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.emailjs.com https://cdn.jsdelivr.net https://unpkg.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; media-src 'self'; worker-src 'self' blob:; manifest-src 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains; preload">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://hemangpandhi.com/">
+  <meta property="og:title" content="Android Internals - Complete Guide">
+  <meta property="og:description" content="Comprehensive guide to Android Internals - HAL, Framework, System Apps, OS Internals, ADB, Performance, and more.">
+  <meta property="og:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://hemangpandhi.com/">
+  <meta property="twitter:title" content="Android Internals - Complete Guide">
+  <meta property="twitter:description" content="Comprehensive guide to Android Internals - HAL, Framework, System Apps, OS Internals, ADB, Performance, and more.">
+  <meta property="twitter:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/images/android_logo.PNG">
+  <link rel="apple-touch-icon" href="assets/images/android_logo.PNG">
+  
+  <!-- Preload critical resources -->
+  <link rel="preload" href="assets/css/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="assets/images/android_logo.PNG" as="image">
+  <link rel="preload" href="assets/images/MyPhotofinal.png" as="image">
+  <link rel="preload" href="assets/js/scripts.js" as="script">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="assets/manifest.json">
+  <meta name="theme-color" content="#3ddc84">
+  
+  <!-- Styles -->
+    <link rel="stylesheet" href="assets/css/styles.css?v=16">
+  <noscript><link rel="stylesheet" href="assets/css/styles.css?v=16"></noscript>
+  
+  <title>Android Internals - Complete Guide to Android OS Architecture</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+</head>
+<body>
+  <header class="hero">
+    <nav class="main-nav">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo-link">
+          <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+        </a>
+        <div class="nav-links" id="navLinks">
+          <a href="#about" class="nav-link">About</a>
+          <a href="#topics" class="nav-link">Topics</a>
+          <a href="#blogs" class="nav-link">Blogs</a>
+          <a href="#discussions" class="nav-link">Discussions</a>
+          <a href="#about-me" class="nav-link">About Me</a>
+          <a href="books.html" class="nav-link">Reference Books</a>
+          <a href="videos.html" class="nav-link">Reference Videos</a>
+        </div>
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle mobile menu">
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
+      </div>
+    </nav>
+    
+    <div class="hero-content">
+        <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="hero-logo animate-pop" />
+      <h1 class="hero-title animate-fadein">Android Internals</h1>
+      <p class="hero-subtitle animate-slidein">Uncovering the Hidden Depths of Android</p>
+                    <div class="hero-stats animate-fadein">
+                <a href="#blogs" class="stat-link">
+                  <div class="stat">
+                    <span class="stat-number">9</span>
+                    <span class="stat-label">Latest Articles</span>
+                  </div>
+                </a>
+                <a href="#topics" class="stat-link">
+                  <div class="stat">
+                    <span class="stat-number">11</span>
+                    <span class="stat-label">Core Topics</span>
+                  </div>
+                </a>
+                <a href="books.html" class="stat-link">
+                  <div class="stat">
+                    <span class="stat-number">7</span>
+                    <span class="stat-label">Reference Books</span>
+                  </div>
+                </a>
+                <a href="videos.html" class="stat-link">
+                  <div class="stat">
+                    <span class="stat-number">6</span>
+                    <span class="stat-label">Reference Videos</span>
+                  </div>
+                </a>
+              </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="about" class="about-section">
+      <div class="container">
+        <h2 class="section-title">About Android Internals</h2>
+        <p class="section-description">
+          Android Internals is your comprehensive resource for understanding the Android operating system architecture, 
+          from hardware abstraction layers to application frameworks. Whether you're a developer, system administrator, 
+          or Android enthusiast, our guides provide deep insights into Android's core components and development practices.
+        </p>
+      </div>
+    </section>
+
+    <!-- Blogs Section - Main Articles -->
+    <section id="blogs" class="blogs-section">
+      <div class="container">
+        <div class="blogs-layout">
+          <div class="blogs-main">
+            <h2 class="section-title">Latest Blogs & Articles</h2>
+            <p class="section-description">
+              Stay updated with the latest insights, tutorials, and deep dives into Android internals. 
+              Our blog covers everything from basic concepts to advanced system programming.
+            </p>
+            <div class="blogs-grid">
+              <article class="blog-card">
+                <div class="blog-image">
+                  <div class="blog-placeholder">🔌</div>
+                </div>
+                <div class="blog-content">
+                  <h3><a href="articles/android-system-server-series.html">Android System Server Deep Dive - Series Index</a></h3>
+                  <p>Complete guide series to Android System Server covering architecture, services, Binder IPC, debugging, best practices, and advanced Q&A for platform developers.</p>
+                  <div class="blog-meta">
+                    <span class="blog-date">2025-10-04</span>
+                    <span class="blog-category">System Architecture</span>
+                  </div>
+                </div>
+              </article>
+              <article class="blog-card">
+                <div class="blog-image">
+                  <div class="blog-placeholder">🔧</div>
+                </div>
+                <div class="blog-content">
+                  <h3><a href="articles/android-system-server-architecture.html">System Server: Architecture and Design</a><span class="blog-series-badge">Part 1</span></h3>
+                  <p>Learn the foundational architecture of Android System Server, including monolithic design rationale, process initialization, and service management.</p>
+                  <div class="blog-meta">
+                    <span class="blog-date">2025-10-04</span>
+                    <span class="blog-category">System Architecture</span>
+                  </div>
+                </div>
+              </article>
+              <article class="blog-card">
+                <div class="blog-image">
+                  <div class="blog-placeholder">⚡</div>
+                </div>
+                <div class="blog-content">
+                  <h3><a href="articles/android-system-server-services.html">System Server: Core System Services</a><span class="blog-series-badge">Part 2</span></h3>
+                  <p>Deep dive into Android System Server's core services: ActivityManagerService, WindowManagerService, PackageManagerService, and PowerManagerService.</p>
+                  <div class="blog-meta">
+                    <span class="blog-date">2025-10-04</span>
+                    <span class="blog-category">System Architecture</span>
+                  </div>
+                </div>
+              </article>
+              <article class="blog-card">
+                <div class="blog-image">
+                  <div class="blog-placeholder">🔒</div>
+                </div>
+                <div class="blog-content">
+                  <h3><a href="articles/android-system-server-binder-ipc.html">System Server: Binder IPC Framework</a><span class="blog-series-badge">Part 3</span></h3>
+                  <p>Understanding Binder IPC communication between system_server and application processes, including transaction lifecycle and optimizations.</p>
+                  <div class="blog-meta">
+                    <span class="blog-date">2025-10-04</span>
+                    <span class="blog-category">System Architecture</span>
+                  </div>
+                </div>
+              </article>
+              <article class="blog-card">
+                <div class="blog-image">
+                  <div class="blog-placeholder">🏗️</div>
+                </div>
+                <div class="blog-content">
+                  <h3><a href="articles/android-system-server-debugging.html">System Server: Debugging and Troubleshooting</a><span class="blog-series-badge">Part 4</span></h3>
+                  <p>Practical debugging techniques, tools, and failure mode analysis for Android System Server troubleshooting.</p>
+                  <div class="blog-meta">
+                    <span class="blog-date">2025-10-04</span>
+                    <span class="blog-category">System Architecture</span>
+                  </div>
+                </div>
+              </article>
+              <article class="blog-card">
+                <div class="blog-image">
+                  <div class="blog-placeholder">📱</div>
+                </div>
+                <div class="blog-content">
+                  <h3><a href="articles/android-system-server-best-practices.html">System Server: Best Practices and Optimization</a><span class="blog-series-badge">Part 5</span></h3>
+                  <p>Development guidelines, threading best practices, memory management, and security considerations for system_server development.</p>
+                  <div class="blog-meta">
+                    <span class="blog-date">2025-10-04</span>
+                    <span class="blog-category">System Architecture</span>
+                  </div>
+                </div>
+              </article>
+              <article class="blog-card">
+                <div class="blog-image">
+                  <div class="blog-placeholder">🔌</div>
+                </div>
+                <div class="blog-content">
+                  <h3><a href="articles/android-system-server-qa.html">System Server: Advanced Q&A</a><span class="blog-series-badge">Part 6</span></h3>
+                  <p>Comprehensive Q&A covering 25+ deep questions about Android System Server architecture, services, communication, debugging, and advanced topics.</p>
+                  <div class="blog-meta">
+                    <span class="blog-date">2025-10-04</span>
+                    <span class="blog-category">System Architecture</span>
+                  </div>
+                </div>
+              </article>
+              <article class="blog-card">
+                <div class="blog-image">
+                  <div class="blog-placeholder">🔧</div>
+                </div>
+                <div class="blog-content">
+                  <h3><a href="articles/adb-enclopidia.html">The Ultimate Encyclopedia of ADB, Dumpsys & Android Internals</a></h3>
+                  <p>Master Android Debug Bridge (ADB) with a complete guide covering basic commands to expert-level techniques for AOSP and native debugging.</p>
+                  <div class="blog-meta">
+                    <span class="blog-date">2025-08-28</span>
+                    <span class="blog-category">Development Tools</span>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <div class="cta-content">
+              <h3>More Articles Coming Soon</h3>
+              <p>We're working on comprehensive articles covering all aspects of Android internals. Stay tuned!</p>
+            </div>
+          </div>
+          
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Topics Section -->
+    <section id="topics" class="topics-section">
+      <div class="container">
+        <h2 class="section-title">Explore Android Internals</h2>
+        <div class="topics-grid">
+          <a class="topic-card" href="hal.html">
+            <div class="card-icon">🔧</div>
+            <h3>HAL (Hardware Abstraction Layer)</h3>
+            <p>Understand how Android interfaces with device hardware through HAL modules, enabling hardware-software integration.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="framework.html">
+            <div class="card-icon">🏗️</div>
+            <h3>Framework</h3>
+            <p>Dive into the Android Framework layer, which provides APIs and system services for app development and system management.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="android-app.html">
+            <div class="card-icon">📱</div>
+            <h3>Android App</h3>
+            <p>Learn about Android application structure, lifecycle, components, and how apps interact with the OS.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="system-app.html">
+            <div class="card-icon">⚙️</div>
+            <h3>System App</h3>
+            <p>Explore the role of system apps, their privileges, and how they differ from user-installed apps.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="os-internals.html">
+            <div class="card-icon">🔬</div>
+            <h3>OS Internals</h3>
+            <p>Uncover the core of Android OS: processes, memory management, security, and system architecture.</p>
+            <span class="card-arrow">→</span>
+          </a>
+            <a class="topic-card" href="system-performance.html">
+            <div class="card-icon">⚡</div>
+            <h3>System Performance</h3>
+            <p>Get insights into optimizing Android system performance, resource management, and profiling tools.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="best-practices.html">
+            <div class="card-icon">📋</div>
+            <h3>Best Practices</h3>
+            <p>Follow industry best practices for Android development, security, and maintainability.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="adb.html">
+            <div class="card-icon">🔌</div>
+            <h3>ADB (Android Debug Bridge)</h3>
+            <p>Master ADB for device communication, debugging, and automation with essential commands and workflows.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="android-commands.html">
+            <div class="card-icon">⌨️</div>
+            <h3>Android Commands</h3>
+            <p>Reference a curated list of powerful Android shell and system commands for advanced users and developers.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="other-internals.html">
+            <div class="card-icon">🔍</div>
+            <h3>Other Internals Concepts</h3>
+            <p>Explore additional topics like boot process, SELinux, system updates, and more.</p>
+            <span class="card-arrow">→</span>
+          </a>
+          <a class="topic-card" href="books.html">
+            <div class="card-icon">📚</div>
+            <h3>Reference Books</h3>
+            <p>Recommended books for AOSP platform development and Android OS internals.</p>
+            <span class="card-arrow">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Discussion Forums & Q&A Section -->
+    <section id="discussions" class="discussions-section">
+      <div class="container">
+        <h2 class="section-title">Discussion Forums & Q&A</h2>
+        <p class="section-description">
+          Join the Android Internals community! Ask questions, share knowledge, and discuss 
+          everything related to Android system development, AOSP, HAL, and more.
+        </p>
+        
+        <div class="discussions-grid">
+          <div class="discussion-card">
+            <div class="discussion-icon">💬</div>
+            <h3>General Discussion</h3>
+            <p>Share ideas, ask questions, and discuss Android internals topics with the community.</p>
+            <div class="discussion-stats">
+              <span class="stat">🚀 Coming Soon</span>
+            </div>
+          </div>
+          
+          <div class="discussion-card">
+            <div class="discussion-icon">❓</div>
+            <h3>Q&A Forum</h3>
+            <p>Get help with specific Android development challenges. Ask questions and get expert answers.</p>
+            <div class="discussion-stats">
+              <span class="stat">🚀 Coming Soon</span>
+            </div>
+          </div>
+          
+          <div class="discussion-card">
+            <div class="discussion-icon">🔧</div>
+            <h3>Technical Deep Dives</h3>
+            <p>Advanced discussions about HAL, Framework, AOSP, and system-level programming.</p>
+            <div class="discussion-stats">
+              <span class="stat">🚀 Coming Soon</span>
+            </div>
+          </div>
+          
+          <div class="discussion-card">
+            <div class="discussion-icon">📱</div>
+            <h3>Project Showcase</h3>
+            <p>Share your Android internals projects, custom ROMs, and system modifications.</p>
+            <div class="discussion-stats">
+              <span class="stat">🚀 Coming Soon</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="discussions-cta">
+          <h3>Community Features Coming Soon</h3>
+          <p>We're building an amazing community platform for Android developers. Stay tuned for updates!</p>
+          <div class="cta-buttons">
+            <span class="btn-primary coming-soon-btn">🚀 Coming Soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="about-me" class="about-me-section">
+      <div class="container">
+        <h2 class="section-title">About Me</h2>
+        <div class="about-me-content">
+          <div class="about-me-image">
+            <img src="assets/images/MyPhotofinal.png" alt="Hemang Pandhi - Android System Architect" class="profile-image" id="profileImage" onclick="openProfileModal()">
+          </div>
+          <div class="about-me-text">
+            <h2 class="about-me-name">Hemang Pandhi</h2>
+            <h3>Android System Architect & Enthusiast</h3>
+            <p>
+              I'm passionate about Android internals and system-level development. With years of experience 
+              in Android development, I've worked on various aspects of the Android ecosystem including HMI 
+              customization, Framework customization, System Overlays, Performance optimization, System 
+              integration and custom ROM development.
+            </p>
+            <p>
+              This website is my contribution to the Android developer community, providing comprehensive 
+              resources for anyone interested in understanding Android's inner workings. From beginners 
+              to advanced developers, I aim to make Android internals accessible and understandable to everyone.
+            </p>
+            <div class="about-me-skills">
+              <h4>Areas of Expertise:</h4>
+              <div class="skills-grid">
+                <span class="skill-tag">Android HAL</span>
+                <span class="skill-tag">System Programming</span>
+                <span class="skill-tag">Custom ROMs</span>
+                <span class="skill-tag">Performance Optimization</span>
+                <span class="skill-tag">AOSP Development</span>
+                <span class="skill-tag">Linux Kernel</span>
+              </div>
+            </div>
+            <div class="about-me-contact">
+              <h4>Get in Touch</h4>
+              <p>Interested in Android internals? Let's connect and discuss system development, custom ROMs, or any Android-related topics.</p>
+              <a href="#contact" class="contact-button">Contact Me</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section id="newsletter" class="newsletter-section">
+      <div class="container">
+        <div class="newsletter-content">
+          <h2>Stay Updated</h2>
+          <p>Get notified when new articles are published and receive exclusive Android internals insights.</p>
+          <form id="newsletterForm" class="newsletter-form">
+            <input type="email" id="newsletterEmail" placeholder="Enter your email address" required>
+            <button type="submit" id="newsletterSubmitBtn" class="newsletter-submit">Subscribe</button>
+          </form>
+          <p class="newsletter-note">No spam, unsubscribe at any time.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+      <div class="container">
+        <div class="contact-content">
+          <h2>Get in Touch</h2>
+          <p>Have questions about Android internals? Want to collaborate? Let's connect!</p>
+          <form id="contactForm" class="contact-form">
+            <div class="form-group">
+              <input type="text" id="contactName" placeholder="Your Name" required>
+            </div>
+            <div class="form-group">
+              <input type="email" id="contactEmail" placeholder="Your Email" required>
+            </div>
+            <div class="form-group">
+              <textarea id="contactMessage" placeholder="Your Message" rows="5" required></textarea>
+            </div>
+            <button type="submit" id="contactSubmitBtn" class="contact-submit">Send Message</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+                      <a href="index.html" class="footer-logo-link">
+                                          <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
+            </a>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul>
+            <li><a href="hal.html">HAL</a></li>
+            <li><a href="framework.html">Framework</a></li>
+            <li><a href="adb.html">ADB</a></li>
+            <li><a href="books.html">Reference Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Resources</h3>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Legal</h3>
+          <ul>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
+  </footer>
+
+    <!-- Profile Photo Modal -->
+    <div id="profileModal" class="profile-modal">
+      <div class="profile-modal-content">
+        <span class="profile-modal-close" onclick="closeProfileModal()">&times;</span>
+        <img id="modalProfileImage" src="assets/images/MyPhotofinal.png" alt="Hemang Pandhi - Android System Architect">
+      </div>
+    </div>
+
+    <script src="assets/js/scripts.js" defer></script>
+    
+    <!-- Cookie Consent Banner -->
+    <div id="cookieConsentBanner" class="cookie-consent-banner">
+      <div class="cookie-consent-content">
+        <div class="cookie-consent-text">
+          <p>We use cookies and service workers to enhance your browsing experience, analyze site traffic, and personalize content. By clicking "Accept", you consent to our use of cookies. <a href="privacy.html">Learn more</a></p>
+        </div>
+        <div class="cookie-consent-buttons">
+          <button id="cookieAcceptBtn" class="cookie-consent-btn cookie-consent-btn-accept">Accept</button>
+          <button id="cookieDeclineBtn" class="cookie-consent-btn cookie-consent-btn-decline">Decline</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('SW registered: ', registration);
+            })
+            .catch(registrationError => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>

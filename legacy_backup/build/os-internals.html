@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OS Internals - Android Internals</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="icon" href="assets/images/android_logo.PNG" type="image/png">
+  <link rel="manifest" href="assets/manifest.json">
+  <meta name="theme-color" content="#3ddc84">
+</head>
+<body>
+  <header class="hero">
+    <nav class="main-nav">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo-link">
+          <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+        </a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="index.html#topics" class="nav-link">Topics</a>
+          <a href="index.html#blogs" class="nav-link">Blogs</a>
+          <a href="index.html#about" class="nav-link">About</a>
+          <a href="books.html" class="nav-link">Reference Books</a>
+          <a href="videos.html" class="nav-link">Reference Videos</a>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="hero-content">
+      <h1 class="hero-title animate-fadein">OS Internals</h1>
+      <p class="hero-subtitle animate-slidein">Deep dive into Android's core</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="content-section">
+      <div class="container">
+        <div class="content-card">
+          <h2>Android OS Architecture</h2>
+          <div class="architecture-stack">
+            <div class="stack-item">Apps</div>
+            <div class="stack-item">Framework</div>
+            <div class="stack-item">Native Libraries</div>
+            <div class="stack-item">Android Runtime (ART)</div>
+            <div class="stack-item highlight">HAL</div>
+            <div class="stack-item">Linux Kernel</div>
+          </div>
+          
+          <h2>Core Components</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>Linux Kernel</h3>
+              <p>Handles low-level hardware interactions, security, and process management.</p>
+            </div>
+            <div class="module-card">
+              <h3>HAL</h3>
+              <p>Bridges hardware and software through standardized interfaces.</p>
+            </div>
+            <div class="module-card">
+              <h3>Native Libraries</h3>
+              <p>C/C++ libraries for core features (WebKit, OpenGL, etc.).</p>
+            </div>
+            <div class="module-card">
+              <h3>Android Runtime</h3>
+              <p>Executes app bytecode with optimized performance.</p>
+            </div>
+            <div class="module-card">
+              <h3>Framework</h3>
+              <p>Java APIs for app development and system services.</p>
+            </div>
+            <div class="module-card">
+              <h3>Apps</h3>
+              <p>User and system applications running on the platform.</p>
+            </div>
+          </div>
+          
+          <h2>Processes & Memory Management</h2>
+          <ul>
+            <li>Each app runs in its own process and sandbox for security.</li>
+            <li>Android manages memory using Linux features (OOM killer, cgroups).</li>
+            <li>Garbage collection in ART/Dalvik for app memory.</li>
+            <li>Process lifecycle management for efficient resource usage.</li>
+          </ul>
+          
+          <h2>Security Features</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>App Sandboxing</h3>
+              <p>Each app runs in isolated environment with limited permissions.</p>
+            </div>
+            <div class="module-card">
+              <h3>SELinux</h3>
+              <p>Mandatory access control for enhanced security enforcement.</p>
+            </div>
+            <div class="module-card">
+              <h3>Verified Boot</h3>
+              <p>Ensures system integrity from bootloader to system partition.</p>
+            </div>
+            <div class="module-card">
+              <h3>Permission Model</h3>
+              <p>Granular permission system for app capabilities.</p>
+            </div>
+          </div>
+          
+          <div class="cta-content">
+            <h3>Learn More</h3>
+            <p>Explore the official Android OS architecture documentation for detailed insights.</p>
+            <a href="https://source.android.com/docs/core/architecture" target="_blank" class="cta-button">Android OS Architecture</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <a href="index.html" class="footer-logo-link">
+            <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
+          </a>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="hal.html">HAL</a></li>
+            <li><a href="framework.html">Framework</a></li>
+            <li><a href="adb.html">ADB</a></li>
+            <li><a href="books.html">Reference Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/scripts.js"></script>
+</body>
+</html> 

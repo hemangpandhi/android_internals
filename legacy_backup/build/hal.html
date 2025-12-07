@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HAL (Hardware Abstraction Layer) - Android Internals</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="icon" href="assets/images/android_logo.PNG" type="image/png">
+  <link rel="manifest" href="assets/manifest.json">
+  <meta name="theme-color" content="#3ddc84">
+</head>
+<body>
+  <header class="hero">
+    <nav class="main-nav">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo-link">
+          <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+        </a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="index.html#topics" class="nav-link">Topics</a>
+          <a href="index.html#blogs" class="nav-link">Blogs</a>
+          <a href="index.html#about" class="nav-link">About</a>
+          <a href="books.html" class="nav-link">Reference Books</a>
+          <a href="videos.html" class="nav-link">Reference Videos</a>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="hero-content">
+      <h1 class="hero-title animate-fadein">HAL (Hardware Abstraction Layer)</h1>
+      <p class="hero-subtitle animate-slidein">Bridging Android software and device hardware</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="content-section">
+      <div class="container">
+        <div class="content-card">
+          <h2>What is HAL?</h2>
+          <p>The Hardware Abstraction Layer (HAL) in Android provides a standard interface for hardware vendors to implement, allowing Android OS to communicate with device hardware without knowing the hardware specifics. HAL modules act as a bridge between the Android system and hardware drivers.</p>
+          
+          <h2>Role in Android</h2>
+          <ul>
+            <li>Enables Android to support a wide range of hardware with minimal changes to the OS.</li>
+            <li>Vendors implement HAL modules for their hardware, which the Android system calls via defined interfaces.</li>
+            <li>Ensures modularity and easier updates for both hardware and software.</li>
+          </ul>
+          
+          <h2>Architecture</h2>
+          <p>HAL sits between the Android Framework and the Linux kernel drivers. The typical stack is:</p>
+          <div class="architecture-stack">
+            <div class="stack-item">Android App</div>
+            <div class="stack-item">Android Framework</div>
+            <div class="stack-item">JNI (Java Native Interface)</div>
+            <div class="stack-item highlight">HAL</div>
+            <div class="stack-item">Linux Kernel Driver</div>
+            <div class="stack-item">Hardware</div>
+          </div>
+          
+          <h2>Examples of HAL Modules</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>Camera HAL</h3>
+              <p>Manages camera hardware interfaces and image processing.</p>
+            </div>
+            <div class="module-card">
+              <h3>Audio HAL</h3>
+              <p>Handles audio input/output and audio processing.</p>
+            </div>
+            <div class="module-card">
+              <h3>Bluetooth HAL</h3>
+              <p>Manages Bluetooth connectivity and protocols.</p>
+            </div>
+            <div class="module-card">
+              <h3>Wi-Fi HAL</h3>
+              <p>Controls Wi-Fi hardware and network management.</p>
+            </div>
+            <div class="module-card">
+              <h3>Sensor HAL</h3>
+              <p>Manages various device sensors (accelerometer, gyroscope, etc.).</p>
+            </div>
+          </div>
+          
+          <div class="cta-content">
+            <h3>Learn More</h3>
+            <p>Explore the official Android HAL documentation for detailed implementation guides.</p>
+            <a href="https://source.android.com/docs/core/architecture/hal" target="_blank" class="cta-button">Official Documentation</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <a href="index.html" class="footer-logo-link">
+            <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
+          </a>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="hal.html">HAL</a></li>
+            <li><a href="framework.html">Framework</a></li>
+            <li><a href="adb.html">ADB</a></li>
+            <li><a href="books.html">Reference Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+        <p style="margin-top: 1rem; font-size: 0.9rem;">
+          <a href="privacy.html" style="color: #3ddc84; margin-right: 1rem;">Privacy Policy</a>
+          <a href="terms.html" style="color: #3ddc84;">Terms of Service</a>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/scripts.js"></script>
+  
+  <!-- Cookie Consent Banner -->
+  <div id="cookieConsentBanner" class="cookie-consent-banner">
+    <div class="cookie-consent-content">
+      <div class="cookie-consent-text">
+        <p>We use cookies and service workers to enhance your browsing experience, analyze site traffic, and personalize content. By clicking "Accept", you consent to our use of cookies. <a href="privacy.html">Learn more</a></p>
+      </div>
+      <div class="cookie-consent-buttons">
+        <button id="cookieAcceptBtn" class="cookie-consent-btn cookie-consent-btn-accept">Accept</button>
+        <button id="cookieDeclineBtn" class="cookie-consent-btn cookie-consent-btn-decline">Decline</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html> 

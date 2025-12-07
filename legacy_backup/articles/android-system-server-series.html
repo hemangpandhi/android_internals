@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Android System Server Deep Dive - Series Index - Android Internals</title>
+  <meta name="description" content="Complete guide series to Android System Server covering architecture, services, Binder IPC, debugging, best practices, and advanced Q&A for platform developers.">
+  <meta name="keywords" content="Android, Internals, System Architecture, development, programming">
+  <link rel="stylesheet" href="../assets/css/styles.css?v=17">
+  <link rel="icon" href="../assets/images/android_logo.PNG" type="image/png">
+  <link rel="manifest" href="../assets/manifest.json">
+  <meta name="theme-color" content="#3ddc84">
+  
+  <!-- Mermaid.js for diagram rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+  <style>
+    .mermaid-diagram {
+      margin: 1rem 0;
+      padding: 0.75rem 1rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+      position: relative;
+      overflow: visible !important;
+      z-index: 1;
+      /* Scroll margin to account for fixed navigation bar (80px height) */
+      scroll-margin-top: 100px;
+      /* Ensure container can expand to show full diagram - no height constraints */
+      min-height: auto !important;
+      height: auto !important;
+      max-height: none !important;
+      /* Ensure content is not clipped */
+      overflow-x: visible;
+      overflow-y: visible;
+    }
+    
+    .mermaid-diagram.zoomed {
+      /* Ensure zoomed diagrams can scroll horizontally and vertically */
+      overflow-x: auto !important;
+      overflow-y: auto !important;
+      max-width: 100%;
+      z-index: 1040 !important;
+      position: relative;
+    }
+    
+    .mermaid {
+      text-align: center;
+      display: block;
+      width: 100%;
+      min-height: auto;
+      height: auto;
+      transition: transform 0.3s ease;
+      cursor: grab;
+      margin: 0;
+      padding: 0;
+      display: block;
+    }
+    
+    .mermaid svg {
+      display: block !important;
+      margin: 0 auto !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: auto !important;
+      max-height: none !important;
+      /* Ensure SVG can expand to show full content - critical for Mermaid 10.7.0 */
+      overflow: visible !important;
+      /* Remove any height constraints that might clip content */
+      box-sizing: border-box;
+    }
+    
+    /* Specific styling for sequence diagrams to reduce vertical spacing */
+    .mermaid-diagram.sequence-diagram-container {
+      padding: 0.4rem 1rem !important;
+    }
+    
+    /* Alternative CSS selector for sequence diagrams */
+    .mermaid-diagram:has(svg g.actor),
+    .mermaid-diagram:has(svg g.note),
+    .mermaid-diagram:has(svg g.activation) {
+      padding: 0.4rem 1rem;
+    }
+    
+    .mermaid:active {
+      cursor: grabbing;
+    }
+    
+    /* Zoom controls */
+    .mermaid-zoom-controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 5px;
+      z-index: 1050;
+    }
+    
+    .zoom-btn {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      color: #333;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      min-width: 32px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
+    
+    .zoom-btn:hover {
+      background: #f0f0f0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .zoom-reset {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+    
+    .zoom-reset:hover {
+      background: #0056b3;
+      border-color: #0056b3;
+    }
+    
+    .fullscreen-btn {
+      background: #28a745;
+      color: white;
+      border-color: #28a745;
+    }
+    
+    .fullscreen-btn:hover {
+      background: #1e7e34;
+      border-color: #1e7e34;
+    }
+    
+    /* Zoom indicator */
+    .zoom-indicator {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: monospace;
+    }
+    
+    /* Fullscreen mode for Mermaid diagrams */
+    .mermaid-diagram.fullscreen {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 99999 !important;
+      background: white !important;
+      padding: 20px !important;
+      margin: 0 !important;
+      border: none !important;
+      overflow: auto !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    
+    .mermaid-diagram.fullscreen .mermaid {
+      max-width: 90vw !important;
+      max-height: 90vh !important;
+      width: auto !important;
+      height: auto !important;
+      display: block !important;
+    }
+    
+    .mermaid-diagram.fullscreen .mermaid svg {
+      max-width: 100% !important;
+      max-height: 100% !important;
+      width: auto !important;
+      height: auto !important;
+    }
+    
+    .mermaid-diagram.fullscreen .mermaid-zoom-controls {
+      display: none !important;
+    }
+    
+    .mermaid-diagram.fullscreen .zoom-indicator {
+      display: none !important;
+    }
+    
+    body.fullscreen-mode {
+      overflow: hidden !important;
+      background: white !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    /* Hide navigation bar when diagram is in fullscreen mode - especially important for mobile */
+    body.fullscreen-mode .main-nav {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+    }
+    
+    .fullscreen-hidden {
+      display: none !important;
+    }
+    
+    /* Mobile responsive styles for Mermaid diagrams */
+    @media (max-width: 768px) {
+      .mermaid-diagram {
+        margin: 0.75rem 0;
+        padding: 0.5rem 0.75rem;
+        /* Scroll margin to account for fixed navigation bar */
+        scroll-margin-top: 100px;
+        /* Remove max-height constraint to allow natural dimensions */
+      }
+      
+      .mermaid-zoom-controls {
+        top: 5px;
+        right: 5px;
+        gap: 3px;
+      }
+      
+      .zoom-btn {
+        padding: 4px 6px;
+        font-size: 10px;
+        min-width: 28px;
+        height: 24px;
+      }
+      
+      .zoom-indicator {
+        bottom: 5px;
+        left: 5px;
+        padding: 2px 6px;
+        font-size: 10px;
+      }
+      
+      /* Fullscreen mobile adjustments */
+      .mermaid-diagram.fullscreen {
+        padding: 10px !important;
+        /* Ensure fullscreen starts from very top on mobile */
+        top: 0 !important;
+      }
+      
+      .mermaid-diagram.fullscreen .mermaid {
+        max-width: 95vw !important;
+        max-height: 95vh !important;
+      }
+      
+      /* Hide navigation bar on mobile when diagram is fullscreen */
+      body.fullscreen-mode .main-nav {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        transform: translateY(-100%) !important;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .mermaid-diagram {
+        margin: 0.5rem 0;
+        padding: 0.4rem 0.6rem;
+        /* Scroll margin to account for fixed navigation bar */
+        scroll-margin-top: 100px;
+        /* Remove max-height constraint to allow natural dimensions */
+      }
+      
+      .mermaid-zoom-controls {
+        top: 3px;
+        right: 3px;
+        gap: 2px;
+      }
+      
+      .zoom-btn {
+        padding: 3px 5px;
+        font-size: 9px;
+        min-width: 24px;
+        height: 20px;
+      }
+      
+      .zoom-indicator {
+        bottom: 3px;
+        left: 3px;
+        padding: 1px 4px;
+        font-size: 9px;
+      }
+      
+      /* Fullscreen mobile adjustments for very small screens */
+      .mermaid-diagram.fullscreen {
+        padding: 5px !important;
+        /* Ensure fullscreen starts from very top on small mobile */
+        top: 0 !important;
+      }
+      
+      .mermaid-diagram.fullscreen .mermaid {
+        max-width: 98vw !important;
+        max-height: 98vh !important;
+      }
+      
+      /* Hide navigation bar on small mobile when diagram is fullscreen */
+      body.fullscreen-mode .main-nav {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        transform: translateY(-100%) !important;
+      }
+    }
+  </style>
+  
+  <!-- Security Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+      <!-- X-Frame-Options should be set via HTTP headers, not meta tags -->
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="Android System Server Deep Dive - Series Index">
+  <meta property="og:description" content="Complete guide series to Android System Server covering architecture, services, Binder IPC, debugging, best practices, and advanced Q&A for platform developers.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.hemangpandhi.com/articles/android-system-server-series.html">
+  <meta property="og:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Android System Server Deep Dive - Series Index">
+  <meta name="twitter:description" content="Complete guide series to Android System Server covering architecture, services, Binder IPC, debugging, best practices, and advanced Q&A for platform developers.">
+  <meta name="twitter:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="main-nav">
+    <div class="nav-container">
+      <a href="../index.html" class="nav-logo-link">
+        <img src="../assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="../index.html" class="nav-link">Home</a>
+        <a href="../index.html#topics" class="nav-link">Topics</a>
+        <a href="../index.html#blogs" class="nav-link">Blogs</a>
+        <a href="../index.html#about" class="nav-link">About</a>
+        <a href="../books.html" class="nav-link">Reference Books</a>
+        <a href="../videos.html" class="nav-link">Reference Videos</a>
+      </div>
+      <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle mobile menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Article Header -->
+  <header class="article-header">
+    <div class="container">
+      <div class="article-hero">
+        <div class="article-meta">
+          <span class="article-category">System Architecture</span>
+          <span class="article-date">2025-10-04</span>
+          <span class="article-read-time">5 min read</span>
+        </div>
+        <h1 class="article-title">Android System Server Deep Dive - Series Index</h1>
+        <p class="article-subtitle">Complete guide series to Android System Server covering architecture, services, Binder IPC, debugging, best practices, and advanced Q&A for platform developers.</p>
+        <div class="article-author">
+          <img src="../assets/images/android_logo.PNG" alt="Author" class="author-avatar">
+          <div class="author-info">
+            <span class="author-name">Android Internals Team</span>
+            <span class="author-title">Android Internals Expert</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="article-content">
+    <!-- Reading Mode Toggle -->
+    <div class="reading-mode-controls">
+      <button id="toggleReadingMode" class="reading-mode-btn">
+        <span class="reading-mode-icon">📖</span>
+        <span class="reading-mode-text">Full Screen</span>
+      </button>
+      <button id="toggleSidebar" class="sidebar-toggle-btn">
+        <span class="sidebar-icon">📋</span>
+        <span class="sidebar-text">Sidebar</span>
+      </button>
+    </div>
+
+    <div class="container">
+      <div class="article-layout" id="articleLayout">
+        <!-- Article Body -->
+        <article class="article-body" id="articleBody">
+          <div class="article-intro">
+            <p class="lead-text">Complete guide series to Android System Server covering architecture, services, Binder IPC, debugging, best practices, and advanced Q&A for platform developers.</p>
+          </div>
+          
+          <div class="article-content-wrapper">
+            <h1 id="-android--system--server--deep--dive--complete--series">Android System Server Deep Dive - Complete Series</h1>
+
+
+<h2 id="-series--overview">Series Overview</h2>
+
+<blockquote class="article-quote"><p><strong>A comprehensive 6-part series</strong> covering everything you need to know about Android System Server, from foundational architecture to advanced debugging and Q&A.</p></blockquote>
+<p class="article-paragraph">The Android System Server (<code class="inline-code">system_server</code>) is the monolithic core of the Android operating system, hosting the vast majority of Android's framework services. This series provides a complete understanding of its architecture, services, communication mechanisms, debugging techniques, and best practices.</p>
+
+<h2 id="-learning--path">Learning Path</h2>
+
+<p class="article-paragraph">Follow these articles in sequence for the best learning experience:</p>
+
+<h3 id="---part--1--architecture--and--design">📚 Part 1: Architecture and Design</h3>
+<p class="article-paragraph"><strong>File</strong>: <a href="./android-system-server-architecture.html" class="article-link">android-system-server-architecture.html</a></p>
+
+<p class="article-paragraph"><strong>What you&#x27;ll learn:</strong></p>
+
+<ul class="article-list"><li class="list-item">Why system_server exists as a monolithic process</li><li class="list-item">How system_server is created and initialized</li><li class="list-item">Service management and boot phases</li><li class="list-item">Architectural trade-offs and design rationale</li></ul>
+<p class="article-paragraph"><strong>Prerequisites</strong>: Basic Android knowledge  </p>
+<p class="article-paragraph"><strong>Estimated Time</strong>: 20 minutes  </p>
+<p class="article-paragraph"><strong>Difficulty</strong>: Intermediate</p>
+
+<hr class="article-divider">
+
+<h3 id="---part--2--core--system--services">🔧 Part 2: Core System Services</h3>
+<p class="article-paragraph"><strong>File</strong>: <a href="./android-system-server-services.html" class="article-link">android-system-server-services.html</a></p>
+
+<p class="article-paragraph"><strong>What you&#x27;ll learn:</strong></p>
+
+<ul class="article-list"><li class="list-item">ActivityManagerService and ActivityTaskManagerService</li><li class="list-item">WindowManagerService architecture</li><li class="list-item">PackageManagerService operations</li><li class="list-item">PowerManagerService and power management</li></ul>
+<p class="article-paragraph"><strong>Prerequisites</strong>: Part 1 (Architecture)  </p>
+<p class="article-paragraph"><strong>Estimated Time</strong>: 25 minutes  </p>
+<p class="article-paragraph"><strong>Difficulty</strong>: Intermediate</p>
+
+<hr class="article-divider">
+
+<h3 id="---part--3--binder--ipc--framework">📡 Part 3: Binder IPC Framework</h3>
+<p class="article-paragraph"><strong>File</strong>: <a href="./android-system-server-binder-ipc.html" class="article-link">android-system-server-binder-ipc.html</a></p>
+
+<p class="article-paragraph"><strong>What you&#x27;ll learn:</strong></p>
+
+<ul class="article-list"><li class="list-item">Binder IPC architecture and components</li><li class="list-item">Transaction lifecycle and flow</li><li class="list-item">Modern Binder optimizations</li><li class="list-item">Cross-process communication patterns</li></ul>
+<p class="article-paragraph"><strong>Prerequisites</strong>: Parts 1-2  </p>
+<p class="article-paragraph"><strong>Estimated Time</strong>: 15 minutes  </p>
+<p class="article-paragraph"><strong>Difficulty</strong>: Intermediate</p>
+
+<hr class="article-divider">
+
+<h3 id="---part--4--debugging--and--troubleshooting">🐛 Part 4: Debugging and Troubleshooting</h3>
+<p class="article-paragraph"><strong>File</strong>: <a href="./android-system-server-debugging.html" class="article-link">android-system-server-debugging.html</a></p>
+
+<p class="article-paragraph"><strong>What you&#x27;ll learn:</strong></p>
+
+<ul class="article-list"><li class="list-item">Essential debugging tools and commands</li><li class="list-item">Performance profiling techniques</li><li class="list-item">Common failure modes (Watchdog, ANRs, crashes)</li><li class="list-item">Advanced debugging strategies</li></ul>
+<p class="article-paragraph"><strong>Prerequisites</strong>: Parts 1-3  </p>
+<p class="article-paragraph"><strong>Estimated Time</strong>: 30 minutes  </p>
+<p class="article-paragraph"><strong>Difficulty</strong>: Advanced</p>
+
+<hr class="article-divider">
+
+<h3 id="---part--5--best--practices--and--optimization">✅ Part 5: Best Practices and Optimization</h3>
+<p class="article-paragraph"><strong>File</strong>: <a href="./android-system-server-best-practices.html" class="article-link">android-system-server-best-practices.html</a></p>
+
+<p class="article-paragraph"><strong>What you&#x27;ll learn:</strong></p>
+
+<ul class="article-list"><li class="list-item">Threading best practices</li><li class="list-item">Memory management strategies</li><li class="list-item">Security considerations</li><li class="list-item">Common pitfalls to avoid</li></ul>
+<p class="article-paragraph"><strong>Prerequisites</strong>: Parts 1-4  </p>
+<p class="article-paragraph"><strong>Estimated Time</strong>: 15 minutes  </p>
+<p class="article-paragraph"><strong>Difficulty</strong>: Advanced</p>
+
+<hr class="article-divider">
+
+<h3 id="---part--6--advanced--qa">❓ Part 6: Advanced Q&A</h3>
+<p class="article-paragraph"><strong>File</strong>: <a href="./android-system-server-qa.html" class="article-link">android-system-server-qa.html</a></p>
+
+<p class="article-paragraph"><strong>What you&#x27;ll learn:</strong></p>
+
+<ul class="article-list"><li class="list-item">Deep answers to 25+ common questions</li><li class="list-item">Edge cases and advanced scenarios</li><li class="list-item">Real-world troubleshooting examples</li><li class="list-item">System integration patterns</li></ul>
+<p class="article-paragraph"><strong>Prerequisites</strong>: Parts 1-5 (or use as reference)  </p>
+<p class="article-paragraph"><strong>Estimated Time</strong>: 60+ minutes  </p>
+<p class="article-paragraph"><strong>Difficulty</strong>: Advanced</p>
+
+<hr class="article-divider">
+
+<h2 id="-quick--navigation">Quick Navigation</h2>
+
+
+<div class="table-container">
+<table class="article-table">
+<thead>
+<tr>
+<th>Article</th>
+<th>Topic</th>
+<th>Time</th>
+<th>Difficulty</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="./android-system-server-architecture.html" class="article-link">Part 1</a></td>
+<td>Architecture & Design</td>
+<td>20 min</td>
+<td>Intermediate</td>
+</tr>
+<tr>
+<td><a href="./android-system-server-services.html" class="article-link">Part 2</a></td>
+<td>Core Services</td>
+<td>25 min</td>
+<td>Intermediate</td>
+</tr>
+<tr>
+<td><a href="./android-system-server-binder-ipc.html" class="article-link">Part 3</a></td>
+<td>Binder IPC</td>
+<td>15 min</td>
+<td>Intermediate</td>
+</tr>
+<tr>
+<td><a href="./android-system-server-debugging.html" class="article-link">Part 4</a></td>
+<td>Debugging</td>
+<td>30 min</td>
+<td>Advanced</td>
+</tr>
+<tr>
+<td><a href="./android-system-server-best-practices.html" class="article-link">Part 5</a></td>
+<td>Best Practices</td>
+<td>15 min</td>
+<td>Advanced</td>
+</tr>
+<tr>
+<td><a href="./android-system-server-qa.html" class="article-link">Part 6</a></td>
+<td>Advanced Q&A</td>
+<td>60+ min</td>
+<td>Advanced</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="article-paragraph"><strong>Total Series Time</strong>: ~2.5 hours</p>
+
+<hr class="article-divider">
+
+<h2 id="-who--should--read--this--series">Who Should Read This Series?</h2>
+
+
+<ul class="article-list"><li class="list-item"><strong>Platform Developers</strong>: Working on Android system-level features</li><li class="list-item"><strong>Framework Engineers</strong>: Modifying or extending Android services</li><li class="list-item"><strong>Performance Engineers</strong>: Optimizing system performance</li><li class="list-item"><strong>Debugging Specialists</strong>: Troubleshooting system issues</li><li class="list-item"><strong>Android Enthusiasts</strong>: Deep diving into Android internals</li></ul>
+<hr class="article-divider">
+
+<h2 id="-key--topics--covered">Key Topics Covered</h2>
+
+<h3 id="-architecture">Architecture</h3>
+
+<ul class="article-list"><li class="list-item">Monolithic design rationale</li><li class="list-item">Process genesis and initialization</li><li class="list-item">Service management architecture</li><li class="list-item">Boot phases and dependencies</li></ul>
+<h3 id="-services">Services</h3>
+
+<ul class="article-list"><li class="list-item">ActivityManagerService / ActivityTaskManagerService</li><li class="list-item">WindowManagerService</li><li class="list-item">PackageManagerService</li><li class="list-item">PowerManagerService</li></ul>
+<h3 id="-communication">Communication</h3>
+
+<ul class="article-list"><li class="list-item">Binder IPC framework</li><li class="list-item">Transaction lifecycle</li><li class="list-item">Service registration and discovery</li><li class="list-item">Cross-process communication</li></ul>
+<h3 id="-debugging">Debugging</h3>
+
+<ul class="article-list"><li class="list-item">Command-line tools</li><li class="list-item">Performance profiling</li><li class="list-item">Failure mode analysis</li><li class="list-item">Advanced debugging techniques</li></ul>
+<h3 id="-best--practices">Best Practices</h3>
+
+<ul class="article-list"><li class="list-item">Threading patterns</li><li class="list-item">Memory management</li><li class="list-item">Security considerations</li><li class="list-item">Common pitfalls</li></ul>
+<h3 id="-advanced--topics">Advanced Topics</h3>
+
+<ul class="article-list"><li class="list-item">25+ comprehensive Q&A</li><li class="list-item">Real-world scenarios</li><li class="list-item">Edge cases</li><li class="list-item">System integration</li></ul>
+<hr class="article-divider">
+
+<h2 id="-start--your--journey">Start Your Journey</h2>
+
+<p class="article-paragraph">👉 <strong>Begin with <a href="./android-system-server-architecture.html" class="article-link">Part 1: Architecture and Design</a></strong></p>
+
+<hr class="article-divider">
+
+<p class="article-paragraph"><em>This series is part of the Android Internals documentation project, providing comprehensive guides for Android platform developers.</em></p>
+
+          </div>
+          
+          <!-- Article Footer -->
+          <div class="article-footer">
+            <div class="article-tags">
+              <span class="tag-label">Tags:</span>
+              <span class="tag">Android</span>
+              <span class="tag">Internals</span>
+              <span class="tag">System Architecture</span>
+            </div>
+            <div class="article-share">
+              <span class="share-label">Share:</span>
+              <a href="https://twitter.com/intent/tweet?text=Android System Server Deep Dive - Series Index&url=https://www.hemangpandhi.com/articles/android-system-server-series.html" target="_blank" class="share-link">🐦 Twitter</a>
+              <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://www.hemangpandhi.com/articles/android-system-server-series.html" target="_blank" class="share-link">💼 LinkedIn</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Article Sidebar -->
+        <aside class="article-sidebar" id="articleSidebar">
+          <!-- Table of Contents -->
+          <div class="sidebar-widget toc-widget">
+            <h4>📋 Table of Contents</h4>
+            <nav class="article-toc" id="tableOfContents">
+              <ul>
+                <li><a href="#introduction">Loading...</a></li>
+              </ul>
+            </nav>
+          </div>
+
+          <!-- Author Info -->
+          <div class="sidebar-widget author-widget">
+            <h4>👤 About the Author</h4>
+            <div class="author-card">
+              <img src="../assets/images/android_logo.PNG" alt="Android Internals Team" class="author-avatar-small">
+              <div class="author-details">
+                <h5>Android Internals Team</h5>
+                <p>Android Internals expert with deep knowledge of system architecture and development tools. Specializing in HAL, Framework, and system optimization.</p>
+                <div class="author-stats">
+                  <span class="stat">📚 50+ Articles</span>
+                  <span class="stat">🔧 10+ Years Experience</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Related Articles -->
+          <div class="sidebar-widget related-widget">
+            <h4>🔗 Related Articles</h4>
+            <div class="related-articles">
+              <a href="../adb.html" class="related-article">
+                <h5>ADB (Android Debug Bridge)</h5>
+                <p>Powerful tool for Android development and debugging</p>
+              </a>
+              <a href="../hal.html" class="related-article">
+                <h5>HAL (Hardware Abstraction Layer)</h5>
+                <p>Bridging Android software and device hardware</p>
+              </a>
+              <a href="../framework.html" class="related-article">
+                <h5>Android Framework</h5>
+                <p>The backbone of Android app development</p>
+              </a>
+            </div>
+          </div>
+
+          <!-- Newsletter Signup -->
+          <div class="sidebar-widget newsletter-widget">
+            <h4>📧 Stay Updated</h4>
+            <p>Get the latest Android Internals articles delivered to your inbox.</p>
+            <form class="newsletter-form">
+              <input type="email" placeholder="Enter your email" required>
+              <button type="submit" class="btn btn-primary">Subscribe</button>
+            </form>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <a href="../index.html" class="footer-logo-link">
+            <img src="../assets/images/android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
+          </a>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="../hal.html">HAL</a></li>
+            <li><a href="../framework.html">Framework</a></li>
+            <li><a href="../adb.html">ADB</a></li>
+            <li><a href="../books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+        <div class="footer-section">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="../privacy.html">Privacy Policy</a></li>
+            <li><a href="../terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/scripts.js"></script>
+  
+  <!-- Cookie Consent Banner -->
+  <div id="cookieConsentBanner" class="cookie-consent-banner">
+    <div class="cookie-consent-content">
+      <div class="cookie-consent-text">
+        <p>We use cookies and service workers to enhance your browsing experience, analyze site traffic, and personalize content. By clicking "Accept", you consent to our use of cookies. <a href="../privacy.html">Learn more</a></p>
+      </div>
+      <div class="cookie-consent-buttons">
+        <button id="cookieAcceptBtn" class="cookie-consent-btn cookie-consent-btn-accept">Accept</button>
+        <button id="cookieDeclineBtn" class="cookie-consent-btn cookie-consent-btn-decline">Decline</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Redirect .md URLs to .html (for browser cache/history issues)
+    (function() {
+      const currentPath = window.location.pathname;
+      if (currentPath.endsWith('.md')) {
+        const newPath = currentPath.replace(/\.md$/, '.html');
+        console.log('Redirecting .md URL to .html:', currentPath, '->', newPath);
+        window.location.replace(newPath);
+        return;
+      }
+    })();
+    
+    // Article functionality
+    // Define functions globally first
+    window.zoomDiagram = function(diagramId, factor) {
+      const cleanId = diagramId.startsWith('mermaid-') ? diagramId : 'mermaid-' + diagramId;
+      const diagram = document.getElementById(cleanId);
+      const diagramContainer = document.getElementById('diagram-' + cleanId);
+      const zoomIndicator = document.getElementById('zoom-' + diagramId);
+      
+      if (!diagram || !diagramContainer) return;
+      
+      // Initialize zoomLevels if not exists
+      window.zoomLevels = window.zoomLevels || {};
+      
+      const currentZoom = window.zoomLevels[diagramId] || 1;
+      const newZoom = Math.max(1, Math.min(5, currentZoom * factor)); // Start from 100% minimum
+      window.zoomLevels[diagramId] = newZoom;
+      
+      // Apply zoom to the diagram element only
+      diagram.style.transform = `scale(${newZoom})`;
+      diagram.style.transformOrigin = 'top left';
+      
+      // Check if we're in fullscreen mode
+      const isFullscreen = diagramContainer.style.position === 'fixed';
+      if (isFullscreen) {
+        // In fullscreen, preserve full height and enable scrolling
+        diagramContainer.style.height = '100vh';
+        diagramContainer.style.minHeight = '100vh';
+        diagramContainer.style.maxHeight = 'none';
+        diagramContainer.style.overflow = 'auto';
+      } else {
+        // Normal mode - ensure proper scrolling when zoomed
+        if (newZoom > 1) {
+          // When zoomed, ensure container allows horizontal and vertical scrolling
+          diagramContainer.style.overflow = 'auto';
+          diagramContainer.style.overflowX = 'auto';
+          diagramContainer.style.overflowY = 'auto';
+          diagramContainer.style.width = '100%';
+          diagramContainer.style.maxWidth = '100%';
+          diagramContainer.style.position = 'relative';
+          diagramContainer.style.zIndex = '1040';
+          diagramContainer.classList.add('zoomed');
+          
+          // Ensure the diagram element itself has proper width for scrolling
+          const svg = diagram.querySelector('svg');
+          if (svg) {
+            // Get the natural SVG width (before scaling)
+            const svgNaturalWidth = svg.viewBox.baseVal.width || svg.width.baseVal.value;
+            if (svgNaturalWidth > 0) {
+              // Set diagram width to accommodate scaled SVG
+              const scaledWidth = svgNaturalWidth * newZoom;
+              diagram.style.width = scaledWidth + 'px';
+              diagram.style.minWidth = scaledWidth + 'px';
+              diagram.style.maxWidth = 'none';
+            } else {
+              // Fallback: use bounding box if viewBox not available
+              const svgWidth = svg.getBoundingClientRect().width;
+              const scaledWidth = svgWidth * newZoom;
+              diagram.style.width = scaledWidth + 'px';
+              diagram.style.minWidth = scaledWidth + 'px';
+              diagram.style.maxWidth = 'none';
+            }
+          }
+        } else {
+          // At 100% zoom, clear all styles to use natural dimensions
+          diagramContainer.style.cssText = '';
+          diagram.style.width = '';
+          diagram.style.minWidth = '';
+          diagram.style.maxWidth = '';
+          diagramContainer.classList.remove('zoomed');
+        }
+      }
+      
+      if (zoomIndicator) {
+        zoomIndicator.textContent = Math.round(newZoom * 100) + '%';
+      }
+    }
+    
+    window.resetZoom = function(diagramId) {
+      const cleanId = diagramId.startsWith('mermaid-') ? diagramId : 'mermaid-' + diagramId;
+      const diagram = document.getElementById(cleanId);
+      const diagramContainer = document.getElementById('diagram-' + cleanId);
+      const zoomIndicator = document.getElementById('zoom-' + diagramId);
+      
+      if (!diagram || !diagramContainer) return;
+      
+      // Reset zoom level
+      window.zoomLevels = window.zoomLevels || {};
+      window.zoomLevels[diagramId] = 1;
+      
+      // Remove zoomed class and z-index
+      diagramContainer.classList.remove('zoomed');
+      
+      // Reset diagram to 100% scale
+      diagram.style.transform = 'scale(1)';
+      diagram.style.transformOrigin = 'top left';
+      
+      // Check if we're in fullscreen mode
+      const isFullscreen = diagramContainer.style.position === 'fixed';
+      if (isFullscreen) {
+        // In fullscreen, preserve full height
+        diagramContainer.style.height = '100vh';
+        diagramContainer.style.minHeight = '100vh';
+        diagramContainer.style.maxHeight = 'none';
+        diagramContainer.style.overflow = 'auto';
+      } else {
+        // Normal mode - clear all styles exactly like fullscreen exit
+        // This ensures the same behavior as exiting fullscreen mode
+        diagramContainer.style.cssText = '';
+        diagram.style.width = '';
+        diagram.style.minWidth = '';
+        diagram.style.maxWidth = '';
+        const mermaidEl = diagramContainer.querySelector('.mermaid');
+        if (mermaidEl) {
+          mermaidEl.style.cssText = '';
+        }
+        const svgEl = mermaidEl?.querySelector('svg');
+        if (svgEl) {
+          svgEl.style.cssText = '';
+        }
+      }
+      
+      if (zoomIndicator) {
+        zoomIndicator.textContent = '100%';
+      }
+    }
+    
+    window.toggleFullscreen = function(diagramId) {
+      console.log('Fullscreen toggle called for:', diagramId);
+      
+      const container = document.getElementById(`diagram-${diagramId}`);
+      if (!container) {
+        console.error('Container not found:', `diagram-${diagramId}`);
+        return;
+      }
+      
+      const isFullscreen = container.style.position === 'fixed';
+      
+      if (isFullscreen) {
+        // Exit fullscreen
+        console.log('Exiting fullscreen');
+        
+        // Show navigation bar again
+        const mainNav = document.querySelector('.main-nav');
+        if (mainNav) {
+          mainNav.style.display = '';
+          mainNav.style.visibility = '';
+          mainNav.style.opacity = '';
+          mainNav.style.height = '';
+          mainNav.style.overflow = '';
+        }
+        
+        container.style.cssText = '';
+        document.body.style.overflow = '';
+        document.body.classList.remove('fullscreen-mode');
+        
+        // Reset the mermaid element styles to normal mode
+        const mermaidEl = container.querySelector('.mermaid');
+        if (mermaidEl) {
+          mermaidEl.style.cssText = '';
+        }
+        
+        // Reset the SVG element styles to normal mode
+        const svgEl = mermaidEl?.querySelector('svg');
+        if (svgEl) {
+          svgEl.style.cssText = '';
+        }
+      } else {
+        // Enter fullscreen
+        console.log('Entering fullscreen');
+        
+        // Hide navigation bar explicitly (especially important for mobile)
+        const mainNav = document.querySelector('.main-nav');
+        if (mainNav) {
+          mainNav.style.display = 'none';
+          mainNav.style.visibility = 'hidden';
+          mainNav.style.opacity = '0';
+          mainNav.style.height = '0';
+          mainNav.style.overflow = 'hidden';
+        }
+        
+        container.style.cssText = `
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          min-height: 100vh !important;
+          z-index: 999999 !important;
+          background: white !important;
+          display: block !important;
+          padding: 10px !important;
+          box-sizing: border-box !important;
+          overflow: auto !important;
+        `;
+        
+        const mermaidEl = container.querySelector('.mermaid');
+        if (mermaidEl) {
+          mermaidEl.style.cssText = `
+            max-width: 95vw !important;
+            max-height: 95vh !important;
+            width: auto !important;
+            height: auto !important;
+            margin: 0 auto !important;
+            display: block !important;
+          `;
+          
+          // Also ensure the SVG inside uses full height
+          const svgEl = mermaidEl.querySelector('svg');
+          if (svgEl) {
+            svgEl.style.cssText = `
+              max-width: 95vw !important;
+              max-height: 95vh !important;
+              width: auto !important;
+              height: auto !important;
+            `;
+          }
+        }
+        
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('fullscreen-mode');
+      }
+    }
+    
+    // Add escape key functionality
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        // Find any fullscreen diagram and exit it
+        const fullscreenDiagram = document.querySelector('.mermaid-diagram[style*="position: fixed"]');
+        if (fullscreenDiagram) {
+          const diagramId = fullscreenDiagram.id.replace('diagram-', '');
+          window.toggleFullscreen(diagramId);
+        }
+      }
+    });
+    
+    // Initialize zoom levels storage
+    window.zoomLevels = window.zoomLevels || {};
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOMContentLoaded fired');
+      console.log('Mermaid available:', typeof mermaid);
+      
+      // Initialize Mermaid with automatic rendering and minimal padding
+      try {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: 'default',
+          securityLevel: 'loose',
+          fontFamily: 'Arial, sans-serif',
+          // Global settings for all diagram types
+          useMaxWidth: true,
+          // Flowchart settings - optimized for Mermaid 10.7.0
+          // Critical: padding must be set to ensure viewBox includes all content
+          flowchart: {
+            padding: 20, // Increased padding to ensure all content is in viewBox
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis',
+            nodeSpacing: 50,
+            rankSpacing: 50,
+            wrap: false
+          },
+          // Sequence diagram settings
+          sequence: {
+            diagramMarginX: 10,
+            diagramMarginY: 10,
+            actorMargin: 50,
+            width: 150,
+            height: 65,
+            boxMargin: 10,
+            boxTextMargin: 5,
+            noteMargin: 35,
+            messageMargin: 35,
+            mirrorActors: true,
+            bottomMarginAdj: 1,
+            useMaxWidth: true
+          },
+          // Class diagram settings
+          class: {
+            useMaxWidth: true,
+            padding: 10
+          },
+          // State diagram settings
+          state: {
+            useMaxWidth: true,
+            padding: 10
+          },
+          // Gantt chart settings
+          gantt: {
+            useMaxWidth: true
+          },
+          // Pie chart settings
+          pie: {
+            useMaxWidth: true
+          },
+          // Git graph settings
+          gitGraph: {
+            useMaxWidth: true
+          },
+          // ER diagram settings
+          er: {
+            useMaxWidth: true
+          },
+          // Journey diagram settings
+          journey: {
+            useMaxWidth: true
+          },
+          // C4 diagram settings
+          c4: {
+            useMaxWidth: true
+          }
+        });
+        console.log('Mermaid initialized successfully');
+        
+        // Simple approach: Just ensure diagrams are properly displayed after Mermaid renders
+        // Wait for Mermaid to render all diagrams, then ensure they're visible
+        setTimeout(function() {
+          console.log('Ensuring all diagrams are properly displayed');
+          
+          // Find all Mermaid diagrams
+          const mermaidContainers = document.querySelectorAll('.mermaid-diagram');
+          mermaidContainers.forEach(function(container) {
+            const diagramId = container.id.replace('diagram-', '');
+            const diagram = document.getElementById(diagramId);
+            const zoomIndicator = document.getElementById('zoom-' + diagramId);
+            
+            if (diagram && container) {
+              // Check if this is a sequence diagram
+              const svg = container.querySelector('svg');
+              let isSequenceDiagram = false;
+              if (svg) {
+                // Detect sequence diagrams
+                const hasSequenceElements = svg.querySelector('g.actor, g.note, g.activation, g[class*="sequence"]');
+                if (hasSequenceElements) {
+                  isSequenceDiagram = true;
+                  container.classList.add('sequence-diagram-container');
+                }
+              }
+              
+              // Initialize zoom level to 100%
+              window.zoomLevels = window.zoomLevels || {};
+              window.zoomLevels[diagramId] = 1;
+              
+              // Reset diagram to 100% scale
+              diagram.style.transform = 'scale(1)';
+              diagram.style.transformOrigin = 'top left';
+              
+              // CRITICAL FIX for Mermaid 10.7.0: Ensure container and SVG can display full content
+              // Remove ALL height and overflow constraints
+              container.style.cssText = `
+                overflow: visible !important;
+                height: auto !important;
+                max-height: none !important;
+                min-height: auto !important;
+                margin: 1rem 0 !important;
+                padding: 0.75rem 1rem !important;
+                background: #f8f9fa !important;
+                border-radius: 8px !important;
+                border: 1px solid #e9ecef !important;
+                position: relative !important;
+                z-index: 1 !important;
+              `;
+              
+              // CRITICAL FIX for Mermaid 10.7.0: Ensure SVG displays fully
+              // Issue: Mermaid 10.7.0 may generate viewBox that cuts off content or has wrong aspect ratio
+              if (svg) {
+                // Use multiple attempts to ensure SVG is fully rendered
+                function fixSvgDimensions() {
+                  const viewBox = svg.viewBox.baseVal;
+                  
+                  if (viewBox && viewBox.width > 0 && viewBox.height > 0) {
+                    // Remove any explicit width/height attributes that might conflict
+                    // Let CSS handle sizing based on viewBox
+                    svg.removeAttribute('width');
+                    svg.removeAttribute('height');
+                    
+                    // Ensure preserveAspectRatio is set correctly
+                    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                    
+                    // Set styles to ensure full content is visible
+                    // Use viewBox-based sizing (browser will calculate height from aspect ratio)
+                    svg.style.cssText = `
+                      display: block !important;
+                      margin: 0 auto !important;
+                      width: 100% !important;
+                      max-width: 100% !important;
+                      height: auto !important;
+                      min-height: auto !important;
+                      max-height: none !important;
+                      overflow: visible !important;
+                      box-sizing: border-box !important;
+                    `;
+                    
+                    // Verify content is not cut off by checking bounding box
+                    try {
+                      const bbox = svg.getBBox();
+                      if (bbox) {
+                        // If content extends beyond viewBox, we need to expand it
+                        const contentRight = bbox.x + bbox.width;
+                        const contentBottom = bbox.y + bbox.height;
+                        const viewBoxRight = viewBox.x + viewBox.width;
+                        const viewBoxBottom = viewBox.y + viewBox.height;
+                        
+                        // If content is cut off, expand viewBox
+                        if (contentRight > viewBoxRight || contentBottom > viewBoxBottom) {
+                          const newX = Math.min(viewBox.x, bbox.x - 10);
+                          const newY = Math.min(viewBox.y, bbox.y - 10);
+                          const newWidth = Math.max(viewBox.width, contentRight - newX + 10);
+                          const newHeight = Math.max(viewBox.height, contentBottom - newY + 10);
+                          
+                          svg.setAttribute('viewBox', `${newX} ${newY} ${newWidth} ${newHeight}`);
+                          console.log('Expanded viewBox for', diagramId, 'to show full content');
+                        }
+                      }
+                    } catch (e) {
+                      // getBBox might fail if SVG is not fully rendered, that's OK
+                    }
+                  }
+                }
+                
+                // Try immediately
+                fixSvgDimensions();
+                
+                // Try again after a short delay (Mermaid might still be rendering)
+                setTimeout(fixSvgDimensions, 100);
+                setTimeout(fixSvgDimensions, 500);
+              }
+              
+              // Also ensure the mermaid element itself doesn't constrain
+              const mermaidEl = container.querySelector('.mermaid');
+              if (mermaidEl) {
+                mermaidEl.style.cssText = `
+                  text-align: center !important;
+                  display: block !important;
+                  width: 100% !important;
+                  height: auto !important;
+                  max-height: none !important;
+                  overflow: visible !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
+                `;
+              }
+              
+              // Re-apply reduced padding for sequence diagrams
+              if (isSequenceDiagram) {
+                container.style.padding = '0.4rem 1rem';
+              }
+              
+              // Update zoom indicator
+              if (zoomIndicator) {
+                zoomIndicator.textContent = '100%';
+              }
+            }
+          });
+        }, 1000); // Wait 1 second for Mermaid to finish rendering
+        
+      } catch (error) {
+        console.error('Mermaid initialization failed:', error);
+      }
+      
+      // Check if content is visible
+      const contentWrapper = document.querySelector('.article-content-wrapper');
+      console.log('Content wrapper found:', contentWrapper);
+      if (contentWrapper) {
+        console.log('Content wrapper visible:', contentWrapper.offsetHeight > 0);
+        console.log('Content wrapper display:', window.getComputedStyle(contentWrapper).display);
+      }
+      
+      // Reading mode toggle
+      const toggleReadingMode = document.getElementById('toggleReadingMode');
+      const toggleSidebar = document.getElementById('toggleSidebar');
+      const articleLayout = document.getElementById('articleLayout');
+      const articleSidebar = document.getElementById('articleSidebar');
+      
+      toggleReadingMode.addEventListener('click', function() {
+        articleLayout.classList.toggle('full-screen');
+        const isFullScreen = articleLayout.classList.contains('full-screen');
+        
+        if (isFullScreen) {
+          toggleReadingMode.querySelector('.reading-mode-text').textContent = 'Exit Full Screen';
+          articleSidebar.style.display = 'none';
+        } else {
+          toggleReadingMode.querySelector('.reading-mode-text').textContent = 'Full Screen';
+          articleSidebar.style.display = 'block';
+        }
+      });
+      
+      toggleSidebar.addEventListener('click', function() {
+        const isHidden = articleSidebar.style.display === 'none';
+        articleSidebar.style.display = isHidden ? 'block' : 'none';
+        toggleSidebar.querySelector('.sidebar-text').textContent = isHidden ? 'Hide Sidebar' : 'Show Sidebar';
+      });
+      
+      // Generate Table of Contents
+      function generateTOC() {
+        const headings = document.querySelectorAll('.article-content-wrapper h1, .article-content-wrapper h2, .article-content-wrapper h3');
+        const tocContainer = document.getElementById('tableOfContents');
+        
+        if (headings.length === 0) return;
+        
+        let tocHTML = '<ul>';
+        headings.forEach((heading, index) => {
+          const id = `heading-${index}`;
+          heading.id = id;
+          
+          const level = parseInt(heading.tagName.charAt(1));
+          const indent = level > 2 ? 'style="margin-left: ' + ((level - 2) * 20) + 'px;"' : '';
+          
+          tocHTML += `<li ${indent}><a href="#${id}">${heading.textContent}</a></li>`;
+        });
+        tocHTML += '</ul>';
+        
+        tocContainer.innerHTML = tocHTML;
+      }
+      
+      // Smooth scrolling for TOC links
+      function addSmoothScrolling() {
+        document.querySelectorAll('.article-toc a').forEach(link => {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+              target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }
+          });
+        });
+      }
+      
+      // Copy code functionality
+      function addCopyCodeButtons() {
+        document.querySelectorAll('.code-copy').forEach(button => {
+          button.addEventListener('click', function() {
+            const codeBlock = this.closest('.code-example').querySelector('code');
+            const text = codeBlock.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+              this.textContent = 'Copied!';
+              setTimeout(() => {
+                this.textContent = 'Copy';
+              }, 2000);
+            });
+          });
+        });
+      }
+      
+      // Initialize functionality
+      generateTOC();
+      setTimeout(() => {
+        addSmoothScrolling();
+        addCopyCodeButtons();
+      }, 100);
+    });
+
+  </script>
+</body>
+</html> 

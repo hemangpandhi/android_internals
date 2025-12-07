@@ -1,123 +1,44 @@
-# Environment and Configuration Files
-.env
-.env.local
-.env.production
-config.js
-# Ensure config.js is never committed (contains sensitive keys)
-/config.js
-build/config.js
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Build Output
-build/
-dist/
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# Dependencies
-node_modules/
-# package-lock.json - Keep this for reproducible builds
+# testing
+/coverage
 
-# Data Files (contain sensitive information)
-data/subscribers.json
-data/newsletter-queue.json
+# next.js
+/.next/
+/out/
 
-# Logs
-*.log
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
+# env files (can opt-in for committing if needed)
+.env*
 
-# Coverage directory used by tools like istanbul
-coverage/
-
-# nyc test coverage
-.nyc_output
-
-# Dependency directories
-jspm_packages/
-
-# Optional npm cache directory
-.npm
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# next.js build output
-.next
-
-# nuxt.js build output
-.nuxt
-
-# vuepress build output
-.vuepress/dist
-
-# Serverless directories
-.serverless
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
-.tern-port
-
-# IDE and Editor Files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS Generated Files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Temporary Files
-*.tmp
-*.temp
-temp/
-tmp/
-
-# Debug Files
-debug/
-*.debug
-
-# Local Development Files
-local/
-dev/
-
-# AOSP Code Cache
-.aosp-cache/
-
-# AOSP Local Repository
-.aosp-repo/
-
-
+# vercel
 .vercel
-.env*.local
-.aosp-repo/
-.aosp-cache/
+
+*.tsbuildinfo
+next-env.d.ts
+
+# AOSP
+.aosp-cache
+.aosp-repo

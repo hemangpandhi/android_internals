@@ -1,0 +1,2132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Server: Binder IPC Framework - Android Internals</title>
+  <meta name="description" content="Understanding Binder IPC communication between system_server and application processes, including transaction lifecycle and optimizations.">
+  <meta name="keywords" content="Android, Internals, System Architecture, development, programming">
+  <link rel="stylesheet" href="../assets/css/styles.css?v=17">
+  <link rel="icon" href="../assets/images/android_logo.PNG" type="image/png">
+  <link rel="manifest" href="../assets/manifest.json">
+  <meta name="theme-color" content="#3ddc84">
+  
+  <!-- Mermaid.js for diagram rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+  <style>
+    .mermaid-diagram {
+      margin: 1rem 0;
+      padding: 0.75rem 1rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+      position: relative;
+      overflow: visible !important;
+      z-index: 1;
+      /* Scroll margin to account for fixed navigation bar (80px height) */
+      scroll-margin-top: 100px;
+      /* Ensure container can expand to show full diagram - no height constraints */
+      min-height: auto !important;
+      height: auto !important;
+      max-height: none !important;
+      /* Ensure content is not clipped */
+      overflow-x: visible;
+      overflow-y: visible;
+    }
+    
+    .mermaid-diagram.zoomed {
+      /* Ensure zoomed diagrams can scroll horizontally and vertically */
+      overflow-x: auto !important;
+      overflow-y: auto !important;
+      max-width: 100%;
+      z-index: 1040 !important;
+      position: relative;
+    }
+    
+    .mermaid {
+      text-align: center;
+      display: block;
+      width: 100%;
+      min-height: auto;
+      height: auto;
+      transition: transform 0.3s ease;
+      cursor: grab;
+      margin: 0;
+      padding: 0;
+      display: block;
+    }
+    
+    .mermaid svg {
+      display: block !important;
+      margin: 0 auto !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: auto !important;
+      max-height: none !important;
+      /* Ensure SVG can expand to show full content - critical for Mermaid 10.7.0 */
+      overflow: visible !important;
+      /* Remove any height constraints that might clip content */
+      box-sizing: border-box;
+    }
+    
+    /* Specific styling for sequence diagrams to reduce vertical spacing */
+    .mermaid-diagram.sequence-diagram-container {
+      padding: 0.4rem 1rem !important;
+    }
+    
+    /* Alternative CSS selector for sequence diagrams */
+    .mermaid-diagram:has(svg g.actor),
+    .mermaid-diagram:has(svg g.note),
+    .mermaid-diagram:has(svg g.activation) {
+      padding: 0.4rem 1rem;
+    }
+    
+    .mermaid:active {
+      cursor: grabbing;
+    }
+    
+    /* Zoom controls */
+    .mermaid-zoom-controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 5px;
+      z-index: 1050;
+    }
+    
+    .zoom-btn {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      color: #333;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      min-width: 32px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
+    
+    .zoom-btn:hover {
+      background: #f0f0f0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .zoom-reset {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+    
+    .zoom-reset:hover {
+      background: #0056b3;
+      border-color: #0056b3;
+    }
+    
+    .fullscreen-btn {
+      background: #28a745;
+      color: white;
+      border-color: #28a745;
+    }
+    
+    .fullscreen-btn:hover {
+      background: #1e7e34;
+      border-color: #1e7e34;
+    }
+    
+    /* Zoom indicator */
+    .zoom-indicator {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: monospace;
+    }
+    
+    /* Fullscreen mode for Mermaid diagrams */
+    .mermaid-diagram.fullscreen {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 99999 !important;
+      background: white !important;
+      padding: 20px !important;
+      margin: 0 !important;
+      border: none !important;
+      overflow: auto !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    
+    .mermaid-diagram.fullscreen .mermaid {
+      max-width: 90vw !important;
+      max-height: 90vh !important;
+      width: auto !important;
+      height: auto !important;
+      display: block !important;
+    }
+    
+    .mermaid-diagram.fullscreen .mermaid svg {
+      max-width: 100% !important;
+      max-height: 100% !important;
+      width: auto !important;
+      height: auto !important;
+    }
+    
+    .mermaid-diagram.fullscreen .mermaid-zoom-controls {
+      display: none !important;
+    }
+    
+    .mermaid-diagram.fullscreen .zoom-indicator {
+      display: none !important;
+    }
+    
+    body.fullscreen-mode {
+      overflow: hidden !important;
+      background: white !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    /* Hide navigation bar when diagram is in fullscreen mode - especially important for mobile */
+    body.fullscreen-mode .main-nav {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+    }
+    
+    .fullscreen-hidden {
+      display: none !important;
+    }
+    
+    /* Mobile responsive styles for Mermaid diagrams */
+    @media (max-width: 768px) {
+      .mermaid-diagram {
+        margin: 0.75rem 0;
+        padding: 0.5rem 0.75rem;
+        /* Scroll margin to account for fixed navigation bar */
+        scroll-margin-top: 100px;
+        /* Remove max-height constraint to allow natural dimensions */
+      }
+      
+      .mermaid-zoom-controls {
+        top: 5px;
+        right: 5px;
+        gap: 3px;
+      }
+      
+      .zoom-btn {
+        padding: 4px 6px;
+        font-size: 10px;
+        min-width: 28px;
+        height: 24px;
+      }
+      
+      .zoom-indicator {
+        bottom: 5px;
+        left: 5px;
+        padding: 2px 6px;
+        font-size: 10px;
+      }
+      
+      /* Fullscreen mobile adjustments */
+      .mermaid-diagram.fullscreen {
+        padding: 10px !important;
+        /* Ensure fullscreen starts from very top on mobile */
+        top: 0 !important;
+      }
+      
+      .mermaid-diagram.fullscreen .mermaid {
+        max-width: 95vw !important;
+        max-height: 95vh !important;
+      }
+      
+      /* Hide navigation bar on mobile when diagram is fullscreen */
+      body.fullscreen-mode .main-nav {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        transform: translateY(-100%) !important;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .mermaid-diagram {
+        margin: 0.5rem 0;
+        padding: 0.4rem 0.6rem;
+        /* Scroll margin to account for fixed navigation bar */
+        scroll-margin-top: 100px;
+        /* Remove max-height constraint to allow natural dimensions */
+      }
+      
+      .mermaid-zoom-controls {
+        top: 3px;
+        right: 3px;
+        gap: 2px;
+      }
+      
+      .zoom-btn {
+        padding: 3px 5px;
+        font-size: 9px;
+        min-width: 24px;
+        height: 20px;
+      }
+      
+      .zoom-indicator {
+        bottom: 3px;
+        left: 3px;
+        padding: 1px 4px;
+        font-size: 9px;
+      }
+      
+      /* Fullscreen mobile adjustments for very small screens */
+      .mermaid-diagram.fullscreen {
+        padding: 5px !important;
+        /* Ensure fullscreen starts from very top on small mobile */
+        top: 0 !important;
+      }
+      
+      .mermaid-diagram.fullscreen .mermaid {
+        max-width: 98vw !important;
+        max-height: 98vh !important;
+      }
+      
+      /* Hide navigation bar on small mobile when diagram is fullscreen */
+      body.fullscreen-mode .main-nav {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        transform: translateY(-100%) !important;
+      }
+    }
+  </style>
+  
+  <!-- Security Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+      <!-- X-Frame-Options should be set via HTTP headers, not meta tags -->
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="System Server: Binder IPC Framework">
+  <meta property="og:description" content="Understanding Binder IPC communication between system_server and application processes, including transaction lifecycle and optimizations.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.hemangpandhi.com/articles/android-system-server-binder-ipc.html">
+  <meta property="og:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="System Server: Binder IPC Framework">
+  <meta name="twitter:description" content="Understanding Binder IPC communication between system_server and application processes, including transaction lifecycle and optimizations.">
+  <meta name="twitter:image" content="https://www.hemangpandhi.com/assets/images/android_logo.PNG">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="main-nav">
+    <div class="nav-container">
+      <a href="../index.html" class="nav-logo-link">
+        <img src="../assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="../index.html" class="nav-link">Home</a>
+        <a href="../index.html#topics" class="nav-link">Topics</a>
+        <a href="../index.html#blogs" class="nav-link">Blogs</a>
+        <a href="../index.html#about" class="nav-link">About</a>
+        <a href="../books.html" class="nav-link">Reference Books</a>
+        <a href="../videos.html" class="nav-link">Reference Videos</a>
+      </div>
+      <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle mobile menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Article Header -->
+  <header class="article-header">
+    <div class="container">
+      <div class="article-hero">
+        <div class="article-meta">
+          <span class="article-category">System Architecture</span>
+          <span class="article-date">2025-10-04</span>
+          <span class="article-read-time">5 min read</span>
+        </div>
+        <h1 class="article-title">System Server: Binder IPC Framework</h1>
+        <p class="article-subtitle">Understanding Binder IPC communication between system_server and application processes, including transaction lifecycle and optimizations.</p>
+        <div class="article-author">
+          <img src="../assets/images/android_logo.PNG" alt="Author" class="author-avatar">
+          <div class="author-info">
+            <span class="author-name">Android Internals Team</span>
+            <span class="author-title">Android Internals Expert</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="article-content">
+    <!-- Reading Mode Toggle -->
+    <div class="reading-mode-controls">
+      <button id="toggleReadingMode" class="reading-mode-btn">
+        <span class="reading-mode-icon">📖</span>
+        <span class="reading-mode-text">Full Screen</span>
+      </button>
+      <button id="toggleSidebar" class="sidebar-toggle-btn">
+        <span class="sidebar-icon">📋</span>
+        <span class="sidebar-text">Sidebar</span>
+      </button>
+    </div>
+
+    <div class="container">
+      <div class="article-layout" id="articleLayout">
+        <!-- Article Body -->
+        <article class="article-body" id="articleBody">
+          <div class="article-intro">
+            <p class="lead-text">Understanding Binder IPC communication between system_server and application processes, including transaction lifecycle and optimizations.</p>
+          </div>
+          
+          <div class="article-content-wrapper">
+            <h1 id="-system--server--binder--ipc--framework">System Server: Binder IPC Framework</h1>
+
+
+<h2 id="-learning--objectives">Learning Objectives</h2>
+
+<blockquote class="article-quote"><p><strong>Part 3 of 6</strong> in the <a href="./android-system-server-series.html" class="article-link">Android System Server Deep Dive</a> series</p><p></p><p><strong>Previous</strong>: <a href="./android-system-server-services.html" class="article-link">Part 2: Core System Services</a>  </p><p><strong>Next</strong>: <a href="./android-system-server-debugging.html" class="article-link">Part 4: Debugging and Troubleshooting</a>  </p><p><strong>Series Index</strong>: <a href="./android-system-server-series.html" class="article-link">View all articles</a></p></blockquote>
+<p class="article-paragraph">By the end of this article, you will understand:</p>
+
+<ul class="article-list"><li class="list-item">How Binder IPC enables cross-process communication</li><li class="list-item">The Binder transaction lifecycle</li><li class="list-item">Service registration and discovery mechanisms</li><li class="list-item">Modern Binder optimizations</li><li class="list-item">Performance implications of IPC vs in-process calls</li></ul>
+<hr class="article-divider">
+
+<h2 id="-part--iii--binder--ipc--framework">Part III: Binder IPC Framework</h2>
+
+<p class="article-paragraph">Binder IPC (Inter-Process Communication) is Android's fundamental mechanism for cross-process communication. It enables applications to communicate with system_server and other processes through a sophisticated kernel-level message passing system optimized for mobile devices.</p>
+
+<h3 id="-30--origins--and--introduction--to--android">3.0 Origins and Introduction to Android</h3>
+
+<h4 id="-historical--context--why--binder">Historical Context: Why Binder?</h4>
+
+<p class="article-paragraph">Before Android, traditional Linux systems used several IPC mechanisms:</p>
+
+<p class="article-paragraph"><strong>Traditional Linux IPC Mechanisms:</strong></p>
+
+
+<div class="table-container">
+<table class="article-table">
+<thead>
+<tr>
+<th>Mechanism</th>
+<th>Use Case</th>
+<th>Limitations for Mobile</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Pipes</strong></td>
+<td>Simple data flow</td>
+<td>Unidirectional, limited to related processes</td>
+</tr>
+<tr>
+<td><strong>Sockets</strong></td>
+<td>Network/Unix domain</td>
+<td>High overhead, complex setup</td>
+</tr>
+<tr>
+<td><strong>Shared Memory</strong></td>
+<td>Fast data sharing</td>
+<td>No synchronization, security concerns</td>
+</tr>
+<tr>
+<td><strong>Message Queues</strong></td>
+<td>Structured messaging</td>
+<td>Limited size, no object references</td>
+</tr>
+<tr>
+<td><strong>Semaphores</strong></td>
+<td>Synchronization</td>
+<td>No data transfer capability</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="article-paragraph"><strong>Android&#x27;s Requirements:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Low Overhead</strong>: Mobile devices have limited CPU and battery</li><li class="list-item"><strong>Object References</strong>: Need to pass references to objects across processes</li><li class="list-item"><strong>Security</strong>: Fine-grained permission checking</li><li class="list-item"><strong>Performance</strong>: Minimize data copying</li><li class="list-item"><strong>Simplicity</strong>: Easy-to-use API for developers</li></ul>
+<h4 id="-binders--origins">Binder's Origins</h4>
+
+<p class="article-paragraph">Binder was originally developed by <strong>Palm, Inc.</strong> for the Palm OS Cobalt operating system. When Android was being developed, the team needed an IPC mechanism that could:</p>
+
+
+<ol class="article-list"><li class="list-item"><strong>Handle Object References</strong>: Pass references to objects (not just data) across process boundaries</li><li class="list-item"><strong>Support Remote Procedure Calls (RPC)</strong>: Enable method calls on remote objects</li><li class="list-item"><strong>Provide Security</strong>: Kernel-level permission enforcement</li><li class="list-item"><strong>Optimize for Mobile</strong>: Low memory and CPU overhead</li></ol>
+<p class="article-paragraph">Android adopted and adapted Binder, making it a core component of the Android kernel.</p>
+
+<h4 id="-android--kernel--modifications">Android Kernel Modifications</h4>
+
+<p class="article-paragraph">Android's kernel is based on Linux, but includes significant modifications for Binder:</p>
+
+<p class="article-paragraph"><strong>Binder Driver (<code class="inline-code">drivers/android/binder.c</code>):</strong></p>
+
+<div class="mermaid-diagram" id="diagram-mermaid-uo7w510n9">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-uo7w510n9', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-uo7w510n9')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-uo7w510n9', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-uo7w510n9')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-uo7w510n9">graph TD
+    A[Linux Kernel Base] --> B[Android Kernel Modifications]
+    B --> C[Binder Driver]
+    B --> D[Ashmem Shared Memory]
+    B --> E[Low Memory Killer]
+    B --> F[Logger]
+    
+    C --> G[Process Communication]
+    C --> H[Reference Counting]
+    C --> I[Security Enforcement]
+    
+    style C fill:#3ddc84
+    style B fill:#4ecdc4</div>
+            <div class="zoom-indicator" id="zoom-mermaid-uo7w510n9">100%</div>
+          </div>
+
+<p class="article-paragraph"><strong>Key Differences:</strong></p>
+
+
+<ol class="article-list"><li class="list-item"><strong>Binder Driver</strong>: Custom kernel module (<code class="inline-code">/dev/binder</code>) not present in standard Linux</li><li class="list-item"><strong>Reference Counting</strong>: Kernel tracks object references across processes</li><li class="list-item"><strong>Death Notifications</strong>: Kernel notifies processes when referenced objects die</li><li class="list-item"><strong>Security Integration</strong>: Tight integration with Android's permission system</li></ol>
+<p class="article-paragraph"><strong>Comparison: Standard Linux vs Android Kernel:</strong></p>
+
+<div class="mermaid-diagram" id="diagram-mermaid-vfxhif6bz">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-vfxhif6bz', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-vfxhif6bz')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-vfxhif6bz', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-vfxhif6bz')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-vfxhif6bz">graph LR
+    subgraph "Standard Linux Kernel"
+        A1[Pipes] --> A2[Process Communication]
+        A3[Sockets] --> A2
+        A4[Shared Memory] --> A2
+        A5[Message Queues] --> A2
+    end
+    
+    subgraph "Android Kernel"
+        B1[Binder Driver] --> B2[Process Communication]
+        B3[Ashmem] --> B2
+        B4[Low Memory Killer] --> B2
+        B1 --> B5[Object References]
+        B1 --> B6[Death Notifications]
+        B1 --> B7[Security Enforcement]
+    end
+    
+    style B1 fill:#3ddc84
+    style B5 fill:#ff6b6b
+    style B6 fill:#ff6b6b
+    style B7 fill:#ff6b6b</div>
+            <div class="zoom-indicator" id="zoom-mermaid-vfxhif6bz">100%</div>
+          </div>
+
+<h4 id="-why--binder--over--other--ipc--mechanisms">Why Binder Over Other IPC Mechanisms?</h4>
+
+<p class="article-paragraph"><strong>1. Object-Oriented Design:</strong></p>
+
+<ul class="article-list"><li class="list-item">Binder supports passing object references, not just data</li><li class="list-item">Enables Remote Procedure Calls (RPC) pattern</li><li class="list-item">Natural fit for Android's Java-based framework</li></ul>
+<p class="article-paragraph"><strong>2. Performance:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Zero-copy optimization</strong>: Minimizes data copying</li><li class="list-item"><strong>Efficient reference counting</strong>: Kernel manages object lifecycle</li><li class="list-item"><strong>Low latency</strong>: Optimized for mobile device constraints</li></ul>
+<p class="article-paragraph"><strong>3. Security:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Kernel-level enforcement</strong>: Permissions checked in kernel space</li><li class="list-item"><strong>Process isolation</strong>: Strong boundaries between processes</li><li class="list-item"><strong>SELinux integration</strong>: Works with Android's security policies</li></ul>
+<p class="article-paragraph"><strong>4. Developer Experience:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>AIDL</strong>: Simple interface definition language</li><li class="list-item"><strong>Automatic code generation</strong>: Proxy/Stub classes generated automatically</li><li class="list-item"><strong>Type safety</strong>: Compile-time checking of interfaces</li></ul>
+<p class="article-paragraph"><strong>Performance Comparison:</strong></p>
+
+<div class="mermaid-diagram" id="diagram-mermaid-qrfff173y">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-qrfff173y', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-qrfff173y')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-qrfff173y', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-qrfff173y')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-qrfff173y">graph TD
+    A["IPC Mechanism Comparison"] --> B[Latency]
+    A --> C["Memory Overhead"]
+    A --> D[Complexity]
+    
+    B --> B1["Binder: 0.5-1ms"]
+    B --> B2["Sockets: 2-5ms"]
+    B --> B3["Pipes: 1-3ms"]
+    B --> B4["Shared Memory: 0.1ms<br/>but no security"]
+    
+    C --> C1["Binder: Low<br/>reference counting"]
+    C --> C2["Sockets: Medium<br/>buffers"]
+    C --> C3["Pipes: Low"]
+    C --> C4["Shared Memory: Very Low<br/>but risky"]
+    
+    D --> D1["Binder: Medium<br/>AIDL helps"]
+    D --> D2["Sockets: High<br/>manual serialization"]
+    D --> D3["Pipes: Low"]
+    D --> D4["Shared Memory: Very High<br/>synchronization needed"]
+    
+    style B1 fill:#3ddc84
+    style C1 fill:#3ddc84
+    style D1 fill:#3ddc84</div>
+            <div class="zoom-indicator" id="zoom-mermaid-qrfff173y">100%</div>
+          </div>
+
+<h4 id="-android--kernel--binder--implementation">Android Kernel Binder Implementation</h4>
+
+<p class="article-paragraph"><strong>Kernel Source Location:</strong></p>
+
+<ul class="article-list"><li class="list-item"><code class="inline-code">drivers/android/binder.c</code> - Main Binder driver implementation</li><li class="list-item"><code class="inline-code">drivers/android/binder_alloc.c</code> - Memory allocation</li><li class="list-item"><code class="inline-code">include/uapi/linux/android/binder.h</code> - Kernel API definitions</li></ul>
+<p class="article-paragraph"><strong>Key Kernel Features:</strong></p>
+
+<ol class="article-list"><li class="list-item"><strong>Binder Context Manager (ServiceManager)</strong>:</li></ol>
+
+<ul class="article-list"><li class="list-item">Special process that manages service registration</li><li class="list-item">Acts as a name server for Binder services</li><li class="list-item">First process to use Binder (PID 1 after init)</li></ul>
+<ol class="article-list"><li class="list-item"><strong>Binder Domains</strong>:</li></ol>
+
+<ul class="article-list"><li class="list-item"><code class="inline-code">/dev/binder</code> - Standard framework communication</li><li class="list-item"><code class="inline-code">/dev/hwbinder</code> - Hardware Abstraction Layer</li><li class="list-item"><code class="inline-code">/dev/vndbinder</code> - Vendor-specific services</li></ul>
+<ol class="article-list"><li class="list-item"><strong>Memory Management</strong>:</li></ol>
+
+<ul class="article-list"><li class="list-item">Uses <code class="inline-code">mmap()</code> to share memory between processes</li><li class="list-item">Kernel manages buffer allocation and deallocation</li><li class="list-item">Automatic cleanup when processes die</li></ul>
+<p class="article-paragraph"><strong>Binder in Android Architecture:</strong></p>
+
+<div class="mermaid-diagram" id="diagram-mermaid-arog47k9b">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-arog47k9b', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-arog47k9b')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-arog47k9b', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-arog47k9b')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-arog47k9b">graph TD
+    A[Android Applications] --> B[Binder Proxy]
+    B --> C["/dev/binder Driver"]
+    C --> D[system_server]
+    C --> E[Other System Services]
+    
+    F[Hardware HAL] --> G["/dev/hwbinder Driver"]
+    G --> D
+    
+    H[Vendor Services] --> I["/dev/vndbinder Driver"]
+    I --> J[Vendor Processes]
+    
+    K[Linux Kernel] --> C
+    K --> G
+    K --> I
+    
+    style C fill:#3ddc84
+    style G fill:#4ecdc4
+    style I fill:#ffe66d
+    style K fill:#ff6b6b</div>
+            <div class="zoom-indicator" id="zoom-mermaid-arog47k9b">100%</div>
+          </div>
+
+<h4 id="-evolution--in--android--versions">Evolution in Android Versions</h4>
+
+<p class="article-paragraph"><strong>Android 1.0 (2008):</strong></p>
+
+<ul class="article-list"><li class="list-item">Initial Binder implementation</li><li class="list-item">Basic IPC functionality</li><li class="list-item">ServiceManager for service discovery</li></ul>
+<p class="article-paragraph"><strong>Android 4.0+ (2011):</strong></p>
+
+<ul class="article-list"><li class="list-item">Performance optimizations</li><li class="list-item">Scatter-gather I/O improvements</li><li class="list-item">Better memory management</li></ul>
+<p class="article-paragraph"><strong>Android 5.0+ (2014):</strong></p>
+
+<ul class="article-list"><li class="list-item">Binder domains introduced (<code class="inline-code">/dev/hwbinder</code>, <code class="inline-code">/dev/vndbinder</code>)</li><li class="list-item">Enhanced security features</li><li class="list-item">64-bit support</li></ul>
+<p class="article-paragraph"><strong>Android 8.0+ (2017):</strong></p>
+
+<ul class="article-list"><li class="list-item">Project Treble: Separation of framework and vendor</li><li class="list-item">Enhanced Binder domains for vendor isolation</li><li class="list-item">Improved performance for large transactions</li></ul>
+<p class="article-paragraph"><strong>Android 10+ (2019):</strong></p>
+
+<ul class="article-list"><li class="list-item">Further optimizations</li><li class="list-item">Better debugging tools</li><li class="list-item">Enhanced security policies</li></ul>
+<h3 id="-31--architectural--components">3.1 Architectural Components</h3>
+
+<h4 id="-binder--driver">Binder Driver</h4>
+
+<p class="article-paragraph">The Binder driver is a Linux kernel module (<code class="inline-code">/dev/binder</code>) that acts as the communication bridge between processes. It provides:</p>
+
+
+<ul class="article-list"><li class="list-item"><strong>Zero-copy optimization</strong>: Minimizes data copying between user space and kernel space</li><li class="list-item"><strong>Reference counting</strong>: Manages object lifecycle across process boundaries</li><li class="list-item"><strong>Security</strong>: Enforces permission checks at the kernel level</li><li class="list-item"><strong>Thread management</strong>: Routes transactions to appropriate threads in the server process</li></ul>
+<p class="article-paragraph"><strong>Binder Architecture Overview:</strong></p>
+
+<div class="mermaid-diagram" id="diagram-mermaid-84rmayzxq">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-84rmayzxq', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-84rmayzxq')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-84rmayzxq', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-84rmayzxq')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-84rmayzxq">graph TD
+    A[App Process] --> B[Binder Proxy]
+    B --> C["Binder Driver /dev/binder"]
+    C -->|"Kernel Space<br/>Cross-Process Boundary"| D[Binder Stub in system_server]
+    D --> E[Service Implementation]
+    E --> F[Response Marshaling]
+    F --> C
+    C -->|"Kernel Space<br/>Cross-Process Boundary"| B
+    B --> A
+    
+    G[ServiceManager] --> C
+    C --> G
+    
+    H[Other App Process] --> I[Binder Proxy]
+    I --> C
+    
+    style C fill:#3ddc84,stroke:#2bb673,stroke-width:3px
+    style D fill:#ff6b6b,stroke:#ee5a6f,stroke-width:2px
+    style E fill:#ff6b6b,stroke:#ee5a6f,stroke-width:2px</div>
+            <div class="zoom-indicator" id="zoom-mermaid-84rmayzxq">100%</div>
+          </div>
+
+<h4 id="-service--registration--and--discovery">Service Registration and Discovery</h4>
+
+<p class="article-paragraph">Services register with ServiceManager using well-known string names (e.g., <code class="inline-code">&quot;activity&quot;</code>, <code class="inline-code">&quot;window&quot;</code>, <code class="inline-code">&quot;package&quot;</code>). This enables service discovery:</p>
+
+<p class="article-paragraph"><strong>Service Registration Flow:</strong></p>
+
+<div class="mermaid-diagram" id="diagram-mermaid-tmr3mts2a">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-tmr3mts2a', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-tmr3mts2a')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-tmr3mts2a', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-tmr3mts2a')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-tmr3mts2a">sequenceDiagram
+    participant Service as System Service
+    participant SM as ServiceManager
+    participant Client as App Process
+    
+    Service->>SM: addService("activity", binder)
+    SM->>SM: Store service reference
+    Note over SM: Service registered
+    
+    Client->>SM: getService("activity")
+    SM->>Client: Return Binder proxy
+    Client->>Service: Call service methods via proxy</div>
+            <div class="zoom-indicator" id="zoom-mermaid-tmr3mts2a">100%</div>
+          </div>
+
+<p class="article-paragraph"><strong>Key System Services:</strong></p>
+
+<ul class="article-list"><li class="list-item"><code class="inline-code">activity</code> - ActivityManagerService</li><li class="list-item"><code class="inline-code">window</code> - WindowManagerService</li><li class="list-item"><code class="inline-code">package</code> - PackageManagerService</li><li class="list-item"><code class="inline-code">power</code> - PowerManagerService</li><li class="list-item"><code class="inline-code">alarm</code> - AlarmManagerService</li><li class="list-item"><code class="inline-code">battery</code> - BatteryService</li></ul>
+<h4 id="-proxy--stub--pattern">Proxy-Stub Pattern</h4>
+
+<p class="article-paragraph">AIDL (Android Interface Definition Language) generates Proxy and Stub classes that handle the communication layer:</p>
+
+<p class="article-paragraph"><strong>Proxy (Client Side):</strong></p>
+
+<ul class="article-list"><li class="list-item">Marshals method arguments into Parcel</li><li class="list-item">Sends transaction to Binder driver</li><li class="list-item">Unmarshals response from Parcel</li></ul>
+<p class="article-paragraph"><strong>Stub (Server Side):</strong></p>
+
+<ul class="article-list"><li class="list-item">Receives transaction from Binder driver</li><li class="list-item">Unmarshals arguments from Parcel</li><li class="list-item">Calls actual service implementation</li><li class="list-item">Marshals response back to client</li></ul>
+<h3 id="-32--transaction--lifecycle">3.2 Transaction Lifecycle</h3>
+
+<p class="article-paragraph">A Binder transaction follows a well-defined lifecycle from client call to server response:</p>
+
+<p class="article-paragraph"><strong>Detailed Transaction Flow:</strong></p>
+
+<div class="mermaid-diagram" id="diagram-mermaid-3bgrf9drz">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-3bgrf9drz', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-3bgrf9drz')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-3bgrf9drz', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-3bgrf9drz')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-3bgrf9drz">sequenceDiagram
+    participant Client as Client Process
+    participant Proxy as Binder Proxy
+    participant Driver as Binder Driver
+    participant Stub as Binder Stub
+    participant Service as Service Implementation
+    
+    Client->>Proxy: Call service method
+    Proxy->>Proxy: Marshal arguments to Parcel
+    Note over Proxy: data.writeInt(42)<br/>data.writeString("text")
+    
+    Proxy->>Driver: transact(code, data, reply, flags)
+    Note over Driver: Copy data to kernel buffer
+    
+    Driver->>Stub: Deliver transaction
+    Note over Stub: Route to handler thread
+    
+    Stub->>Stub: Unmarshal arguments from Parcel
+    Note over Stub: int value = data.readInt()<br/>String text = data.readString()
+    
+    Stub->>Service: Call actual implementation
+    Service->>Service: Process request
+    Service->>Stub: Return result
+    
+    Stub->>Stub: Marshal response to Parcel
+    Note over Stub: reply.writeInt(result)
+    
+    Stub->>Driver: Send reply
+    Driver->>Proxy: Deliver response
+    
+    Proxy->>Proxy: Unmarshal response from Parcel
+    Proxy->>Client: Return result</div>
+            <div class="zoom-indicator" id="zoom-mermaid-3bgrf9drz">100%</div>
+          </div>
+
+<p class="article-paragraph"><strong>Transaction Code Example:</strong></p>
+
+
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/android/os/Binder.java (transact pattern)" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/core/java/android/os/Binder.java (transact pattern)</span>
+                <span class="source-link-arrow">→</span>
+              </a><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/android/os/Parcel.java (marshaling)" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/core/java/android/os/Parcel.java (marshaling)</span>
+                <span class="source-link-arrow">→</span>
+              </a><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/android/os/IBinder.java (interface)" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/core/java/android/os/IBinder.java (interface)</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// CONCEPTUAL ILLUSTRATION - This is NOT actual AOSP source code
+// This shows the pattern used by AIDL-generated proxy/stub classes
+
+// Client side (Proxy) - typically auto-generated by AIDL
+// NOTE: getServiceValue() is an example method name, not from AOSP
+public int getServiceValue(int input) throws RemoteException {
+    Parcel data = Parcel.obtain();
+    Parcel reply = Parcel.obtain();
+    try {
+        data.writeInterfaceToken(DESCRIPTOR);
+        data.writeInt(input);
+        
+        // Send transaction to Binder driver
+        // Actual implementation calls transactNative() via JNI
+        mRemote.transact(TRANSACTION_getServiceValue, data, reply, 0);
+        
+        // Read response
+        reply.readException();
+        int result = reply.readInt();
+        return result;
+    } finally {
+        data.recycle();
+        reply.recycle();
+    }
+}
+
+// Server side (Stub) - typically auto-generated by AIDL
+// NOTE: This shows the onTransact() pattern used in actual AOSP services
+@Override
+public boolean onTransact(int code, Parcel data, Parcel reply, int flags) {
+    switch (code) {
+        case TRANSACTION_getServiceValue:
+            data.enforceInterface(DESCRIPTOR);
+            int input = data.readInt();
+            
+            // Call actual service implementation
+            // In real AOSP, this would call methods like startActivity(), etc.
+            int result = getServiceValue(input);
+            
+            reply.writeNoException();
+            reply.writeInt(result);
+            return true;
+        default:
+            return super.onTransact(code, data, reply, flags);
+    }
+}</code></pre>
+          </div>
+
+<blockquote class="article-quote"><p><strong>⚠️ Important Note:</strong> The code example below is a <strong>conceptual illustration</strong> of the Binder transaction pattern. The method name <code class="inline-code">getServiceValue()</code> is a <strong>placeholder example</strong> and does not exist in the actual AOSP source code. This pattern represents what AIDL-generated proxy/stub classes look like. The actual implementation in <a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/android/os/Binder.java" class="article-link" target="_blank" rel="noopener noreferrer">Binder.java</a> is more complex, with error handling, interface token validation, and native method calls via JNI. Real AOSP services use methods like <code class="inline-code">startActivity()</code>, <code class="inline-code">getService()</code>, etc., but follow the same transaction pattern shown here.</p></blockquote>
+<p class="article-paragraph"><strong>Verification Against AOSP Source:</strong></p>
+
+<p class="article-paragraph">To verify this pattern matches actual AOSP code, you can check:</p>
+
+<ol class="article-list"><li class="list-item"><strong>Core Binder Implementation:</strong></li></ol>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/android/os/Binder.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;Binder.transact()&lt;/code&gt;</a> - Shows the actual <code class="inline-code">transact()</code> method implementation</li><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/android/os/Binder.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;Binder.onTransact()&lt;/code&gt;</a> - Base implementation that services override</li></ul>
+<ol class="article-list"><li class="list-item"><strong>AIDL-Generated Code Pattern:</strong></li></ol>
+
+<ul class="article-list"><li class="list-item">AIDL-generated proxy/stub classes follow this exact pattern</li><li class="list-item">Example: Search for <code class="inline-code">&lt;em&gt;Stub.java</code> or <code class="inline-code">&lt;/em&gt;Proxy.java</code> files in AOSP (e.g., <code class="inline-code">IActivityManager.Stub</code>, <code class="inline-code">IPackageManager.Proxy</code>)</li><li class="list-item">These are auto-generated and follow the pattern shown above</li></ul>
+<ol class="article-list"><li class="list-item"><strong>Actual Service Examples:</strong></li></ol>
+
+<ul class="article-list"><li class="list-item"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/services/core/java/com/android/server/am/ActivityManagerService.java" class="article-link" target="_blank" rel="noopener noreferrer">&lt;code class=&quot;inline-code&quot;&gt;ActivityManagerService.onTransact()&lt;/code&gt;</a> - Real implementation showing transaction handling</li><li class="list-item">Service implementations override <code class="inline-code">onTransact()</code> to handle specific transaction codes</li></ul>
+<p class="article-paragraph"><strong>Key Differences from Actual AOSP:</strong></p>
+
+<ul class="article-list"><li class="list-item"><strong>Error Handling</strong>: Real code includes extensive exception handling and validation</li><li class="list-item"><strong>Native Calls</strong>: <code class="inline-code">transact()</code> internally calls <code class="inline-code">transactNative()</code> via JNI to the kernel driver</li><li class="list-item"><strong>Interface Tokens</strong>: <code class="inline-code">DESCRIPTOR</code> is validated to ensure type safety</li><li class="list-item"><strong>Transaction Codes</strong>: Real services use constants like <code class="inline-code">START&lt;em&gt;ACTIVITY&lt;/em&gt;TRANSACTION</code>, not <code class="inline-code">TRANSACTION_getServiceValue</code></li><li class="list-item"><strong>Parcel Management</strong>: More sophisticated memory management and error recovery</li></ul>
+<p class="article-paragraph">The pattern shown above is <strong>conceptually correct</strong> and matches the structure of AIDL-generated code, but the actual AOSP implementation includes additional error handling, security checks, and optimizations.</p>
+
+<h3 id="-33--binder--domains">3.3 Binder Domains</h3>
+
+<p class="article-paragraph">Android uses multiple Binder domains to isolate different communication channels:</p>
+
+<p class="article-paragraph"><strong>Binder Domain Architecture:</strong></p>
+
+<div class="mermaid-diagram" id="diagram-mermaid-y9h1n8zw3">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-y9h1n8zw3', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-y9h1n8zw3')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-y9h1n8zw3', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-y9h1n8zw3')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-y9h1n8zw3">graph LR
+    A[Framework Services] --> B["/dev/binder"]
+    C[Applications] --> B
+    
+    D[Framework Services] --> E["/dev/hwbinder"]
+    F[HAL Processes] --> E
+    
+    G[Vendor Services] --> H["/dev/vndbinder"]
+    I[Vendor Apps] --> H
+    
+    style B fill:#3ddc84
+    style E fill:#4ecdc4
+    style H fill:#ffe66d</div>
+            <div class="zoom-indicator" id="zoom-mermaid-y9h1n8zw3">100%</div>
+          </div>
+
+<p class="article-paragraph"><strong>Domain Details:</strong></p>
+
+<ol class="article-list"><li class="list-item"><strong><code class="inline-code">/dev/binder</code></strong> - Framework-Application Communication</li></ol>
+
+<ul class="article-list"><li class="list-item">Used for all framework service communication</li><li class="list-item">Most common domain</li><li class="list-item">Handles ActivityManager, WindowManager, PackageManager, etc.</li></ul>
+<ol class="article-list"><li class="list-item"><strong><code class="inline-code">/dev/hwbinder</code></strong> - Framework-HAL Communication</li></ol>
+
+<ul class="article-list"><li class="list-item">Communication between framework and Hardware Abstraction Layer</li><li class="list-item">Used for camera, audio, sensors, etc.</li><li class="list-item">Provides stronger isolation between framework and hardware</li></ul>
+<ol class="article-list"><li class="list-item"><strong><code class="inline-code">/dev/vndbinder</code></strong> - Vendor Process Communication</li></ol>
+
+<ul class="article-list"><li class="list-item">Vendor-specific services and applications</li><li class="list-item">Isolated from framework services</li><li class="list-item">Used for OEM customizations</li></ul>
+<h3 id="-34--performance--optimizations">3.4 Performance Optimizations</h3>
+
+<h4 id="-scatter--gather--io">Scatter-Gather I/O</h4>
+
+<p class="article-paragraph">For large transactions, Binder uses scatter-gather I/O to reduce data copying:</p>
+
+<p class="article-paragraph"><strong>Traditional Copy:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">TEXT</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-text">Client Buffer → Kernel Buffer → Server Buffer (2 copies)</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Scatter-Gather:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">TEXT</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-text">Client Buffer → Kernel (reference) → Server Buffer (1 copy)</code></pre>
+          </div>
+
+<p class="article-paragraph">This optimization is particularly important for:</p>
+
+<ul class="article-list"><li class="list-item">Large file transfers</li><li class="list-item">Bitmap/image data</li><li class="list-item">Bulk data operations</li></ul>
+<h4 id="-transaction--batching">Transaction Batching</h4>
+
+<p class="article-paragraph">Multiple Binder calls can be batched into a single kernel transition:</p>
+
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// Instead of multiple transactions:
+service.method1();
+service.method2();
+service.method3();
+
+// Binder can batch these into one kernel call
+// (when using FLAG_ONEWAY or async transactions)</code></pre>
+          </div>
+
+<h4 id="-one--way--transactions">One-Way Transactions</h4>
+
+<p class="article-paragraph">For fire-and-forget operations, use one-way transactions (<code class="inline-code">FLAG_ONEWAY</code>):</p>
+
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/android/os/Binder.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/core/java/android/os/Binder.java</span>
+                <span class="source-link-arrow">→</span>
+              </a><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/android/os/IBinder.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/core/java/android/os/IBinder.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// Simplified illustration of one-way Binder transaction pattern
+
+// One-way transaction (no reply expected)
+// Note: FLAG_ONEWAY is passed as the flags parameter, not written to Parcel
+Parcel data = Parcel.obtain();
+try {
+    data.writeInterfaceToken(DESCRIPTOR);
+    data.writeInt(value);
+    // FLAG_ONEWAY: Don&#x27;t wait for reply, fire-and-forget
+    mRemote.transact(TRANSACTION_NOTIFY, data, null, IBinder.FLAG_ONEWAY);
+} finally {
+    data.recycle();
+}</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Benefits:</strong></p>
+
+<ul class="article-list"><li class="list-item">No blocking wait for response</li><li class="list-item">Lower latency</li><li class="list-item">Better for notifications and callbacks</li></ul>
+<h3 id="-35--security--and--permissions">3.5 Security and Permissions</h3>
+
+<p class="article-paragraph">Binder transactions are secured at multiple levels:</p>
+
+<p class="article-paragraph"><strong>Permission Enforcement:</strong></p>
+
+<div class="mermaid-diagram" id="diagram-mermaid-3qqb4zvjz">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-3qqb4zvjz', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-3qqb4zvjz')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-3qqb4zvjz', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-3qqb4zvjz')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-3qqb4zvjz">graph TD
+    A[Client Request] --> B{Binder Driver}
+    B --> C{Check UID/GID}
+    C -->|Allowed| D{Check SELinux}
+    D -->|Allowed| E[Deliver to Service]
+    C -->|Denied| F[Permission Denied]
+    D -->|Denied| F
+    
+    style F fill:#ff6b6b
+    style E fill:#3ddc84</div>
+            <div class="zoom-indicator" id="zoom-mermaid-3qqb4zvjz">100%</div>
+          </div>
+
+<p class="article-paragraph"><strong>Security Mechanisms:</strong></p>
+
+<ol class="article-list"><li class="list-item"><strong>UID/GID Checking</strong>: Kernel verifies caller's user/group ID</li><li class="list-item"><strong>SELinux Policies</strong>: Enforces mandatory access control</li><li class="list-item"><strong>Interface Tokens</strong>: Prevents interface confusion attacks</li><li class="list-item"><strong>Caller Identity</strong>: Services can verify caller's identity</li></ol>
+<p class="article-paragraph"><strong>Verifying Caller Identity:</strong></p>
+
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/android/os/Binder.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/core/java/android/os/Binder.java</span>
+                <span class="source-link-arrow">→</span>
+              </a><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/android/os/Process.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/core/java/android/os/Process.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// Simplified illustration of Binder security checking
+
+// In service implementation
+@Override
+public boolean onTransact(int code, Parcel data, Parcel reply, int flags) {
+    // Get caller&#x27;s UID
+    int callingUid = Binder.getCallingUid();
+    
+    // Check permissions
+    if (callingUid != Process.SYSTEM_UID) {
+        // Verify permission
+        mContext.checkCallingPermission(
+            Manifest.permission.MANAGE_ACTIVITY_STACKS);
+    }
+    
+    // Process transaction...
+}</code></pre>
+          </div>
+
+<h3 id="-36--threading--model">3.6 Threading Model</h3>
+
+<p class="article-paragraph">Binder transactions are processed on dedicated threads in the server process:</p>
+
+<p class="article-paragraph"><strong>Thread Pool Architecture:</strong></p>
+
+<div class="mermaid-diagram" id="diagram-mermaid-ul4ckslyb">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-ul4ckslyb', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-ul4ckslyb')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-ul4ckslyb', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-ul4ckslyb')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-ul4ckslyb">graph TD
+    A[Binder Driver] --> B[Binder Thread Pool]
+    B --> C[Thread 1]
+    B --> D[Thread 2]
+    B --> E[Thread 3]
+    B --> F[Thread N]
+    
+    C --> G[Service Handler]
+    D --> G
+    E --> G
+    F --> G
+    
+    G --> H[Service Implementation]
+    
+    style B fill:#3ddc84
+    style G fill:#4ecdc4</div>
+            <div class="zoom-indicator" id="zoom-mermaid-ul4ckslyb">100%</div>
+          </div>
+
+<p class="article-paragraph"><strong>Key Characteristics:</strong></p>
+
+<ul class="article-list"><li class="list-item">Default thread pool size: 15 threads</li><li class="list-item">Threads are created on-demand</li><li class="list-item">Each thread can handle one transaction at a time</li><li class="list-item">Long-running transactions can block the thread pool</li></ul>
+<p class="article-paragraph"><strong>Best Practices:</strong></p>
+
+<ul class="article-list"><li class="list-item">Keep transactions short (< 1ms ideally)</li><li class="list-item">Use async callbacks for long operations</li><li class="list-item">Avoid blocking operations in onTransact()</li></ul>
+<h3 id="-37--debugging--binder--ipc">3.7 Debugging Binder IPC</h3>
+
+<h4 id="-monitoring--binder--transactions">Monitoring Binder Transactions</h4>
+
+<p class="article-paragraph"><strong>Check Binder Statistics:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># View Binder transaction statistics</span>
+adb shell cat /proc/binder/stats
+
+<span class="comment"># Monitor specific process</span>
+adb shell cat /proc/$(pidof system_server)/task/*/stat</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Trace Binder Calls:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Trace Binder IOCTL calls</span>
+adb shell strace -p $(pidof system_server) -e trace=binder_ioctl
+
+<span class="comment"># Monitor Binder transactions with systrace</span>
+<span class="keyword">python</span> systrace.py --time=10 -o trace.html binder</code></pre>
+          </div>
+
+<p class="article-paragraph"><strong>Dumpsys Binder Information:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">BASH</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-bash"><span class="comment"># Dump Binder state</span>
+adb shell dumpsys activity services | <span class="keyword">grep</span> -A10 <span class="string">&quot;Binder&quot;</span>
+
+<span class="comment"># Check Binder dead object detection</span>
+adb shell dumpsys meminfo system_server | <span class="keyword">grep</span> -i binder</code></pre>
+          </div>
+
+<h4 id="-common--issues">Common Issues</h4>
+
+<p class="article-paragraph"><strong>1. Transaction Too Large:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">TEXT</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-text">Error: Parcel data size exceeds limit (typically 1MB)</code></pre>
+          </div>
+<p class="article-paragraph"><strong>Solution</strong>: Split large data into multiple transactions</p>
+
+<p class="article-paragraph"><strong>2. Dead Object Exception:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">TEXT</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-text">DeadObjectException: The object you are calling has died</code></pre>
+          </div>
+<p class="article-paragraph"><strong>Solution</strong>: Service process crashed; implement retry logic</p>
+
+<p class="article-paragraph"><strong>3. Transaction Timeout:</strong></p>
+<div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">TEXT</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-text">Transaction timed out after 30 seconds</code></pre>
+          </div>
+<p class="article-paragraph"><strong>Solution</strong>: Service is blocked; check for deadlocks or long operations</p>
+
+<h3 id="-38--real--world--examples">3.8 Real-World Examples</h3>
+
+<h4 id="-example--activity--start--request">Example: Activity Start Request</h4>
+
+<p class="article-paragraph">When an app starts an activity, multiple Binder transactions occur:</p>
+
+<div class="mermaid-diagram" id="diagram-mermaid-6j65cabcl">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-6j65cabcl', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-6j65cabcl')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-6j65cabcl', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-6j65cabcl')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-6j65cabcl">sequenceDiagram
+    participant App as Application
+    participant AMS as ActivityManagerService
+    participant WMS as WindowManagerService
+    participant PMS as PackageManagerService
+    
+    App->>AMS: startActivity(intent)
+    AMS->>PMS: resolveActivity(intent)
+    PMS-->>AMS: ActivityInfo
+    
+    AMS->>AMS: Check permissions
+    AMS->>AMS: Create ActivityRecord
+    
+    AMS->>WMS: addWindow(ActivityRecord)
+    WMS-->>AMS: Window token
+    
+    AMS->>App: Schedule launch</div>
+            <div class="zoom-indicator" id="zoom-mermaid-6j65cabcl">100%</div>
+          </div>
+
+<h4 id="-example--service--binding">Example: Service Binding</h4>
+
+<p class="article-paragraph">Binding to a service involves Binder transaction setup:</p>
+
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/android/content/Context.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/core/java/android/content/Context.java</span>
+                <span class="source-link-arrow">→</span>
+              </a><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/android/content/ServiceConnection.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/core/java/android/content/ServiceConnection.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// Simplified illustration of service binding pattern
+
+// Client side
+ServiceConnection connection = new ServiceConnection() {
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        // service is a Binder proxy
+        IMyService myService = IMyService.Stub.asInterface(service);
+        myService.doSomething();
+    }
+};
+
+bindService(intent, connection, Context.BIND_AUTO_CREATE);</code></pre>
+          </div>
+
+<h3 id="-39--performance--considerations">3.9 Performance Considerations</h3>
+
+<p class="article-paragraph"><strong>IPC vs In-Process Call Performance:</strong></p>
+
+
+<div class="table-container">
+<table class="article-table">
+<thead>
+<tr>
+<th>Operation</th>
+<th>In-Process</th>
+<th>Binder IPC</th>
+<th>Overhead</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Simple method call</td>
+<td>~0.001ms</td>
+<td>~0.5-1ms</td>
+<td>500-1000x</td>
+</tr>
+<tr>
+<td>Small data transfer</td>
+<td>~0.01ms</td>
+<td>~1-2ms</td>
+<td>100-200x</td>
+</tr>
+<tr>
+<td>Large data transfer</td>
+<td>~1ms</td>
+<td>~5-10ms</td>
+<td>5-10x</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="article-paragraph"><strong>Optimization Strategies:</strong></p>
+
+<ol class="article-list"><li class="list-item"><strong>Batch Operations</strong>: Combine multiple calls into one transaction</li><li class="list-item"><strong>Cache Results</strong>: Avoid repeated IPC calls for same data</li><li class="list-item"><strong>Use Callbacks</strong>: For async operations, use one-way callbacks</li><li class="list-item"><strong>Minimize Data Size</strong>: Only transfer necessary data</li><li class="list-item"><strong>Avoid Nested Calls</strong>: Deep call chains increase latency</li></ol>
+<h3 id="-310--advanced--topics">3.10 Advanced Topics</h3>
+
+<h4 id="-binder--object--references">Binder Object References</h4>
+
+<p class="article-paragraph">Binder maintains object references across process boundaries:</p>
+
+<div class="mermaid-diagram" id="diagram-mermaid-oxx0rl733">
+            <div class="mermaid-zoom-controls">
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-oxx0rl733', 0.8)" title="Zoom Out">🔍-</button>
+              <button class="zoom-btn zoom-reset" onclick="resetZoom('mermaid-oxx0rl733')" title="Reset Zoom">⌂</button>
+              <button class="zoom-btn" onclick="zoomDiagram('mermaid-oxx0rl733', 1.2)" title="Zoom In">🔍+</button>
+              <button class="zoom-btn fullscreen-btn" onclick="toggleFullscreen('mermaid-oxx0rl733')" title="Fullscreen">⛶</button>
+            </div>
+            <div class="mermaid" id="mermaid-oxx0rl733">graph LR
+    A[Client Process] -->|Holds Reference| B[Binder Proxy]
+    B -->|Kernel Reference| C[Binder Driver]
+    C -->|Tracks Object| D[Server Process]
+    D -->|Actual Object| E[Service Implementation]
+    
+    F[Object Death] -->|Notification| C
+    C -->|Death Notification| B
+    B -->|Callback| A
+    
+    style C fill:#3ddc84</div>
+            <div class="zoom-indicator" id="zoom-mermaid-oxx0rl733">100%</div>
+          </div>
+
+<p class="article-paragraph"><strong>Death Recipients:</strong></p>
+<div class="code-source-links">
+              <div class="code-source-label">📚 Source Code:</div>
+              <div class="code-source-links-list"><a href="https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r3/core/java/android/os/IBinder.java" target="_blank" rel="noopener noreferrer" class="source-link">
+                <span class="source-link-icon">📄</span>
+                <span class="source-link-path">frameworks/base/core/java/android/os/IBinder.java</span>
+                <span class="source-link-arrow">→</span>
+              </a></div>
+            </div><div class="code-example">
+            <div class="code-header">
+              <div class="code-header-left">
+                <span class="code-language">JAVA</span>
+                
+              </div>
+              <span class="code-copy" onclick="copyCode(this)">Copy</span>
+            </div>
+            <pre><code class="language-java">// Simplified illustration of Binder death recipient pattern
+
+IBinder.DeathRecipient deathRecipient = new IBinder.DeathRecipient() {
+    @Override
+    public void binderDied() {
+        // Service process died, handle cleanup
+        reconnect();
+    }
+};
+
+service.asBinder().linkToDeath(deathRecipient, 0);</code></pre>
+          </div>
+
+<h4 id="-transaction--flags">Transaction Flags</h4>
+
+<p class="article-paragraph"><strong>Common Transaction Flags:</strong></p>
+
+<ul class="article-list"><li class="list-item"><code class="inline-code">FLAG_ONEWAY</code>: Fire-and-forget, no reply</li><li class="list-item"><code class="inline-code">FLAG&lt;em&gt;CLEAR&lt;/em&gt;BUF</code>: Clear buffer after transaction</li><li class="list-item"><code class="inline-code">FLAG_DEBUGGER</code>: Debug transaction</li><li class="list-item"><code class="inline-code">FLAG&lt;em&gt;ACCEPT&lt;/em&gt;FDS</code>: Allow file descriptors</li></ul>
+<h3 id="-311--summary">3.11 Summary</h3>
+
+<p class="article-paragraph">Binder IPC is the fundamental communication mechanism that enables Android's process isolation while maintaining efficient cross-process communication. Key takeaways:</p>
+
+
+<ul class="article-list"><li class="list-item"><strong>Architecture</strong>: Kernel-level driver with zero-copy optimizations</li><li class="list-item"><strong>Pattern</strong>: Proxy-Stub pattern generated from AIDL</li><li class="list-item"><strong>Security</strong>: Multi-layer permission and SELinux enforcement</li><li class="list-item"><strong>Performance</strong>: Optimized for mobile with scatter-gather and batching</li><li class="list-item"><strong>Domains</strong>: Separate domains for framework, HAL, and vendor communication</li><li class="list-item"><strong>Threading</strong>: Dedicated thread pool for transaction processing</li></ul>
+<p class="article-paragraph">Understanding Binder IPC is crucial for:</p>
+
+<ul class="article-list"><li class="list-item">Debugging performance issues</li><li class="list-item">Understanding system behavior</li><li class="list-item">Developing system services</li><li class="list-item">Optimizing application-system interactions</li></ul>
+<hr class="article-divider">
+
+<h2 id="-summary">Summary</h2>
+
+<p class="article-paragraph">Binder IPC is the fundamental communication mechanism between system_server and application processes. Understanding its architecture and optimizations is crucial for debugging performance issues and understanding system behavior.</p>
+
+<hr class="article-divider">
+
+<h2 id="-next--steps">Next Steps</h2>
+
+<p class="article-paragraph">Continue to <strong><a href="./android-system-server-debugging.html" class="article-link">Part 4: Debugging and Troubleshooting</a></strong> to learn practical debugging techniques and tools for system_server.</p>
+
+<hr class="article-divider">
+
+<h2 id="-related--articles">Related Articles</h2>
+
+
+<ul class="article-list"><li class="list-item"><a href="./android-system-server-services.html" class="article-link">Part 2: Core System Services</a></li><li class="list-item"><a href="./android-system-server-debugging.html" class="article-link">Part 4: Debugging and Troubleshooting</a></li><li class="list-item"><a href="./android-system-server-qa.html" class="article-link">Part 6: Advanced Q&amp;A</a> - See Q4 for detailed Binder IPC Q&A</li><li class="list-item"><a href="./android-system-server-series.html" class="article-link">Series Index</a></li></ul>
+<hr class="article-divider">
+
+<p class="article-paragraph"><em>This article is part of the <a href="./android-system-server-series.html" class="article-link">Android System Server Deep Dive</a> series. For the complete learning path, start with the <a href="./android-system-server-series.html" class="article-link">Series Index</a>.</em></p>
+
+          </div>
+          
+          <!-- Article Footer -->
+          <div class="article-footer">
+            <div class="article-tags">
+              <span class="tag-label">Tags:</span>
+              <span class="tag">Android</span>
+              <span class="tag">Internals</span>
+              <span class="tag">System Architecture</span>
+            </div>
+            <div class="article-share">
+              <span class="share-label">Share:</span>
+              <a href="https://twitter.com/intent/tweet?text=System Server: Binder IPC Framework&url=https://www.hemangpandhi.com/articles/android-system-server-binder-ipc.html" target="_blank" class="share-link">🐦 Twitter</a>
+              <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://www.hemangpandhi.com/articles/android-system-server-binder-ipc.html" target="_blank" class="share-link">💼 LinkedIn</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Article Sidebar -->
+        <aside class="article-sidebar" id="articleSidebar">
+          <!-- Table of Contents -->
+          <div class="sidebar-widget toc-widget">
+            <h4>📋 Table of Contents</h4>
+            <nav class="article-toc" id="tableOfContents">
+              <ul>
+                <li><a href="#introduction">Loading...</a></li>
+              </ul>
+            </nav>
+          </div>
+
+          <!-- Author Info -->
+          <div class="sidebar-widget author-widget">
+            <h4>👤 About the Author</h4>
+            <div class="author-card">
+              <img src="../assets/images/android_logo.PNG" alt="Android Internals Team" class="author-avatar-small">
+              <div class="author-details">
+                <h5>Android Internals Team</h5>
+                <p>Android Internals expert with deep knowledge of system architecture and development tools. Specializing in HAL, Framework, and system optimization.</p>
+                <div class="author-stats">
+                  <span class="stat">📚 50+ Articles</span>
+                  <span class="stat">🔧 10+ Years Experience</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Related Articles -->
+          <div class="sidebar-widget related-widget">
+            <h4>🔗 Related Articles</h4>
+            <div class="related-articles">
+              <a href="../adb.html" class="related-article">
+                <h5>ADB (Android Debug Bridge)</h5>
+                <p>Powerful tool for Android development and debugging</p>
+              </a>
+              <a href="../hal.html" class="related-article">
+                <h5>HAL (Hardware Abstraction Layer)</h5>
+                <p>Bridging Android software and device hardware</p>
+              </a>
+              <a href="../framework.html" class="related-article">
+                <h5>Android Framework</h5>
+                <p>The backbone of Android app development</p>
+              </a>
+            </div>
+          </div>
+
+          <!-- Newsletter Signup -->
+          <div class="sidebar-widget newsletter-widget">
+            <h4>📧 Stay Updated</h4>
+            <p>Get the latest Android Internals articles delivered to your inbox.</p>
+            <form class="newsletter-form">
+              <input type="email" placeholder="Enter your email" required>
+              <button type="submit" class="btn btn-primary">Subscribe</button>
+            </form>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <a href="../index.html" class="footer-logo-link">
+            <img src="../assets/images/android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
+          </a>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="../hal.html">HAL</a></li>
+            <li><a href="../framework.html">Framework</a></li>
+            <li><a href="../adb.html">ADB</a></li>
+            <li><a href="../books.html">Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+        <div class="footer-section">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="../privacy.html">Privacy Policy</a></li>
+            <li><a href="../terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/scripts.js"></script>
+  
+  <!-- Cookie Consent Banner -->
+  <div id="cookieConsentBanner" class="cookie-consent-banner">
+    <div class="cookie-consent-content">
+      <div class="cookie-consent-text">
+        <p>We use cookies and service workers to enhance your browsing experience, analyze site traffic, and personalize content. By clicking "Accept", you consent to our use of cookies. <a href="../privacy.html">Learn more</a></p>
+      </div>
+      <div class="cookie-consent-buttons">
+        <button id="cookieAcceptBtn" class="cookie-consent-btn cookie-consent-btn-accept">Accept</button>
+        <button id="cookieDeclineBtn" class="cookie-consent-btn cookie-consent-btn-decline">Decline</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Redirect .md URLs to .html (for browser cache/history issues)
+    (function() {
+      const currentPath = window.location.pathname;
+      if (currentPath.endsWith('.md')) {
+        const newPath = currentPath.replace(/\.md$/, '.html');
+        console.log('Redirecting .md URL to .html:', currentPath, '->', newPath);
+        window.location.replace(newPath);
+        return;
+      }
+    })();
+    
+    // Article functionality
+    // Define functions globally first
+    window.zoomDiagram = function(diagramId, factor) {
+      const cleanId = diagramId.startsWith('mermaid-') ? diagramId : 'mermaid-' + diagramId;
+      const diagram = document.getElementById(cleanId);
+      const diagramContainer = document.getElementById('diagram-' + cleanId);
+      const zoomIndicator = document.getElementById('zoom-' + diagramId);
+      
+      if (!diagram || !diagramContainer) return;
+      
+      // Initialize zoomLevels if not exists
+      window.zoomLevels = window.zoomLevels || {};
+      
+      const currentZoom = window.zoomLevels[diagramId] || 1;
+      const newZoom = Math.max(1, Math.min(5, currentZoom * factor)); // Start from 100% minimum
+      window.zoomLevels[diagramId] = newZoom;
+      
+      // Apply zoom to the diagram element only
+      diagram.style.transform = `scale(${newZoom})`;
+      diagram.style.transformOrigin = 'top left';
+      
+      // Check if we're in fullscreen mode
+      const isFullscreen = diagramContainer.style.position === 'fixed';
+      if (isFullscreen) {
+        // In fullscreen, preserve full height and enable scrolling
+        diagramContainer.style.height = '100vh';
+        diagramContainer.style.minHeight = '100vh';
+        diagramContainer.style.maxHeight = 'none';
+        diagramContainer.style.overflow = 'auto';
+      } else {
+        // Normal mode - ensure proper scrolling when zoomed
+        if (newZoom > 1) {
+          // When zoomed, ensure container allows horizontal and vertical scrolling
+          diagramContainer.style.overflow = 'auto';
+          diagramContainer.style.overflowX = 'auto';
+          diagramContainer.style.overflowY = 'auto';
+          diagramContainer.style.width = '100%';
+          diagramContainer.style.maxWidth = '100%';
+          diagramContainer.style.position = 'relative';
+          diagramContainer.style.zIndex = '1040';
+          diagramContainer.classList.add('zoomed');
+          
+          // Ensure the diagram element itself has proper width for scrolling
+          const svg = diagram.querySelector('svg');
+          if (svg) {
+            // Get the natural SVG width (before scaling)
+            const svgNaturalWidth = svg.viewBox.baseVal.width || svg.width.baseVal.value;
+            if (svgNaturalWidth > 0) {
+              // Set diagram width to accommodate scaled SVG
+              const scaledWidth = svgNaturalWidth * newZoom;
+              diagram.style.width = scaledWidth + 'px';
+              diagram.style.minWidth = scaledWidth + 'px';
+              diagram.style.maxWidth = 'none';
+            } else {
+              // Fallback: use bounding box if viewBox not available
+              const svgWidth = svg.getBoundingClientRect().width;
+              const scaledWidth = svgWidth * newZoom;
+              diagram.style.width = scaledWidth + 'px';
+              diagram.style.minWidth = scaledWidth + 'px';
+              diagram.style.maxWidth = 'none';
+            }
+          }
+        } else {
+          // At 100% zoom, clear all styles to use natural dimensions
+          diagramContainer.style.cssText = '';
+          diagram.style.width = '';
+          diagram.style.minWidth = '';
+          diagram.style.maxWidth = '';
+          diagramContainer.classList.remove('zoomed');
+        }
+      }
+      
+      if (zoomIndicator) {
+        zoomIndicator.textContent = Math.round(newZoom * 100) + '%';
+      }
+    }
+    
+    window.resetZoom = function(diagramId) {
+      const cleanId = diagramId.startsWith('mermaid-') ? diagramId : 'mermaid-' + diagramId;
+      const diagram = document.getElementById(cleanId);
+      const diagramContainer = document.getElementById('diagram-' + cleanId);
+      const zoomIndicator = document.getElementById('zoom-' + diagramId);
+      
+      if (!diagram || !diagramContainer) return;
+      
+      // Reset zoom level
+      window.zoomLevels = window.zoomLevels || {};
+      window.zoomLevels[diagramId] = 1;
+      
+      // Remove zoomed class and z-index
+      diagramContainer.classList.remove('zoomed');
+      
+      // Reset diagram to 100% scale
+      diagram.style.transform = 'scale(1)';
+      diagram.style.transformOrigin = 'top left';
+      
+      // Check if we're in fullscreen mode
+      const isFullscreen = diagramContainer.style.position === 'fixed';
+      if (isFullscreen) {
+        // In fullscreen, preserve full height
+        diagramContainer.style.height = '100vh';
+        diagramContainer.style.minHeight = '100vh';
+        diagramContainer.style.maxHeight = 'none';
+        diagramContainer.style.overflow = 'auto';
+      } else {
+        // Normal mode - clear all styles exactly like fullscreen exit
+        // This ensures the same behavior as exiting fullscreen mode
+        diagramContainer.style.cssText = '';
+        diagram.style.width = '';
+        diagram.style.minWidth = '';
+        diagram.style.maxWidth = '';
+        const mermaidEl = diagramContainer.querySelector('.mermaid');
+        if (mermaidEl) {
+          mermaidEl.style.cssText = '';
+        }
+        const svgEl = mermaidEl?.querySelector('svg');
+        if (svgEl) {
+          svgEl.style.cssText = '';
+        }
+      }
+      
+      if (zoomIndicator) {
+        zoomIndicator.textContent = '100%';
+      }
+    }
+    
+    window.toggleFullscreen = function(diagramId) {
+      console.log('Fullscreen toggle called for:', diagramId);
+      
+      const container = document.getElementById(`diagram-${diagramId}`);
+      if (!container) {
+        console.error('Container not found:', `diagram-${diagramId}`);
+        return;
+      }
+      
+      const isFullscreen = container.style.position === 'fixed';
+      
+      if (isFullscreen) {
+        // Exit fullscreen
+        console.log('Exiting fullscreen');
+        
+        // Show navigation bar again
+        const mainNav = document.querySelector('.main-nav');
+        if (mainNav) {
+          mainNav.style.display = '';
+          mainNav.style.visibility = '';
+          mainNav.style.opacity = '';
+          mainNav.style.height = '';
+          mainNav.style.overflow = '';
+        }
+        
+        container.style.cssText = '';
+        document.body.style.overflow = '';
+        document.body.classList.remove('fullscreen-mode');
+        
+        // Reset the mermaid element styles to normal mode
+        const mermaidEl = container.querySelector('.mermaid');
+        if (mermaidEl) {
+          mermaidEl.style.cssText = '';
+        }
+        
+        // Reset the SVG element styles to normal mode
+        const svgEl = mermaidEl?.querySelector('svg');
+        if (svgEl) {
+          svgEl.style.cssText = '';
+        }
+      } else {
+        // Enter fullscreen
+        console.log('Entering fullscreen');
+        
+        // Hide navigation bar explicitly (especially important for mobile)
+        const mainNav = document.querySelector('.main-nav');
+        if (mainNav) {
+          mainNav.style.display = 'none';
+          mainNav.style.visibility = 'hidden';
+          mainNav.style.opacity = '0';
+          mainNav.style.height = '0';
+          mainNav.style.overflow = 'hidden';
+        }
+        
+        container.style.cssText = `
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          min-height: 100vh !important;
+          z-index: 999999 !important;
+          background: white !important;
+          display: block !important;
+          padding: 10px !important;
+          box-sizing: border-box !important;
+          overflow: auto !important;
+        `;
+        
+        const mermaidEl = container.querySelector('.mermaid');
+        if (mermaidEl) {
+          mermaidEl.style.cssText = `
+            max-width: 95vw !important;
+            max-height: 95vh !important;
+            width: auto !important;
+            height: auto !important;
+            margin: 0 auto !important;
+            display: block !important;
+          `;
+          
+          // Also ensure the SVG inside uses full height
+          const svgEl = mermaidEl.querySelector('svg');
+          if (svgEl) {
+            svgEl.style.cssText = `
+              max-width: 95vw !important;
+              max-height: 95vh !important;
+              width: auto !important;
+              height: auto !important;
+            `;
+          }
+        }
+        
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('fullscreen-mode');
+      }
+    }
+    
+    // Add escape key functionality
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        // Find any fullscreen diagram and exit it
+        const fullscreenDiagram = document.querySelector('.mermaid-diagram[style*="position: fixed"]');
+        if (fullscreenDiagram) {
+          const diagramId = fullscreenDiagram.id.replace('diagram-', '');
+          window.toggleFullscreen(diagramId);
+        }
+      }
+    });
+    
+    // Initialize zoom levels storage
+    window.zoomLevels = window.zoomLevels || {};
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOMContentLoaded fired');
+      console.log('Mermaid available:', typeof mermaid);
+      
+      // Initialize Mermaid with automatic rendering and minimal padding
+      try {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: 'default',
+          securityLevel: 'loose',
+          fontFamily: 'Arial, sans-serif',
+          // Global settings for all diagram types
+          useMaxWidth: true,
+          // Flowchart settings - optimized for Mermaid 10.7.0
+          // Critical: padding must be set to ensure viewBox includes all content
+          flowchart: {
+            padding: 20, // Increased padding to ensure all content is in viewBox
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis',
+            nodeSpacing: 50,
+            rankSpacing: 50,
+            wrap: false
+          },
+          // Sequence diagram settings
+          sequence: {
+            diagramMarginX: 10,
+            diagramMarginY: 10,
+            actorMargin: 50,
+            width: 150,
+            height: 65,
+            boxMargin: 10,
+            boxTextMargin: 5,
+            noteMargin: 35,
+            messageMargin: 35,
+            mirrorActors: true,
+            bottomMarginAdj: 1,
+            useMaxWidth: true
+          },
+          // Class diagram settings
+          class: {
+            useMaxWidth: true,
+            padding: 10
+          },
+          // State diagram settings
+          state: {
+            useMaxWidth: true,
+            padding: 10
+          },
+          // Gantt chart settings
+          gantt: {
+            useMaxWidth: true
+          },
+          // Pie chart settings
+          pie: {
+            useMaxWidth: true
+          },
+          // Git graph settings
+          gitGraph: {
+            useMaxWidth: true
+          },
+          // ER diagram settings
+          er: {
+            useMaxWidth: true
+          },
+          // Journey diagram settings
+          journey: {
+            useMaxWidth: true
+          },
+          // C4 diagram settings
+          c4: {
+            useMaxWidth: true
+          }
+        });
+        console.log('Mermaid initialized successfully');
+        
+        // Simple approach: Just ensure diagrams are properly displayed after Mermaid renders
+        // Wait for Mermaid to render all diagrams, then ensure they're visible
+        setTimeout(function() {
+          console.log('Ensuring all diagrams are properly displayed');
+          
+          // Find all Mermaid diagrams
+          const mermaidContainers = document.querySelectorAll('.mermaid-diagram');
+          mermaidContainers.forEach(function(container) {
+            const diagramId = container.id.replace('diagram-', '');
+            const diagram = document.getElementById(diagramId);
+            const zoomIndicator = document.getElementById('zoom-' + diagramId);
+            
+            if (diagram && container) {
+              // Check if this is a sequence diagram
+              const svg = container.querySelector('svg');
+              let isSequenceDiagram = false;
+              if (svg) {
+                // Detect sequence diagrams
+                const hasSequenceElements = svg.querySelector('g.actor, g.note, g.activation, g[class*="sequence"]');
+                if (hasSequenceElements) {
+                  isSequenceDiagram = true;
+                  container.classList.add('sequence-diagram-container');
+                }
+              }
+              
+              // Initialize zoom level to 100%
+              window.zoomLevels = window.zoomLevels || {};
+              window.zoomLevels[diagramId] = 1;
+              
+              // Reset diagram to 100% scale
+              diagram.style.transform = 'scale(1)';
+              diagram.style.transformOrigin = 'top left';
+              
+              // CRITICAL FIX for Mermaid 10.7.0: Ensure container and SVG can display full content
+              // Remove ALL height and overflow constraints
+              container.style.cssText = `
+                overflow: visible !important;
+                height: auto !important;
+                max-height: none !important;
+                min-height: auto !important;
+                margin: 1rem 0 !important;
+                padding: 0.75rem 1rem !important;
+                background: #f8f9fa !important;
+                border-radius: 8px !important;
+                border: 1px solid #e9ecef !important;
+                position: relative !important;
+                z-index: 1 !important;
+              `;
+              
+              // CRITICAL FIX for Mermaid 10.7.0: Ensure SVG displays fully
+              // Issue: Mermaid 10.7.0 may generate viewBox that cuts off content or has wrong aspect ratio
+              if (svg) {
+                // Use multiple attempts to ensure SVG is fully rendered
+                function fixSvgDimensions() {
+                  const viewBox = svg.viewBox.baseVal;
+                  
+                  if (viewBox && viewBox.width > 0 && viewBox.height > 0) {
+                    // Remove any explicit width/height attributes that might conflict
+                    // Let CSS handle sizing based on viewBox
+                    svg.removeAttribute('width');
+                    svg.removeAttribute('height');
+                    
+                    // Ensure preserveAspectRatio is set correctly
+                    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                    
+                    // Set styles to ensure full content is visible
+                    // Use viewBox-based sizing (browser will calculate height from aspect ratio)
+                    svg.style.cssText = `
+                      display: block !important;
+                      margin: 0 auto !important;
+                      width: 100% !important;
+                      max-width: 100% !important;
+                      height: auto !important;
+                      min-height: auto !important;
+                      max-height: none !important;
+                      overflow: visible !important;
+                      box-sizing: border-box !important;
+                    `;
+                    
+                    // Verify content is not cut off by checking bounding box
+                    try {
+                      const bbox = svg.getBBox();
+                      if (bbox) {
+                        // If content extends beyond viewBox, we need to expand it
+                        const contentRight = bbox.x + bbox.width;
+                        const contentBottom = bbox.y + bbox.height;
+                        const viewBoxRight = viewBox.x + viewBox.width;
+                        const viewBoxBottom = viewBox.y + viewBox.height;
+                        
+                        // If content is cut off, expand viewBox
+                        if (contentRight > viewBoxRight || contentBottom > viewBoxBottom) {
+                          const newX = Math.min(viewBox.x, bbox.x - 10);
+                          const newY = Math.min(viewBox.y, bbox.y - 10);
+                          const newWidth = Math.max(viewBox.width, contentRight - newX + 10);
+                          const newHeight = Math.max(viewBox.height, contentBottom - newY + 10);
+                          
+                          svg.setAttribute('viewBox', `${newX} ${newY} ${newWidth} ${newHeight}`);
+                          console.log('Expanded viewBox for', diagramId, 'to show full content');
+                        }
+                      }
+                    } catch (e) {
+                      // getBBox might fail if SVG is not fully rendered, that's OK
+                    }
+                  }
+                }
+                
+                // Try immediately
+                fixSvgDimensions();
+                
+                // Try again after a short delay (Mermaid might still be rendering)
+                setTimeout(fixSvgDimensions, 100);
+                setTimeout(fixSvgDimensions, 500);
+              }
+              
+              // Also ensure the mermaid element itself doesn't constrain
+              const mermaidEl = container.querySelector('.mermaid');
+              if (mermaidEl) {
+                mermaidEl.style.cssText = `
+                  text-align: center !important;
+                  display: block !important;
+                  width: 100% !important;
+                  height: auto !important;
+                  max-height: none !important;
+                  overflow: visible !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
+                `;
+              }
+              
+              // Re-apply reduced padding for sequence diagrams
+              if (isSequenceDiagram) {
+                container.style.padding = '0.4rem 1rem';
+              }
+              
+              // Update zoom indicator
+              if (zoomIndicator) {
+                zoomIndicator.textContent = '100%';
+              }
+            }
+          });
+        }, 1000); // Wait 1 second for Mermaid to finish rendering
+        
+      } catch (error) {
+        console.error('Mermaid initialization failed:', error);
+      }
+      
+      // Check if content is visible
+      const contentWrapper = document.querySelector('.article-content-wrapper');
+      console.log('Content wrapper found:', contentWrapper);
+      if (contentWrapper) {
+        console.log('Content wrapper visible:', contentWrapper.offsetHeight > 0);
+        console.log('Content wrapper display:', window.getComputedStyle(contentWrapper).display);
+      }
+      
+      // Reading mode toggle
+      const toggleReadingMode = document.getElementById('toggleReadingMode');
+      const toggleSidebar = document.getElementById('toggleSidebar');
+      const articleLayout = document.getElementById('articleLayout');
+      const articleSidebar = document.getElementById('articleSidebar');
+      
+      toggleReadingMode.addEventListener('click', function() {
+        articleLayout.classList.toggle('full-screen');
+        const isFullScreen = articleLayout.classList.contains('full-screen');
+        
+        if (isFullScreen) {
+          toggleReadingMode.querySelector('.reading-mode-text').textContent = 'Exit Full Screen';
+          articleSidebar.style.display = 'none';
+        } else {
+          toggleReadingMode.querySelector('.reading-mode-text').textContent = 'Full Screen';
+          articleSidebar.style.display = 'block';
+        }
+      });
+      
+      toggleSidebar.addEventListener('click', function() {
+        const isHidden = articleSidebar.style.display === 'none';
+        articleSidebar.style.display = isHidden ? 'block' : 'none';
+        toggleSidebar.querySelector('.sidebar-text').textContent = isHidden ? 'Hide Sidebar' : 'Show Sidebar';
+      });
+      
+      // Generate Table of Contents
+      function generateTOC() {
+        const headings = document.querySelectorAll('.article-content-wrapper h1, .article-content-wrapper h2, .article-content-wrapper h3');
+        const tocContainer = document.getElementById('tableOfContents');
+        
+        if (headings.length === 0) return;
+        
+        let tocHTML = '<ul>';
+        headings.forEach((heading, index) => {
+          const id = `heading-${index}`;
+          heading.id = id;
+          
+          const level = parseInt(heading.tagName.charAt(1));
+          const indent = level > 2 ? 'style="margin-left: ' + ((level - 2) * 20) + 'px;"' : '';
+          
+          tocHTML += `<li ${indent}><a href="#${id}">${heading.textContent}</a></li>`;
+        });
+        tocHTML += '</ul>';
+        
+        tocContainer.innerHTML = tocHTML;
+      }
+      
+      // Smooth scrolling for TOC links
+      function addSmoothScrolling() {
+        document.querySelectorAll('.article-toc a').forEach(link => {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+              target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }
+          });
+        });
+      }
+      
+      // Copy code functionality
+      function addCopyCodeButtons() {
+        document.querySelectorAll('.code-copy').forEach(button => {
+          button.addEventListener('click', function() {
+            const codeBlock = this.closest('.code-example').querySelector('code');
+            const text = codeBlock.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+              this.textContent = 'Copied!';
+              setTimeout(() => {
+                this.textContent = 'Copy';
+              }, 2000);
+            });
+          });
+        });
+      }
+      
+      // Initialize functionality
+      generateTOC();
+      setTimeout(() => {
+        addSmoothScrolling();
+        addCopyCodeButtons();
+      }, 100);
+    });
+
+  </script>
+</body>
+</html> 

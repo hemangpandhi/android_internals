@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADB (Android Debug Bridge) - Android Internals</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="icon" href="assets/images/android_logo.PNG" type="image/png">
+  <link rel="manifest" href="assets/manifest.json">
+  <meta name="theme-color" content="#3ddc84">
+</head>
+<body>
+  <header class="hero">
+    <nav class="main-nav">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo-link">
+          <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="nav-logo" />
+        </a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="index.html#topics" class="nav-link">Topics</a>
+          <a href="index.html#blogs" class="nav-link">Blogs</a>
+          <a href="index.html#about" class="nav-link">About</a>
+          <a href="books.html" class="nav-link">Reference Books</a>
+          <a href="videos.html" class="nav-link">Reference Videos</a>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="hero-content">
+      <h1 class="hero-title animate-fadein">ADB (Android Debug Bridge)</h1>
+      <p class="hero-subtitle animate-slidein">Powerful tool for Android development and debugging</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="content-section">
+      <div class="container">
+        <div class="content-card">
+          <h2>What is ADB?</h2>
+          <p>ADB is a versatile command-line tool that lets you communicate with and control Android devices. It is essential for development, debugging, and automation.</p>
+          
+          <h2>Common Uses</h2>
+          <div class="hal-modules">
+            <div class="module-card">
+              <h3>App Management</h3>
+              <p>Install and uninstall apps, manage app data and permissions.</p>
+            </div>
+            <div class="module-card">
+              <h3>Device Shell</h3>
+              <p>Access device shell for direct command execution.</p>
+            </div>
+            <div class="module-card">
+              <h3>File Transfer</h3>
+              <p>Transfer files between device and computer seamlessly.</p>
+            </div>
+            <div class="module-card">
+              <h3>Logcat</h3>
+              <p>View system logs for debugging and monitoring.</p>
+            </div>
+            <div class="module-card">
+              <h3>Automation</h3>
+              <p>Automate device actions and testing workflows.</p>
+            </div>
+          </div>
+          
+          <h2>Common Commands</h2>
+          <div class="command-list">
+            <div class="command-item">
+              <code>adb devices</code>
+              <span>List connected devices</span>
+            </div>
+            <div class="command-item">
+              <code>adb install &lt;apk&gt;</code>
+              <span>Install an APK</span>
+            </div>
+            <div class="command-item">
+              <code>adb shell</code>
+              <span>Open a shell on the device</span>
+            </div>
+            <div class="command-item">
+              <code>adb logcat</code>
+              <span>View system logs</span>
+            </div>
+            <div class="command-item">
+              <code>adb push &lt;src&gt; &lt;dest&gt;</code>
+              <span>Copy file to device</span>
+            </div>
+            <div class="command-item">
+              <code>adb pull &lt;src&gt; &lt;dest&gt;</code>
+              <span>Copy file from device</span>
+            </div>
+          </div>
+          
+          <h2>Usage Examples</h2>
+          <div class="code-examples">
+            <div class="code-block">
+              <h4>List Google packages:</h4>
+              <code>adb shell pm list packages | grep google</code>
+            </div>
+            <div class="code-block">
+              <h4>Open URL in browser:</h4>
+              <code>adb shell am start -a android.intent.action.VIEW -d https://www.android.com</code>
+            </div>
+          </div>
+          
+          <div class="cta-content">
+            <h3>Learn More</h3>
+            <p>Explore the official ADB documentation for comprehensive command reference and advanced usage.</p>
+            <a href="https://developer.android.com/studio/command-line/adb" target="_blank" class="cta-button">ADB Documentation</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <a href="index.html" class="footer-logo-link">
+            <img src="assets/images/android_logo.PNG" alt="Android Internals Logo" class="footer-logo" />
+          </a>
+          <p>Comprehensive guide to Android OS architecture and internals.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="hal.html">HAL</a></li>
+            <li><a href="framework.html">Framework</a></li>
+            <li><a href="adb.html">ADB</a></li>
+            <li><a href="books.html">Reference Books</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://source.android.com" target="_blank">AOSP</a></li>
+            <li><a href="https://developer.android.com" target="_blank">Android Dev</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Android Internals. Not affiliated with Google or Android. Built with ❤️ for the Android community.</p>
+        <p style="margin-top: 1rem; font-size: 0.9rem;">
+          <a href="privacy.html" style="color: #3ddc84; margin-right: 1rem;">Privacy Policy</a>
+          <a href="terms.html" style="color: #3ddc84;">Terms of Service</a>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/scripts.js"></script>
+  
+  <!-- Cookie Consent Banner -->
+  <div id="cookieConsentBanner" class="cookie-consent-banner">
+    <div class="cookie-consent-content">
+      <div class="cookie-consent-text">
+        <p>We use cookies and service workers to enhance your browsing experience, analyze site traffic, and personalize content. By clicking "Accept", you consent to our use of cookies. <a href="privacy.html">Learn more</a></p>
+      </div>
+      <div class="cookie-consent-buttons">
+        <button id="cookieAcceptBtn" class="cookie-consent-btn cookie-consent-btn-accept">Accept</button>
+        <button id="cookieDeclineBtn" class="cookie-consent-btn cookie-consent-btn-decline">Decline</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html> 

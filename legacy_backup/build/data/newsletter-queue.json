@@ -1,0 +1,11 @@
+{
+  "article": {
+    "title": "Complete Android Internals Article Collection - All Articles Now Available",
+    "description": "Explore our comprehensive collection of Android Internals articles covering System Server Architecture, ADB Encyclopedia, Binder IPC, Debugging Techniques, Best Practices, and more. Everything you need to master Android OS internals.",
+    "url": "https://www.hemangpandhi.com/index.html#blogs",
+    "slug": "all-articles-collection",
+    "date": "2025-11-30",
+    "message": "Hi there!\n\nWe're excited to share our complete collection of Android Internals articles with you!\n\n📚 Our comprehensive guides include:\n\n• Android System Server Deep Dive - Architecture, Communication, and Advanced Debugging\n  Read: https://www.hemangpandhi.com/articles/android-system-server-deep-dive.html\n\n• System Server Services - Understanding core Android services\n  Read: https://www.hemangpandhi.com/articles/android-system-server-services.html\n\n• Binder IPC Communication - Inter-process communication in Android\n  Read: https://www.hemangpandhi.com/articles/android-system-server-binder-ipc.html\n\n• ADB Encyclopedia - Complete guide to Android Debug Bridge\n  Read: https://www.hemangpandhi.com/articles/adb-enclopidia.html\n\n• System Server Best Practices - Production-ready development tips\n  Read: https://www.hemangpandhi.com/articles/android-system-server-best-practices.html\n\n• Debugging Techniques - Tools and methods for troubleshooting\n  Read: https://www.hemangpandhi.com/articles/android-system-server-debugging.html\n\n• System Server Q&A - 40+ questions answered\n  Read: https://www.hemangpandhi.com/articles/android-system-server-qa.html\n\n• System Server Architecture - Complete overview\n  Read: https://www.hemangpandhi.com/articles/android-system-server-architecture.html\n\n• System Server Series - Introduction and overview\n  Read: https://www.hemangpandhi.com/articles/android-system-server-series.html\n\nAll articles are now available on our website. Explore the complete collection and deepen your understanding of Android OS internals.\n\nBest regards,\nAndroid Internals Team"
+  },
+  "queuedAt": "2025-11-30T10:30:00.000Z"
+}
